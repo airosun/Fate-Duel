@@ -1,9 +1,10 @@
 servant,class,score_vs_field_pct,overall_win_pct,nps_per_match,hp,atk
-Artoria Pendragon,Saber,53.7,50.7,2.01,1285,123
-Heracles,Berserker,53.3,50.3,1.42,903,122
-Medea,Caster,44.4,43.1,2.54,1215,118
-Sasaki Kojirou,Assassin,46.5,43.9,1.77,1175,115
-EMIYA,Archer,49.9,47.6,1.77,1250,121
-Cú Chulainn,Lancer,52.9,50.5,1.97,1019,117
-Medusa,Rider,49.4,46.5,1.58,1219,117
-Hassan of the Cursed Arm,Assassin,49.9,47.1,1.79,1199,116
+Artoria Pendragon,Saber,52.9,50.1,2.00,1285,123
+Heracles,Berserker,53.9,50.8,1.44,903,122
+Medea,Caster,45.0,43.5,2.53,1215,118
+Sasaki Kojirou,Assassin,46.6,43.7,1.76,1175,115
+EMIYA,Archer,50.0,47.6,1.77,1250,121
+Cú Chulainn,Lancer,52.7,50.2,1.96,1019,117
+Medusa,Rider,49.4,46.5,1.57,1219,117
+Hassan of the Cursed Arm,Assassin,49.4,46.6,1.78,1199,116
+Gilgamesh,Archer,50.1,47.4,1.58,1266,124

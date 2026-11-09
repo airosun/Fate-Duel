@@ -490,3 +490,25 @@ test("EMIYA copies Shaytan's Arm but it does nothing without Zabaniya", () => {
   }
   assert.equal(kills, 0);
 });
+
+test("Gilgamesh: Ea neutralizes the opponent's unique passives", () => {
+  const vsHer = createMatch(SERVANTS.gilgamesh, SERVANTS.heracles);
+  assert.deepEqual(vsHer.players[1].neutralized, ['12 Labors']);
+  assert.equal(vsHer.players[1].buffs.some(b => b.type === 'guts'), false);
+  assert.ok(vsHer.players[1].buffs.some(b => b.source === 'Mad Enhancement B'));   // class passives stay
+  assert.ok(vsHer.players[1].maxHp > createMatch(SERVANTS.artoria, SERVANTS.heracles).players[1].maxHp); // full HP back
+  const vsEmiya = createMatch(SERVANTS.emiya, SERVANTS.gilgamesh).players[0];
+  assert.deepEqual(vsEmiya.neutralized, ['Reality Marble', 'Trace On']);
+  assert.equal(vsEmiya.buffs.some(b => b.type === 'affinityAll' || b.copiedFrom), false);
+  const mirror = createMatch(SERVANTS.gilgamesh, SERVANTS.gilgamesh);
+  assert.deepEqual(mirror.players.map(p => p.neutralized), [['Ea'], ['Ea']]);
+});
+
+test('Gilgamesh: Enuma Elish boosts its own damage only for that NP', () => {
+  let s = createMatch(SERVANTS.gilgamesh, dummy('B'), { seed: 1 });
+  const g = s.players[0];
+  s.players[0].np = 100;
+  s = resolveTurn(s, [np(), skill('charge')]).state;
+  assert.equal(1000 - s.players[1].hp, Math.round(g.atk * 3.0 * 1.3 + 8));   // + Divinity B
+  assert.equal(s.players[0].buffs.some(b => b.type === 'npUp'), false);
+});

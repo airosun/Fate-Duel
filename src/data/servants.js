@@ -262,6 +262,35 @@ export const SERVANTS = {
           desc: 'Heavy Quick damage, then ATK +20% for 3 turns',
           postEffects: [{ type: 'atkUp', value: 20, turns: 4 }] },
   },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
+  gilgamesh: {
+    id: 'gilgamesh', name: 'Gilgamesh', class: 'Archer',
+    fgoHp: 13097, fgoAtk: 12280, fgoNpAtk: 0.34, fgoNpDef: 3,
+    favoredCard: 'buster', maxAp: 10,
+    passives: [
+      classPassive('independentAction', 'A+'),
+      classPassive('magicResistance', 'E'),
+      classPassive('divinity', 'B'),
+      unique('Ea', "Neutralizes the opponent's unique passives for the whole match",
+        [{ type: 'neutralizeEnemyUnique' }]),
+    ],
+    skills: [
+      { id: 'saw_it_all', name: 'The One Who Saw It All EX', cost: 5,
+        desc: 'ATK +20% and NP damage +20% for 3 turns',
+        effects: [{ type: 'atkUp', value: 20, turns: 3 }, { type: 'npUp', value: 20, turns: 3 }] },
+      { id: 'golden_rule', name: 'Golden Rule A', cost: 3,
+        desc: 'NP gain +50% for 3 turns and 10% damage cut for 2 turns',
+        effects: [{ type: 'npGainUp', value: 50, turns: 3 }, { type: 'damageCut', value: 10, turns: 2 }] },
+      { id: 'treasury', name: 'Treasury of Babylon EX', cost: 6,
+        desc: 'NP +30% and AP +3 now; Buster +25% for 3 turns',
+        effects: [{ type: 'npCharge', value: 30 }, { type: 'apGain', value: 3 },
+                  { type: 'cardUp', card: 'buster', value: 25, turns: 3 }] },
+    ],
+    np: { name: 'Enuma Elish', card: 'buster', mult: 3.0,
+          desc: 'NP damage +30% for this NP, then heavy Buster damage',
+          preEffects: [{ type: 'npUp', value: 30, turns: 1 }] },
+  },
 };
 
 export const ROSTER = Object.values(SERVANTS);

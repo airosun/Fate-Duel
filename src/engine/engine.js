@@ -18,14 +18,16 @@ const CARD_NAME = { quick: 'Quick', arts: 'Arts', buster: 'Buster' };
 
 // ---------- setup ----------
 
-export function deriveStats(servant) {
-  const hp = servant.hp ?? Math.round(T.baseHp * (servant.fgoHp / T.refFgoHp) ** T.statExponent * (servant.hpMult ?? 1));
+// hpMult pays for a revive passive (Heracles, Cú). When Ea neutralizes the
+// revive, the servant gets full HP back: { uniquesOff: true }.
+export function deriveStats(servant, { uniquesOff = false } = {}) {
+  const hp = servant.hp ?? Math.round(T.baseHp * (servant.fgoHp / T.refFgoHp) ** T.statExponent * (uniquesOff ? 1 : servant.hpMult ?? 1));
   const atk = servant.atk ?? Math.round(T.baseAtk * (servant.fgoAtk / T.refFgoAtk) ** T.statExponent);
   return { hp, atk };
 }
 
-function createPlayer(servant) {
-  const { hp, atk } = deriveStats(servant);
+function createPlayer(servant, { blockUniques = false } = {}) {
+  const { hp, atk } = deriveStats(servant, { uniquesOff: blockUniques });
   const p = {
     servantId: servant.id,
     name: servant.name,
@@ -43,7 +45,11 @@ function createPlayer(servant) {
     empower: false,
     buffs: [],
   };
-  const passives = servant.passives ?? (servant.passive ? [servant.passive] : []);
+  let passives = servant.passives ?? (servant.passive ? [servant.passive] : []);
+  if (blockUniques) { // the opponent's Ea switches off every unique passive
+    p.neutralized = passives.filter(pa => pa.kind === 'unique').map(pa => pa.name);
+    passives = passives.filter(pa => pa.kind !== 'unique');
+  }
   const all = passives.flatMap(pas => pas.effects);
   for (const e of all.filter(e => e.type === 'maxApUp')) p.maxAp += e.value;
   for (const pas of passives) {
@@ -70,10 +76,15 @@ function applyCopiedUniques(p, servant, foe) {
   }
 }
 
+const neutralizesUniques = s => (s.passives ?? []).some(pa => pa.kind === 'unique' && pa.effects.some(e => e.type === 'neutralizeEnemyUnique'));
+
 export function createMatch(servantA, servantB, { seed } = {}) {
-  const players = [createPlayer(servantA), createPlayer(servantB)];
-  applyCopiedUniques(players[0], servantA, servantB);
-  applyCopiedUniques(players[1], servantB, servantA);
+  // Ea (Gilgamesh) switches off the opponent's unique passives before anything
+  // else, so a neutralized Trace On copies nothing. Two Eas cancel each other.
+  const block = [neutralizesUniques(servantB), neutralizesUniques(servantA)];
+  const players = [createPlayer(servantA, { blockUniques: block[0] }), createPlayer(servantB, { blockUniques: block[1] })];
+  if (!block[0]) applyCopiedUniques(players[0], servantA, servantB);
+  if (!block[1]) applyCopiedUniques(players[1], servantB, servantA);
   return {
     turn: 1,
     over: false,
