@@ -71,14 +71,14 @@ footer { color: var(--muted); font-size: .8rem; }
 <div class="wrap">
   <header>
     <h1>Fate<span>/</span>Duel Roster</h1>
-    <p class="intro">9 servants and their complete kits, generated from the game's own data. HP and ATK are the in-game values; NP gain is relative to an average servant (1.00×).</p>
+    <p class="intro">10 servants and their complete kits, generated from the game's own data. HP and ATK are the in-game values; NP gain is relative to an average servant (1.00×).</p>
   </header>
   <nav class="filters" aria-label="Filter by class">
-    <button type="button" data-filter="all" aria-pressed="true">All (9)</button>
+    <button type="button" data-filter="all" aria-pressed="true">All (10)</button>
     <button type="button" data-filter="Saber" aria-pressed="false">Saber (1)</button>
     <button type="button" data-filter="Archer" aria-pressed="false">Archer (2)</button>
     <button type="button" data-filter="Lancer" aria-pressed="false">Lancer (1)</button>
-    <button type="button" data-filter="Rider" aria-pressed="false">Rider (1)</button>
+    <button type="button" data-filter="Rider" aria-pressed="false">Rider (2)</button>
     <button type="button" data-filter="Caster" aria-pressed="false">Caster (1)</button>
     <button type="button" data-filter="Assassin" aria-pressed="false">Assassin (2)</button>
     <button type="button" data-filter="Berserker" aria-pressed="false">Berserker (1)</button>
@@ -394,6 +394,41 @@ footer { color: var(--muted); font-size: .8rem; }
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Enuma Elish</h4><span class="card buster">Buster</span><span class="mult">3×</span></div>
     <p>NP damage +30% for this NP, then heavy Buster damage</p></div>
     <p class="fgo">FGO stats: 13,097 HP · 12,280 ATK · NP 0.34% / 3%</p>
+  </article>
+
+  <article class="servant" id="iskandar" data-class="Rider">
+    <header>
+      <div class="badge" aria-hidden="true">I</div>
+      <div class="title"><span class="cls">Rider</span><h3>Iskandar</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>1,268</dd></div>
+      <div><dt>ATK</dt><dd>123</dd></div>
+      <div><dt>Max AP</dt><dd>10</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>1.04× <small>atk</small> · 1.00× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card buster">Buster</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Magic Resistance D</span><span>Enemy debuffs on self 5% weaker</span></li>
+        <li><span class="name">Riding A+</span><span>Quick attacks +13% damage</span></li>
+        <li><span class="name">Divinity C</span><span>+6 flat damage on every hit</span></li>
+        <li><span class="name">Bucephalus<span class="tag">Unique</span></span><span>Quick and Buster attacks are 10% more effective</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">Those Who Go Towards the Beyond A<span class="ap">6 AP</span></span><span>NP +30% now; ATK +25% and attacks ignore damage cut for 3 turns</span></li>
+        <li><span class="name">Conquest Tactics A<span class="ap">4 AP</span></span><span>NP damage +25% and NP gain +30% for 3 turns</span></li>
+        <li><span class="name">Lightning Conqueror EX<span class="ap">5 AP</span></span><span>Buster +30% for 3 turns and AP +1 now</span></li>
+      </ul>
+    </section>
+    <div class="np">
+    <div class="np-head"><span class="label">Noble Phantasm</span><h4>Ionioi Hetairoi</h4><span class="card buster">Buster</span><span class="mult">3.5×</span></div>
+    <p>Heavy Buster damage, then the enemy takes 20% more damage for 2 turns</p></div>
+    <p class="fgo">FGO stats: 13,219 HP · 11,560 ATK · NP 0.86% / 3%</p>
   </article>
   </main>
   <footer>Generated from src/data/servants.js on 2026-11-09. Kits are rebuilt whenever a servant is added or rebalanced.</footer>

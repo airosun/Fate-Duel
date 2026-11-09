@@ -42,6 +42,7 @@ export function describeEffect(e) {
     case 'buffFailChance': return `Enemy self-buffs ${v}% likely to fail`;
     case 'copyEnemyUnique': return `Copies the enemy's unique passive`;
     case 'neutralizeEnemyUnique': return `Neutralizes the enemy's unique passives`;
+    case 'ignoreDamageCut': return `Attacks ignore damage cut${turnsText(e)}`;
     case 'instantKillChance': return `NP ${v}% chance to kill outright`;
     case 'affinityAll': return `Every favored-card bonus`;
     case 'setNpMode': return `Change NP mode`;
@@ -81,7 +82,7 @@ const BUFF_LABEL = {
   defDown: 'DEF↓', flatDamage: 'Flat Dmg', sureHit: 'Sure Hit', debuffPotency: 'Debuff Potency',
   nextHitUp: 'Next Hit↑', affinityAll: 'All Cards Favored', apRecoveryDown: 'AP Recovery↓',
   bonusVsStatus: 'vs Petrified↑', buffFailChance: 'Breaker Gorgon', copyEnemyUnique: 'Trace On',
-  instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea',
+  instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF',
 };
 
 // Plain-language explanation of what a buff, debuff or passive does.
@@ -120,6 +121,7 @@ export function explainBuff(b) {
     case 'copyEnemyUnique': return "Copies the opponent's unique passive for the match. Revives can't be copied.";
     case 'apRecoveryDown': return `${b.status === 'petrified' ? 'Petrified: g' : 'G'}ains ${Math.round(b.value)} less AP from each attack.`;
     case 'bonusVsStatus': return `The next attack against a ${b.status} enemy deals ${v}% more damage.`;
+    case 'ignoreDamageCut': return "Regular attacks go straight through the enemy's damage cut. Evade still works.";
     case 'neutralizeEnemyUnique': return "Switches off all of the opponent's unique passives for the whole match.";
     case 'instantKillChance': return b.npName
       ? `${b.npName} has a ${v}% chance to kill outright when it connects. Revives don't trigger.${b.copiedFrom ? ` Only works with ${b.npName}, so it has no effect here.` : ''}`
@@ -135,7 +137,7 @@ export function buffChip(b) {
   if (b.type === 'sureHit' && b.card) label = `${CARD_LABEL[b.card]} Sure Hit`;
   if (b.type === 'apRecoveryDown' && b.status === 'petrified') label = 'Petrified';
   const val = b.type === 'apRecoveryDown' ? ` −${Math.round(b.value)} AP`
-    : b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage', 'sureHit', 'copyEnemyUnique', 'guts'].includes(b.type)
+    : b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage', 'sureHit', 'copyEnemyUnique', 'guts', 'ignoreDamageCut'].includes(b.type)
       ? ` ${Math.round(b.value)}%` : (['apRegen', 'flatDamage'].includes(b.type) ? ` +${b.value}` : '');
   const kind = b.debuff ? 'debuff' : b.turns === null ? 'passive' : 'active';
   let duration;

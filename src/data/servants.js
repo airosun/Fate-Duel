@@ -292,6 +292,35 @@ export const SERVANTS = {
           desc: 'NP damage +30% for this NP, then heavy Buster damage',
           preEffects: [{ type: 'npUp', value: 30, turns: 1 }] },
   },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
+  iskandar: {
+    id: 'iskandar', name: 'Iskandar', class: 'Rider',
+    fgoHp: 13219, fgoAtk: 11560, fgoNpAtk: 0.86, fgoNpDef: 3,
+    favoredCard: 'buster', maxAp: 10,
+    passives: [
+      classPassive('magicResistance', 'D'),
+      classPassive('riding', 'A+'),
+      classPassive('divinity', 'C'),
+      unique('Bucephalus', 'Quick and Buster attacks are 10% more effective',
+        [{ type: 'cardUp', card: 'quick', value: 10 }, { type: 'cardUp', card: 'buster', value: 10 }]),
+    ],
+    skills: [
+      { id: 'towards_beyond', name: 'Those Who Go Towards the Beyond A', cost: 6,
+        desc: 'NP +30% now; ATK +25% and attacks ignore damage cut for 3 turns',
+        effects: [{ type: 'npCharge', value: 30 }, { type: 'atkUp', value: 25, turns: 3 },
+                  { type: 'ignoreDamageCut', turns: 3 }] },
+      { id: 'conquest_tactics', name: 'Conquest Tactics A', cost: 4,
+        desc: 'NP damage +25% and NP gain +30% for 3 turns',
+        effects: [{ type: 'npUp', value: 25, turns: 3 }, { type: 'npGainUp', value: 30, turns: 3 }] },
+      { id: 'lightning_conqueror', name: 'Lightning Conqueror EX', cost: 5,
+        desc: 'Buster +30% for 3 turns and AP +1 now',
+        effects: [{ type: 'cardUp', card: 'buster', value: 30, turns: 3 }, { type: 'apGain', value: 1 }] },
+    ],
+    np: { name: 'Ionioi Hetairoi', card: 'buster', mult: 3.5,
+          desc: 'Heavy Buster damage, then the enemy takes 20% more damage for 2 turns',
+          postEffects: [{ type: 'defDown', value: 20, turns: 3, target: 'enemy' }] },
+  },
 };
 
 export const ROSTER = Object.values(SERVANTS);

@@ -162,7 +162,7 @@ export function validateAction(state, idx, action) {
 const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown'];
 
 // Lasting positive effects a servant puts on itself (what Breaker Gorgon can make fail).
-const BUFF_TYPES = new Set(['atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
+const BUFF_TYPES = new Set(['ignoreDamageCut', 'atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
   'cardNpGainUp', 'debuffResist', 'guts', 'apRegen', 'busterConvert', 'flatDamage', 'sureHit',
   'nextHitUp', 'bonusVsStatus', 'debuffPotency']);
 const hasStatus = (p, status) => p.buffs.some(b => b.status === status);
@@ -236,6 +236,7 @@ const BUFF_NAMES = {
   npGainUp: 'NP gain up', debuffResist: 'debuff resist', guts: 'Guts', apRegen: 'AP regen',
   busterConvert: 'Buster strike', flatDamage: 'flat damage', sureHit: 'Sure Hit', nextHitUp: 'next-hit boost',
   bonusVsStatus: 'bonus damage', debuffPotency: 'debuff potency', instantKillChance: 'instant kill',
+  ignoreDamageCut: 'ignore damage cut',
 };
 const buffName = e => (e.type === 'cardUp' ? `${CARD_NAME[e.card]} up`
   : e.type === 'cardNpGainUp' ? `${CARD_NAME[e.card]} NP gain up` : BUFF_NAMES[e.type] ?? e.type);
@@ -285,10 +286,10 @@ function atkMultiplier(p, card, extraPct = 0) {
 
 const hasAffinity = (p, card) => p.favoredCard === card || hasBuff(p, 'affinityAll');
 
-function defend(defender, raw, { isNp, ignoreDefense, sureHit }) {
+function defend(defender, raw, { isNp, ignoreDefense, sureHit, ignoreCut = false }) {
   if (hasBuff(defender, 'invincible')) return { amount: 0, blocked: 'invincible' };
   if (!isNp && !ignoreDefense && !sureHit && hasBuff(defender, 'evade')) return { amount: 0, blocked: 'evade' };
-  const cut = ignoreDefense ? 0 : Math.min(T.maxDamageCut, sumBuff(defender, 'damageCut'));
+  const cut = ignoreDefense || ignoreCut ? 0 : Math.min(T.maxDamageCut, sumBuff(defender, 'damageCut'));
   const vuln = 1 + sumBuff(defender, 'defDown') / 100;
   return { amount: Math.round(raw * vuln * (1 - cut / 100)), blocked: null };
 }
@@ -300,7 +301,8 @@ function attackPacket(att, def, card, { counter, empowered, nextHit = 0, vsBonus
   if (empowered) raw *= 1 + T.seals.empowerBonus;
   raw += sumBuff(att, 'flatDamage');
   const sureHit = att.buffs.some(b => b.type === 'sureHit' && (!b.card || b.card === card));
-  return defend(def, raw, { isNp: false, ignoreDefense: false, sureHit });
+  // ignoreDamageCut (Iskandar): regular attacks go straight through damage cut; Evade still works
+  return defend(def, raw, { isNp: false, ignoreDefense: false, sureHit, ignoreCut: hasBuff(att, 'ignoreDamageCut') });
 }
 
 function npPacket(att, def, np, { empowered = false } = {}) {

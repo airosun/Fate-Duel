@@ -14,6 +14,7 @@ The game tries `.png`, then `.jpg`, then `.webp`, and falls back to a class-colo
 | Medusa | `medusa.png` |
 | Hassan of the Cursed Arm | `hassan.png` |
 | Gilgamesh | `gilgamesh.png` |
+| Iskandar | `iskandar.png` |
 
 Tips
 - Portrait-oriented full art works best (e.g. Final Ascension stage art). Images are cropped with

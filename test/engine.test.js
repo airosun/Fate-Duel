@@ -512,3 +512,14 @@ test('Gilgamesh: Enuma Elish boosts its own damage only for that NP', () => {
   assert.equal(1000 - s.players[1].hp, Math.round(g.atk * 3.0 * 1.3 + 8));   // + Divinity B
   assert.equal(s.players[0].buffs.some(b => b.type === 'npUp'), false);
 });
+
+test('Iskandar: Towards the Beyond makes attacks ignore damage cut (not evade)', () => {
+  const guard = { skills: [{ id: 'cut', name: 'Cut', cost: 3, effects: [{ type: 'damageCut', value: 50, turns: 3 }] }] };
+  let s = createMatch(SERVANTS.iskandar, dummy('B', guard), { seed: 1 });
+  const k = s.players[0];
+  s.players[0].ap = 10;
+  s = resolveTurn(s, [skill('towards_beyond'), skill('cut')]).state;
+  const hp = s.players[1].hp;
+  s = resolveTurn(s, [atk('arts'), atk('buster')]).state;
+  assert.equal(hp - s.players[1].hp, Math.round(k.atk * 1.0 * 1.25 * 1.25 + 6));   // no 50% cut; Divinity C +6
+});
