@@ -1,5 +1,7 @@
-// Fate Duel — local hotseat client (both masters share one screen).
-// The engine runs in the browser; online play will swap this for the server.
+// Fate Duel client.
+//  - Local mode: both masters share one screen; the engine runs in the browser.
+//  - Online mode: the server owns the match; this client renders snapshots and
+//    sends intents (pick, lock in, rematch). Screens are shared between modes.
 
 import { createMatch, getLegalActions, resolveTurn, validateAction, deriveStats } from '/src/engine/engine.js';
 import { ROSTER } from '/src/data/servants.js';
@@ -9,7 +11,6 @@ import { CARD_LABEL, describeSkill, describeNp, describeEffects, buffChip } from
 const app = document.getElementById('app');
 const overlay = document.getElementById('overlay');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const MASTER = i => `Master ${i + 1}`;
 
 // ---------- art (drop files into public/art/<id>.png|jpg|webp) ----------
 
@@ -42,24 +43,35 @@ function art(servant, cls = '') {
 // ---------- ui state ----------
 
 const ui = {
-  screen: 'title',          // title | select | battle | end
-  selecting: 0,             // which master is picking a servant
+  mode: 'local',            // local | online
+  screen: 'title',          // title | lobby | room | select | battle | end
+  selecting: 0,             // local: which master is picking a servant
   focus: null,              // servant id shown in the select detail panel
-  picks: [null, null],      // servant ids
+  picks: [null, null],      // local: servant ids
   match: null,
-  active: 0,                // master currently choosing an action
+  active: 0,                // seat currently choosing an action (-1 = none)
   draft: { main: null, seal: null },
+  draftTurn: null,
   locked: [null, null],
   bars: {},                 // last shown % per bar, for animation
   logOpen: true,
+  revealing: false,
+  net: { socket: null, code: null, seat: null, snap: null, revealedTurn: 0, error: '', online: true },
 };
+
+const online = () => ui.mode === 'online';
+const mySeat = () => ui.net.seat;
+function masterLabel(i) {
+  if (!online()) return `Master ${i + 1}`;
+  return i === mySeat() ? 'You' : 'Opponent';
+}
 
 function show(screen) { ui.screen = screen; render(); }
 
 function render() {
-  overlay.hidden = true;
-  overlay.innerHTML = '';
-  ({ title: renderTitle, select: renderSelect, battle: renderBattle, end: renderEnd })[ui.screen]();
+  if (!ui.revealing) { overlay.hidden = true; overlay.innerHTML = ''; }
+  ({ title: renderTitle, lobby: renderLobby, room: renderRoom, select: renderSelect, battle: renderBattle, end: renderEnd })[ui.screen]();
+  renderNetBanner();
   animateBars();
 }
 
@@ -75,11 +87,26 @@ function passScreen(i, text, next) {
   openOverlay(`
     <div class="pass">
       <div class="seal-mark big"></div>
-      <h2>${MASTER(i)}</h2>
+      <h2>Master ${i + 1}</h2>
       <p>${esc(text)}</p>
-      <p class="hint">${MASTER(1 - i)}, look away from the screen.</p>
+      <p class="hint">Master ${2 - i}, look away from the screen.</p>
       <button class="btn gold" id="ready">I'm ready</button>
     </div>`, o => o.querySelector('#ready').onclick = next);
+}
+
+function renderNetBanner() {
+  document.getElementById('net-banner')?.remove();
+  if (!online()) return;
+  const snap = ui.net.snap;
+  let msg = '';
+  if (!ui.net.online) msg = 'Connection lost. Reconnecting…';
+  else if (snap && snap.present[1 - snap.seat] && !snap.connected[1 - snap.seat] && snap.phase !== 'waiting')
+    msg = 'Your opponent disconnected. Waiting for them to come back…';
+  if (!msg) return;
+  const el = document.createElement('div');
+  el.id = 'net-banner';
+  el.textContent = msg;
+  document.body.appendChild(el);
 }
 
 // ---------- title ----------
@@ -91,15 +118,17 @@ function renderTitle() {
       <h1>FATE <span>DUEL</span></h1>
       <p class="tag">Servant versus Servant · Master versus Master</p>
       <div class="title-actions">
-        <button class="btn gold big" id="local">Local Duel</button>
-        <button class="btn ghost big" disabled title="Coming in Phase 4">Online Duel <small>soon</small></button>
+        <button class="btn gold big" id="online">Online Duel</button>
+        <button class="btn ghost big" id="local">Local Duel <small>one screen</small></button>
       </div>
       ${rulesHtml()}
     </div>`;
   app.querySelector('#local').onclick = () => {
+    ui.mode = 'local';
     ui.picks = [null, null]; ui.selecting = 0; ui.focus = ROSTER[0].id;
     show('select');
   };
+  app.querySelector('#online').onclick = () => { ui.mode = 'online'; ui.net.error = ''; connect(); show('lobby'); };
 }
 
 function rulesHtml() {
@@ -124,15 +153,158 @@ function rulesHtml() {
     </details>`;
 }
 
-// ---------- servant select ----------
+// ---------- online: connection + session ----------
 
-function statLine(s) {
-  const { hp, atk } = deriveStats(s);
-  return { hp, atk };
+const SESSION_KEY = 'fateduel.session';
+const saveSession = (code, token) => sessionStorage.setItem(SESSION_KEY, JSON.stringify({ code, token }));
+const loadSession = () => { try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch { return null; } };
+const clearSession = () => sessionStorage.removeItem(SESSION_KEY);
+
+function emit(event, payload = {}) {
+  return new Promise(resolve => {
+    if (!ui.net.socket?.connected) return resolve({ ok: false, error: 'Not connected to the server yet.' });
+    ui.net.socket.timeout(8000).emit(event, payload, (err, res) =>
+      resolve(err ? { ok: false, error: 'The server did not respond.' } : res));
+  });
 }
 
+function connect() {
+  if (ui.net.socket) return;
+  // global `io` comes from /socket.io/socket.io.js
+  const socket = window.io();
+  ui.net.socket = socket;
+  socket.on('connect', async () => {
+    ui.net.online = true;
+    const s = loadSession();
+    if (s?.code && s?.token) {
+      const res = await emit('room:rejoin', s);
+      if (!res.ok) { clearSession(); ui.net.code = null; ui.net.snap = null; ui.net.error = res.error; if (online()) show('lobby'); }
+    } else if (online()) render();
+  });
+  socket.on('disconnect', () => { ui.net.online = false; if (online()) renderNetBanner(); });
+  socket.on('room:state', onSnapshot);
+}
+
+function onSnapshot(snap) {
+  const firstForRoom = ui.net.code !== snap.code;
+  ui.mode = 'online';
+  ui.net.snap = snap;
+  ui.net.code = snap.code;
+  ui.net.seat = snap.seat;
+  if (firstForRoom) ui.net.revealedTurn = snap.lastTurn?.turn ?? 0; // don't replay old turns after a refresh
+  if (snap.match) { ui.match = snap.match; ui.locked = snap.locked; }
+  if (ui.revealing) return; // applied when the reveal closes
+
+  if (snap.phase === 'waiting') return show('room');
+  if (snap.phase === 'select') {
+    if (ui.screen !== 'select') { ui.focus = snap.picks[snap.seat] ?? ROSTER[0].id; ui.bars = {}; }
+    show('select');
+    if (snap.picks[snap.seat]) waitingOverlay('Servant summoned', 'Waiting for your opponent to choose…');
+    return;
+  }
+  // battle / over
+  if (snap.lastTurn && snap.lastTurn.turn > ui.net.revealedTurn) {
+    ui.net.revealedTurn = snap.lastTurn.turn;
+    ui.active = -1;
+    show('battle');
+    return showReveal(snap.lastTurn, snap.match, () => {
+      ui.revealing = false;
+      onSnapshot(ui.net.snap); // re-apply whatever arrived during the reveal
+    });
+  }
+  if (snap.phase === 'over') return show('end');
+  if (ui.draftTurn !== snap.match.turn) { ui.draft = { main: null, seal: null }; ui.draftTurn = snap.match.turn; }
+  ui.active = snap.locked[snap.seat] ? -1 : snap.seat;
+  show('battle');
+}
+
+function waitingOverlay(title, text) {
+  openOverlay(`
+    <div class="pass">
+      <div class="spinner"></div>
+      <h2>${esc(title)}</h2>
+      <p>${esc(text)}</p>
+      <button class="btn ghost" id="leave">Leave room</button>
+    </div>`, o => o.querySelector('#leave').onclick = leaveRoom);
+}
+
+async function leaveRoom() {
+  await emit('room:leave');
+  clearSession();
+  Object.assign(ui.net, { code: null, seat: null, snap: null, revealedTurn: 0, error: '' });
+  ui.mode = 'local';
+  ui.match = null;
+  history.replaceState(null, '', location.pathname);
+  show('title');
+}
+
+// ---------- online: lobby + room ----------
+
+function renderLobby() {
+  const invite = new URLSearchParams(location.search).get('room') ?? '';
+  app.innerHTML = `
+    <div class="title-screen lobby">
+      <h1 class="small-title">ONLINE <span>DUEL</span></h1>
+      <div class="lobby-cards">
+        <section class="lobby-card">
+          <h3>Create a room</h3>
+          <p class="muted">Get a code to share with your opponent.</p>
+          <button class="btn gold big" id="create">Create Room</button>
+        </section>
+        <section class="lobby-card">
+          <h3>Join a room</h3>
+          <p class="muted">Enter the 4-letter code you were given.</p>
+          <form id="joinForm" class="join-row">
+            <input id="code" maxlength="4" placeholder="ABCD" autocomplete="off" value="${esc(invite)}" />
+            <button class="btn gold" type="submit">Join</button>
+          </form>
+        </section>
+      </div>
+      <p class="error lobby-error">${esc(ui.net.error)}</p>
+      <button class="btn ghost small" id="back">← Back</button>
+    </div>`;
+  const codeInput = app.querySelector('#code');
+  codeInput.oninput = () => { codeInput.value = codeInput.value.toUpperCase().replace(/[^A-Z]/g, ''); };
+  app.querySelector('#back').onclick = () => { ui.mode = 'local'; show('title'); };
+  app.querySelector('#create').onclick = async () => {
+    const res = await emit('room:create');
+    if (!res.ok) { ui.net.error = res.error; return render(); }
+    saveSession(res.code, res.token);
+  };
+  app.querySelector('#joinForm').onsubmit = async e => {
+    e.preventDefault();
+    const res = await emit('room:join', { code: codeInput.value });
+    if (!res.ok) { ui.net.error = res.error; return render(); }
+    saveSession(res.code, res.token);
+  };
+}
+
+function renderRoom() {
+  const code = ui.net.code;
+  const link = `${location.origin}/?room=${code}`;
+  app.innerHTML = `
+    <div class="title-screen lobby">
+      <p class="tag">Room code</p>
+      <div class="room-code">${esc(code)}</div>
+      <p class="muted">Share the code or the invite link. The duel starts when your opponent joins.</p>
+      <div class="title-actions">
+        <button class="btn gold" id="copy">Copy invite link</button>
+        <button class="btn ghost" id="leave">Leave room</button>
+      </div>
+      <div class="spinner"></div>
+      <p class="muted">Waiting for an opponent…</p>
+    </div>`;
+  app.querySelector('#copy').onclick = async e => {
+    try { await navigator.clipboard.writeText(link); e.target.textContent = 'Copied!'; }
+    catch { e.target.textContent = link; }
+  };
+  app.querySelector('#leave').onclick = leaveRoom;
+}
+
+// ---------- servant select ----------
+
 function kitHtml(s) {
-  const { hp, atk } = statLine(s);
+  const { hp, atk } = deriveStats(s);
   const passives = s.passives ?? (s.passive ? [s.passive] : []);
   return `
     <div class="kit">
@@ -158,14 +330,18 @@ function kitHtml(s) {
 }
 
 function renderSelect() {
-  const i = ui.selecting;
   const focus = ROSTER.find(s => s.id === ui.focus) ?? ROSTER[0];
+  const snap = ui.net.snap;
+  const title = online() ? 'Summon your Servant' : `Master ${ui.selecting + 1} <span>— Summon your Servant</span>`;
+  const status = online()
+    ? `<span class="opp-status ${snap.picked[1 - snap.seat] ? 'ready' : ''}">Opponent: ${snap.picked[1 - snap.seat] ? 'ready' : 'choosing…'}</span>`
+    : '<div></div>';
   app.innerHTML = `
     <div class="select-screen">
       <header class="screen-head">
-        <button class="btn ghost small" id="back">← Back</button>
-        <h1>${MASTER(i)} <span>— Summon your Servant</span></h1>
-        <div></div>
+        <button class="btn ghost small" id="back">${online() ? 'Leave room' : '← Back'}</button>
+        <h1>${title}</h1>
+        ${status}
       </header>
       <div class="select-body">
         <div class="roster">
@@ -182,31 +358,39 @@ function renderSelect() {
         </aside>
       </div>
     </div>`;
-  app.querySelectorAll('.roster-card').forEach(b => b.onclick = () => { ui.focus = b.dataset.id; render(); });
-  app.querySelector('#back').onclick = () => show('title');
-  app.querySelector('#confirm').onclick = () => {
-    ui.picks[i] = focus.id;
-    if (i === 0) {
+  app.querySelectorAll('.roster-card').forEach(b => b.onclick = () => {
+    ui.focus = b.dataset.id;
+    render();
+    if (online() && ui.net.snap.picks[ui.net.seat]) waitingOverlay('Servant summoned', 'Waiting for your opponent to choose…');
+  });
+  app.querySelector('#back').onclick = () => online() ? leaveRoom() : show('title');
+  app.querySelector('#confirm').onclick = async () => {
+    if (online()) {
+      const res = await emit('select:pick', { servantId: focus.id });
+      if (!res.ok) alert(res.error);
+      return;
+    }
+    ui.picks[ui.selecting] = focus.id;
+    if (ui.selecting === 0) {
       ui.selecting = 1; ui.focus = ROSTER[0].id;
       show('select');
       passScreen(1, 'Choose your Servant. Your opponent\'s pick stays hidden until the duel begins.', () => render());
-    } else startMatch();
+    } else startLocalMatch();
   };
 }
 
-// ---------- battle ----------
+// ---------- battle (shared) ----------
 
 const byId = id => ROSTER.find(s => s.id === id);
 
-function startMatch() {
+function startLocalMatch() {
   ui.match = createMatch(byId(ui.picks[0]), byId(ui.picks[1]));
   ui.bars = {};
   ui.locked = [null, null];
-  ui.history = [];
-  beginTurn(0, true);
+  beginLocalTurn(0, true);
 }
 
-function beginTurn(i, first = false) {
+function beginLocalTurn(i, first = false) {
   ui.active = i;
   ui.draft = { main: null, seal: null };
   show('battle');
@@ -230,12 +414,13 @@ function panelHtml(i) {
   const hpPct = Math.max(0, (p.hp / p.maxHp) * 100);
   const npFull = p.np >= T.npMax;
   const buffs = p.buffs.map(buffChip);
+  const highlight = online() ? i === mySeat() : ui.active === i;
   return `
-    <section class="panel ${ui.active === i ? 'active' : ''} side-${i}">
+    <section class="panel ${highlight ? 'active' : ''} side-${i}">
       ${art(s, 'battle-art')}
       <div class="panel-info">
         <div class="panel-head">
-          <span class="master-tag">${MASTER(i)}</span>
+          <span class="master-tag">${masterLabel(i)}</span>
           <h2>${esc(s.name)}</h2>
           <span class="class-badge" data-class="${esc(s.class)}">${esc(s.class)}</span>
           ${ui.locked[i] ? '<span class="locked-tag">LOCKED IN</span>' : ''}
@@ -288,7 +473,7 @@ function controlsHtml() {
   return `
     <section class="controls">
       <div class="controls-head">
-        <h3>${MASTER(i)} <span>· ${esc(s.name)}</span></h3>
+        <h3>${masterLabel(i)} <span>· ${esc(s.name)}</span></h3>
         <span class="turn-tag">Turn ${m.turn}</span>
       </div>
       <div class="action-rows">
@@ -335,8 +520,23 @@ function controlsHtml() {
     </section>`;
 }
 
+function waitingControlsHtml() {
+  if (!online()) return '<section class="controls resolving"><p>Resolving the clash…</p></section>';
+  const mine = ui.net.snap.myAction;
+  const s = ui.match.servants[mySeat()];
+  return `
+    <section class="controls resolving">
+      <div>
+        <p class="locked-line">Locked in: <b>${mine ? esc(actionLabel(s, mine)) : '…'}${mine?.seal ? ` + ${SEAL_INFO[mine.seal].name}` : ''}</b></p>
+        <div class="spinner"></div>
+        <p class="muted">Waiting for your opponent…</p>
+        <button class="btn ghost small" id="unlock">Change action</button>
+      </div>
+    </section>`;
+}
+
 function logHtml() {
-  const turns = [...(ui.history ?? [])].reverse();
+  const turns = [...(ui.match.history ?? [])].reverse();
   return `
     <section class="log ${ui.logOpen ? '' : 'collapsed'}">
       <button class="log-toggle" id="logToggle">Battle log ${ui.logOpen ? '▾' : '▸'}</button>
@@ -351,13 +551,14 @@ function logHtml() {
 function renderBattle() {
   app.innerHTML = `
     <div class="battle">
+      ${online() ? `<div class="room-tag">Room ${esc(ui.net.code)} <button class="btn ghost small" id="leaveBattle">Leave</button></div>` : ''}
       <div class="field">
         ${panelHtml(0)}
         <div class="versus">VS</div>
         ${panelHtml(1)}
       </div>
       <div class="lower">
-        ${ui.active >= 0 ? controlsHtml() : '<section class="controls resolving"><p>Resolving the clash…</p></section>'}
+        ${ui.active >= 0 ? controlsHtml() : waitingControlsHtml()}
         ${logHtml()}
       </div>
     </div>`;
@@ -368,7 +569,6 @@ function setDraft(patch) {
   Object.assign(ui.draft, patch);
   const scroll = window.scrollY;
   render();
-  overlay.hidden = true;
   window.scrollTo(0, scroll);
 }
 
@@ -381,24 +581,33 @@ function bindControls() {
   $('.seal-btn').forEach(b => b.onclick = () => setDraft({ seal: ui.draft.seal === b.dataset.seal ? null : b.dataset.seal }));
   const lock = app.querySelector('#lock');
   if (lock) lock.onclick = lockIn;
+  const unlock = app.querySelector('#unlock');
+  if (unlock) unlock.onclick = () => emit('battle:unlock');
+  const leave = app.querySelector('#leaveBattle');
+  if (leave) leave.onclick = () => { if (confirm('Leave this duel? Your opponent will be returned to the lobby.')) leaveRoom(); };
   app.querySelector('#logToggle').onclick = () => { ui.logOpen = !ui.logOpen; setDraft({}); };
 }
 
-function lockIn() {
+async function lockIn() {
   const i = ui.active;
   const action = { main: ui.draft.main, seal: ui.draft.seal };
   const err = validateAction(ui.match, i, action);
   if (err) { app.querySelector('#err').textContent = err; return; }
+  if (online()) {
+    const res = await emit('battle:lock', { action });
+    if (!res.ok) { const e = app.querySelector('#err'); if (e) e.textContent = res.error; }
+    return; // the server's snapshot moves us on
+  }
   ui.locked[i] = action;
-  if (i === 0) beginTurn(1);
-  else resolve();
+  if (i === 0) beginLocalTurn(1);
+  else resolveLocal();
 }
 
-// ---------- reveal ----------
+// ---------- reveal (shared) ----------
 
-function clashBanner(actions) {
+function clashBanner(actions, servants) {
   const [a, b] = actions.map(x => x.main);
-  const names = ui.match.servants.map(s => s.name);
+  const names = servants.map(s => s.name);
   if (a.type === 'np' && b.type === 'np') return { text: 'Noble Phantasms collide!', cls: 'np' };
   if (a.type === 'np' || b.type === 'np') return { text: `${names[a.type === 'np' ? 0 : 1]} unleashes their Noble Phantasm!`, cls: 'np' };
   if (a.type === 'attack' && b.type === 'attack') {
@@ -412,13 +621,13 @@ function clashBanner(actions) {
   return { text: `${names[atk]} strikes unopposed!`, cls: [a, b][atk].card };
 }
 
-function revealSide(i, action) {
-  const s = ui.match.servants[i];
+function revealSide(i, action, servants) {
+  const s = servants[i];
   const m = action.main;
   const kind = m.type === 'attack' ? m.card : m.type;
   return `
     <div class="reveal-side">
-      <span class="master-tag">${MASTER(i)}</span>
+      <span class="master-tag">${masterLabel(i)}</span>
       <div class="reveal-card ${kind}">
         ${art(s, 'card-art')}
         <div class="cmd-frame"><span class="cmd-name">${esc(actionLabel(s, action))}</span>
@@ -428,24 +637,28 @@ function revealSide(i, action) {
     </div>`;
 }
 
-function resolve() {
+function showReveal({ turn, actions, log }, state, onContinue) {
+  ui.revealing = true;
+  const banner = clashBanner(actions, state.servants);
+  openOverlay(`
+    <div class="reveal">
+      <h4>Turn ${turn}</h4>
+      <div class="reveal-row">${revealSide(0, actions[0], state.servants)}<div class="versus">VS</div>${revealSide(1, actions[1], state.servants)}</div>
+      <div class="clash-banner ${banner.cls}">${esc(banner.text)}</div>
+      <div class="reveal-log">${log.map((l, k) => `<p class="log-${l.type}" style="animation-delay:${0.25 + k * 0.35}s">${esc(l.msg)}</p>`).join('')}</div>
+      <button class="btn gold" id="cont">${state.over ? 'See result' : 'Continue'}</button>
+    </div>`, o => o.querySelector('#cont').onclick = () => { ui.revealing = false; onContinue(); });
+}
+
+function resolveLocal() {
   const actions = ui.locked;
   const turn = ui.match.turn;
   const { state, log } = resolveTurn(ui.match, actions);
   ui.match = state;
-  ui.history.push({ turn, log });
   ui.locked = [null, null];
   ui.active = -1;
   show('battle');
-  const banner = clashBanner(actions);
-  openOverlay(`
-    <div class="reveal">
-      <h4>Turn ${turn}</h4>
-      <div class="reveal-row">${revealSide(0, actions[0])}<div class="versus">VS</div>${revealSide(1, actions[1])}</div>
-      <div class="clash-banner ${banner.cls}">${esc(banner.text)}</div>
-      <div class="reveal-log">${log.map((l, k) => `<p class="log-${l.type}" style="animation-delay:${0.25 + k * 0.35}s">${esc(l.msg)}</p>`).join('')}</div>
-      <button class="btn gold" id="cont">${state.over ? 'See result' : 'Continue'}</button>
-    </div>`, o => o.querySelector('#cont').onclick = () => state.over ? show('end') : beginTurn(0));
+  showReveal({ turn, actions, log }, state, () => state.over ? show('end') : beginLocalTurn(0));
 }
 
 // ---------- end ----------
@@ -455,28 +668,57 @@ function renderEnd() {
   const { winner, reason } = m.result;
   const draw = winner === null;
   const s = draw ? null : m.servants[winner];
-  app.innerHTML = `
-    <div class="end-screen ${draw ? 'draw' : ''}">
-      ${draw ? `<div class="end-pair">${art(m.servants[0], 'end-art')}${art(m.servants[1], 'end-art')}</div>` : art(s, 'end-art winner')}
-      <h1>${draw ? 'Stalemate' : 'Victory'}</h1>
-      <p class="tag">${draw
-        ? (reason === 'double KO' ? 'Both Servants fall. Both Masters survive to fight again.' : `The battle reaches turn ${T.maxTurns} without a victor.`)
-        : `${MASTER(winner)} and ${esc(s.name)} claim the Grail. (${m.turn - 1} turns)`}</p>
+  let headline = draw ? 'Stalemate' : 'Victory';
+  if (online() && !draw) headline = winner === mySeat() ? 'Victory' : 'Defeat';
+  const sub = draw
+    ? (reason === 'double KO' ? 'Both Servants fall. Both Masters survive to fight again.' : `The battle reaches turn ${T.maxTurns} without a victor.`)
+    : `${online() ? (winner === mySeat() ? 'You' : 'Your opponent') : `Master ${winner + 1}`} and ${esc(s.name)} claim the Grail. (${m.turn - 1} turns)`;
+
+  let actions;
+  if (online()) {
+    const votes = ui.net.snap.rematch;
+    const mine = votes[mySeat()], theirs = votes[1 - mySeat()];
+    const voteText = v => v === 'same' ? 'wants a rematch' : v === 'change' ? 'wants new servants' : '';
+    actions = `
+      <div class="title-actions">
+        <button class="btn gold big ${mine === 'same' ? 'voted' : ''}" id="rematch">Rematch</button>
+        <button class="btn ghost big ${mine === 'change' ? 'voted' : ''}" id="newpick">New Servants</button>
+        <button class="btn ghost big" id="leave">Leave Room</button>
+      </div>
+      <p class="muted">${mine ? `You ${voteText(mine)}. ` : ''}${theirs ? `Your opponent ${voteText(theirs)}.` : (mine ? 'Waiting for your opponent…' : '')}</p>`;
+  } else {
+    actions = `
       <div class="title-actions">
         <button class="btn gold big" id="rematch">Rematch</button>
         <button class="btn ghost big" id="newpick">New Servants</button>
         <button class="btn ghost big" id="title">Title</button>
-      </div>
+      </div>`;
+  }
+
+  app.innerHTML = `
+    <div class="end-screen ${draw ? 'draw' : ''}">
+      ${draw ? `<div class="end-pair">${art(m.servants[0], 'end-art')}${art(m.servants[1], 'end-art')}</div>` : art(s, `end-art ${headline === 'Defeat' ? 'loser' : 'winner'}`)}
+      <h1>${headline}</h1>
+      <p class="tag">${sub}</p>
+      ${actions}
     </div>`;
-  app.querySelector('#rematch').onclick = startMatch;
-  app.querySelector('#newpick').onclick = () => { ui.picks = [null, null]; ui.selecting = 0; ui.focus = ROSTER[0].id; show('select'); };
-  app.querySelector('#title').onclick = () => show('title');
+
+  if (online()) {
+    app.querySelector('#rematch').onclick = () => emit('match:rematch', { choice: 'same' });
+    app.querySelector('#newpick').onclick = () => emit('match:rematch', { choice: 'change' });
+    app.querySelector('#leave').onclick = leaveRoom;
+  } else {
+    app.querySelector('#rematch').onclick = startLocalMatch;
+    app.querySelector('#newpick').onclick = () => { ui.picks = [null, null]; ui.selecting = 0; ui.focus = ROSTER[0].id; show('select'); };
+    app.querySelector('#title').onclick = () => show('title');
+  }
 }
 
 // ---------- keyboard shortcuts (battle) ----------
 
 document.addEventListener('keydown', e => {
   if (ui.screen !== 'battle' || !overlay.hidden || ui.active < 0) return;
+  if (e.target.tagName === 'INPUT') return;
   const s = ui.match.servants[ui.active];
   const legal = getLegalActions(ui.match, ui.active);
   const k = e.key.toLowerCase();
@@ -490,4 +732,12 @@ document.addEventListener('keydown', e => {
   } else if (k === 'enter' && ui.draft.main) lockIn();
 });
 
-render();
+// ---------- boot ----------
+
+if (loadSession() || new URLSearchParams(location.search).get('room')) {
+  ui.mode = 'online';
+  connect();
+  show('lobby'); // replaced by the room snapshot if the session rejoins
+} else {
+  render();
+}

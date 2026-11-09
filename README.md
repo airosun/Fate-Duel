@@ -11,7 +11,8 @@ npm run sim -- 1000   # balance simulator
 ```
 
 ## Layout
-- `server.js` - Express + Socket.IO server (serves `public/` and the shared engine)
+- `server.js` - Express + Socket.IO server (serves `public/`, the shared engine, and online rooms)
+- `src/server/rooms.js` - online room manager: codes, seats, hidden picks/actions, rematch, reconnect
 - `public/` - browser client (local hotseat duel: `js/app.js`, theme: `css/style.css`)
 - `public/art/` - servant art drop-in folder (see its README for file names)
 - `src/engine/constants.js` - every tuning number (card mults, NP gain, AP, seals, stat conversion)
@@ -33,3 +34,9 @@ const { state: next, log } = resolveTurn(state, [
 State is plain JSON (safe to send over Socket.IO). `resolveTurn` never mutates its input.
 
 Tuning experiments without editing files: `BASE_HP=1100 STAT_EXP=0.3 npm run sim -- 500`
+
+## Online play
+Online Duel → Create Room gives a 4-letter code and an invite link (`/?room=CODE`).
+The server owns each match: it validates every action and only reveals picks and
+locked-in actions once both players have chosen. Refreshing the page rejoins your seat.
+Rooms live in server memory, so a redeploy or a sleeping free-tier instance clears them.

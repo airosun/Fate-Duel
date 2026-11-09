@@ -295,3 +295,33 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
   .skills { grid-template-columns: 1fr; }
   .reveal-card { width: 120px; }
 }
+
+/* ---------- online ---------- */
+.lobby { gap: 1rem; }
+.small-title { font-size: clamp(2rem, 6vw, 3.2rem) !important; margin-bottom: 1rem; }
+.lobby-cards { display: grid; grid-template-columns: repeat(2, minmax(240px, 320px)); gap: 1.2rem; }
+.lobby-card { background: var(--panel); border: 1px solid var(--gold-dim); border-radius: var(--radius); padding: 1.4rem; display: flex; flex-direction: column; align-items: center; gap: .6rem; }
+.lobby-card h3 { color: var(--gold2); }
+.join-row { display: flex; gap: .5rem; }
+.join-row input {
+  width: 8.5rem; text-align: center; font-family: var(--title); font-size: 1.5rem; letter-spacing: .3em; font-weight: 900;
+  background: rgba(0,0,0,.35); color: var(--gold2); border: 1px solid var(--gold-dim); border-radius: 6px; padding: .45rem;
+}
+.join-row input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 12px rgba(216,178,90,.35); }
+.lobby-error { min-height: 1.2rem; }
+.room-code { font-family: var(--title); font-weight: 900; font-size: clamp(3.5rem, 12vw, 6rem); letter-spacing: .25em; color: var(--gold2); text-shadow: 0 0 30px rgba(216,178,90,.5); padding-left: .25em; }
+.spinner { width: 34px; height: 34px; margin: 1rem auto; border-radius: 50%; border: 3px solid rgba(216,178,90,.2); border-top-color: var(--gold); animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.opp-status { justify-self: end; font-size: .8rem; color: var(--muted); border: 1px solid rgba(255,255,255,.15); border-radius: 99px; padding: .25rem .7rem; }
+.opp-status.ready { color: #1c1405; background: var(--gold); border-color: var(--gold); font-weight: 700; }
+.room-tag { display: flex; justify-content: flex-end; align-items: center; gap: .6rem; font-family: var(--title); color: var(--muted); font-size: .85rem; margin-bottom: -.4rem; }
+.locked-line { font-size: 1.05rem; }
+.locked-line b { color: var(--gold2); }
+.btn.voted { box-shadow: 0 0 0 2px #fff, 0 0 18px rgba(243,220,147,.5); }
+.end-art.loser { filter: grayscale(.7) brightness(.8); }
+#net-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 60; text-align: center; padding: .55rem 1rem;
+  background: linear-gradient(90deg, #5a1420, #8c2232, #5a1420); color: #ffe3e7; font-weight: 600; font-size: .9rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,.5);
+}
+@media (max-width: 640px) { .lobby-cards { grid-template-columns: 1fr; } }
