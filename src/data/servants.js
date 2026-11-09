@@ -175,6 +175,35 @@ export const SERVANTS = {
                      postEffects: [{ type: 'atkDown', value: 20, turns: 4, target: 'enemy' }] },
           } },
   },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
+  cu: {
+    id: 'cu', name: 'Cú Chulainn', class: 'Lancer',
+    fgoHp: 9593, fgoAtk: 7239, fgoNpAtk: 1.07, fgoNpDef: 4,
+    hpMult: 0.83, // 17% below FGO-derived HP: Battle Continuation is an extra life
+    favoredCard: 'quick', maxAp: 10,
+    passives: [
+      classPassive('magicResistance', 'C'),
+      classPassive('divinity', 'B'),
+      unique('Battle Continuation', 'Revives once at 1 HP (keeps his AP and NP gauge)',
+        [{ type: 'guts', value: 0, charges: 1 }]),
+    ],
+    skills: [
+      { id: 'ath_ngabla', name: 'Ath nGabla A', cost: 4,
+        desc: 'ATK +20% to +50% for 3 turns (20% + 30% × missing HP when used)',
+        effects: [{ type: 'atkUp', value: 20, scaleMissingHp: 30, turns: 3 }] },
+      { id: 'protection_from_arrows', name: 'Protection from Arrows B', cost: 4,
+        desc: 'Evade and 10% damage cut for 2 turns',
+        effects: [{ type: 'evade', turns: 2 }, { type: 'damageCut', value: 10, turns: 2 }] },
+      { id: 'disengage', name: 'Disengage C', cost: 4,
+        desc: 'Cleanse own debuffs and heal 15% HP',
+        effects: [{ type: 'cleanse' }, { type: 'heal', value: 15 }] },
+    ],
+    np: { name: 'Gáe Bolg', card: 'quick', mult: 3.4,
+          desc: 'Sure Hit for 2 turns, heavy Quick damage, then the enemy takes 20% more damage for 2 turns',
+          preEffects: [{ type: 'sureHit', turns: 3 }],
+          postEffects: [{ type: 'defDown', value: 20, turns: 3, target: 'enemy' }] },
+  },
 };
 
 export const ROSTER = Object.values(SERVANTS);

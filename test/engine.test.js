@@ -367,3 +367,27 @@ test('EMIYA: Circuit Connect needs a mode, switches UBW, and boosts the next lan
   s = resolveTurn(s, [np(), atk('arts')]).state;
   assert.equal(s.players[1].buffs.find(b => b.type === 'atkDown').value, 20);
 });
+
+test('Cu: Ath nGabla scales with missing HP; Battle Continuation revives at 1 HP keeping AP/NP', () => {
+  let s = createMatch(SERVANTS.cu, dummy('B'));
+  s.players[0].hp = Math.round(s.players[0].maxHp / 2);
+  s = resolveTurn(s, [skill('ath_ngabla'), skill('charge')]).state;
+  assert.equal(s.players[0].buffs.find(b => b.source === 'ath_ngabla').value, 35); // 20 + 30 × 0.5
+  let t = createMatch(dummy('A', { atk: 5000 }), SERVANTS.cu);
+  t.players[1].np = 60; t.players[1].ap = 7;
+  t = resolveTurn(t, [atk('arts'), atk('buster')]).state;  // Arts beats Buster: the big hit lands
+  assert.equal(t.players[1].hp, 1);
+  assert.equal(t.players[1].ap, 7 + 2);         // kept (plus this turn's attack AP)
+  assert.ok(t.players[1].np >= 60);
+});
+
+test('Cu: Gae Bolg grants Sure Hit for the next 2 turns and lowers enemy DEF', () => {
+  const ev = { skills: [{ id: 'ev', name: 'Ev', cost: 3, effects: [{ type: 'evade', turns: 3 }] }] };
+  let s = createMatch(SERVANTS.cu, dummy('B', ev));
+  s.players[0].np = 100;
+  s = resolveTurn(s, [np(), skill('ev')]).state;
+  assert.ok(s.players[1].buffs.some(b => b.type === 'defDown'));
+  const hp = s.players[1].hp;
+  s = resolveTurn(s, [atk('buster'), atk('quick')]).state;  // buster through evade
+  assert.ok(s.players[1].hp < hp);
+});

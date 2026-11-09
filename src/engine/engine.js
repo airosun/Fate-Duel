@@ -153,7 +153,9 @@ function applyEffect(target, e, source, user) {
       // turns: null = permanent (passives); undefined = use the default for this effect
       let turns = e.turns === undefined ? (T.defaultTurns[e.type] ?? null) : e.turns;
       if (e.type === 'invincible') turns = 1;
-      const value = Math.round((e.value ?? 0) * (DEBUFFS.includes(e.type) ? resistScale(target, e, user) : 1) * 10) / 10;
+      // scaleMissingHp: bonus that grows with the target's missing HP at the moment it's applied
+      const base = (e.value ?? 0) + (e.scaleMissingHp ? e.scaleMissingHp * (1 - target.hp / target.maxHp) : 0);
+      const value = Math.round(base * (DEBUFFS.includes(e.type) ? resistScale(target, e, user) : 1) * 10) / 10;
       target.buffs.push({
         type: e.type,
         value,
