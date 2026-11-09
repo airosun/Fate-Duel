@@ -124,7 +124,7 @@ function renderTitle() {
   app.innerHTML = `
     <div class="title-screen">
       <div class="title-emblem"></div>
-      <h1>FATE <span>DUEL</span></h1>
+      <h1>FATE<span class="slash">/</span><span>DUEL</span></h1>
       <p class="tag">Servant versus Servant · Master versus Master</p>
       <div class="title-actions">
         <button class="btn gold big" id="online">Online Duel</button>
