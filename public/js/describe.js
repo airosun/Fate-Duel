@@ -42,7 +42,7 @@ export function describeEffect(e) {
     case 'buffFailChance': return `Enemy self-buffs ${v}% likely to fail`;
     case 'copyEnemyUnique': return `Copies the enemy's unique passive`;
     case 'neutralizeEnemyUnique': return `Neutralizes the enemy's unique passives`;
-    case 'ignoreDamageCut': return `Attacks ignore damage cut${turnsText(e)}`;
+    case 'ignoreDamageCut': return `Attacks and NP ignore damage cut${turnsText(e)}`;
     case 'instantKillChance': return `NP ${v}% chance to kill outright`;
     case 'affinityAll': return `Every favored-card bonus`;
     case 'setNpMode': return `Change NP mode`;
@@ -121,7 +121,7 @@ export function explainBuff(b) {
     case 'copyEnemyUnique': return "Copies the opponent's unique passive for the match. Revives can't be copied.";
     case 'apRecoveryDown': return `${b.status === 'petrified' ? 'Petrified: g' : 'G'}ains ${Math.round(b.value)} less AP from each attack.`;
     case 'bonusVsStatus': return `The next attack against a ${b.status} enemy deals ${v}% more damage.`;
-    case 'ignoreDamageCut': return "Regular attacks go straight through the enemy's damage cut. Evade still works.";
+    case 'ignoreDamageCut': return "Attacks and Noble Phantasms go straight through the enemy's damage cut. Evade still dodges regular attacks.";
     case 'neutralizeEnemyUnique': return "Switches off all of the opponent's unique passives for the whole match.";
     case 'instantKillChance': return b.npName
       ? `${b.npName} has a ${v}% chance to kill outright when it connects. Revives don't trigger.${b.copiedFrom ? ` Only works with ${b.npName}, so it has no effect here.` : ''}`

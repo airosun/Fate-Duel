@@ -523,3 +523,15 @@ test('Iskandar: Towards the Beyond makes attacks ignore damage cut (not evade)',
   s = resolveTurn(s, [atk('arts'), atk('buster')]).state;
   assert.equal(hp - s.players[1].hp, Math.round(k.atk * 1.0 * 1.25 * 1.25 + 6));   // no 50% cut; Divinity C +6
 });
+
+test('Iskandar: Ionioi Hetairoi also ignores damage cut while Towards the Beyond is active', () => {
+  const guard = { skills: [{ id: 'cut', name: 'Cut', cost: 3, effects: [{ type: 'damageCut', value: 50, turns: 3 }] }] };
+  let s = createMatch(SERVANTS.iskandar, dummy('B', guard), { seed: 1 });
+  const k = s.players[0];
+  s.players[0].ap = 10;
+  s = resolveTurn(s, [skill('towards_beyond'), skill('cut')]).state;
+  s.players[0].np = 100;
+  const hp = s.players[1].hp;
+  s = resolveTurn(s, [np(), atk('arts')]).state;
+  assert.equal(hp - s.players[1].hp, Math.round(k.atk * 3.5 * (1 + 0.25 + 0.10) + 6));   // ATK +25%, Bucephalus Buster +10%
+});

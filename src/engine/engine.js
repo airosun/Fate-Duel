@@ -301,7 +301,7 @@ function attackPacket(att, def, card, { counter, empowered, nextHit = 0, vsBonus
   if (empowered) raw *= 1 + T.seals.empowerBonus;
   raw += sumBuff(att, 'flatDamage');
   const sureHit = att.buffs.some(b => b.type === 'sureHit' && (!b.card || b.card === card));
-  // ignoreDamageCut (Iskandar): regular attacks go straight through damage cut; Evade still works
+  // ignoreDamageCut (Iskandar): attacks and NPs go straight through damage cut; Evade still works
   return defend(def, raw, { isNp: false, ignoreDefense: false, sureHit, ignoreCut: hasBuff(att, 'ignoreDamageCut') });
 }
 
@@ -310,7 +310,7 @@ function npPacket(att, def, np, { empowered = false } = {}) {
   if (np.missingHpBonus) mult *= 1 + np.missingHpBonus * (1 - def.hp / def.maxHp);
   const raw = att.atk * mult * atkMultiplier(att, np.card) * (1 + sumBuff(att, 'npUp') / 100)
     + sumBuff(att, 'flatDamage');
-  return defend(def, raw, { isNp: true, ignoreDefense: !!np.ignoreDefense });
+  return defend(def, raw, { isNp: true, ignoreDefense: !!np.ignoreDefense, ignoreCut: hasBuff(att, 'ignoreDamageCut') });
 }
 
 function gainNp(p, base, { defending = false, card, artsEffect = 0 } = {}) {

@@ -307,7 +307,7 @@ export const SERVANTS = {
     ],
     skills: [
       { id: 'towards_beyond', name: 'Those Who Go Towards the Beyond A', cost: 6,
-        desc: 'NP +30% now; ATK +25% and attacks ignore damage cut for 3 turns',
+        desc: 'NP +30% now; ATK +25% and attacks and NP ignore damage cut for 3 turns',
         effects: [{ type: 'npCharge', value: 30 }, { type: 'atkUp', value: 25, turns: 3 },
                   { type: 'ignoreDamageCut', turns: 3 }] },
       { id: 'conquest_tactics', name: 'Conquest Tactics A', cost: 4,
