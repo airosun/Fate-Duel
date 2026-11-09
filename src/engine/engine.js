@@ -14,6 +14,8 @@
 
 import { TUNING as T, CARDS, SEALS } from './constants.js';
 
+const CARD_NAME = { quick: 'Quick', arts: 'Arts', buster: 'Buster' };
+
 // ---------- setup ----------
 
 export function deriveStats(servant) {
@@ -203,7 +205,7 @@ export function resolveTurn(prev, actions) {
     if (seal === 'heal') applyEffect(p, { type: 'heal', value: T.seals.healPct });
     if (seal === 'recharge') applyEffect(p, { type: 'apGain', value: T.seals.rechargeAp });
     if (seal === 'empower') p.empower = true;
-    say(`${p.name}'s master uses a Command Seal (${seal}).`, { type: 'seal', player: i, seal });
+    say(`${p.name}'s master uses a Command Seal: ${{ heal: 'Heal', recharge: 'Recharge', empower: 'Empower' }[seal]}.`, { type: 'seal', player: i, seal });
   }
 
   // 2. Skills — self effects for both first, then enemy-targeted effects
@@ -261,7 +263,7 @@ export function resolveTurn(prev, actions) {
       } else if (T.beats[card] === other) { counter = true; reason = 'counter'; }
       else { lands = false; reason = 'countered'; }
     }
-    if (!lands) { say(`${P[i].name}'s ${card} attack fails (${reason}).`, { type: 'whiff', player: i, card, reason }); continue; }
+    if (!lands) { say(`${P[i].name}'s ${CARD_NAME[card]} attack fails (${reason}).`, { type: 'whiff', player: i, card, reason }); continue; }
     packets.push({ from: i, to: j, kind: 'attack', card, hitAs, reason, ...attackPacket(P[i], P[j], hitAs, { counter, empowered }) });
   }
 
@@ -269,7 +271,7 @@ export function resolveTurn(prev, actions) {
   for (const pk of packets) {
     const att = P[pk.from], def = P[pk.to];
     if (pk.blocked) {
-      say(`${def.name} negates ${att.name}'s ${pk.kind === 'np' ? 'NP' : pk.card} (${pk.blocked}).`, { type: 'blocked', ...pk });
+      say(`${def.name} negates ${att.name}'s ${pk.kind === 'np' ? 'Noble Phantasm' : CARD_NAME[pk.card] + ' attack'} (${pk.blocked}).`, { type: 'blocked', ...pk });
       continue;
     }
     def.hp -= pk.amount;
@@ -278,7 +280,7 @@ export function resolveTurn(prev, actions) {
       gainNp(att, T.cards[pk.hitAs].npGain, { card: pk.hitAs });
       att.ap = Math.min(att.maxAp, att.ap + T.apOnLand);
     }
-    say(`${att.name} hits ${def.name} for ${pk.amount}${pk.hitAs && pk.hitAs !== pk.card ? ` (${pk.card} → Buster)` : ''}${pk.reason === 'counter' ? ' (counter!)' : ''}.`, { type: 'hit', ...pk });
+    say(`${att.name} hits ${def.name} for ${pk.amount}${pk.hitAs && pk.hitAs !== pk.card ? ` (${CARD_NAME[pk.card]} → Buster)` : ''}${pk.reason === 'counter' ? ' (counter!)' : ''}.`, { type: 'hit', ...pk });
   }
   for (const i of npUsers) applyEffects(P[i], P[1 - i], S[i].np.postEffects, 'np');
 

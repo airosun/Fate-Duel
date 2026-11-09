@@ -43,8 +43,8 @@ export const TUNING = {
 
   // Stat conversion: GameStat = Base * (FGO / Reference) ^ statExponent
   // 0.5 = square root; lower = flatter (rarity matters less).
-  statExponent: Number(process.env.STAT_EXP ?? 0.25),
-  baseHp: Number(process.env.BASE_HP ?? 1150),
+  statExponent: Number(globalThis.process?.env?.STAT_EXP ?? 0.25),
+  baseHp: Number(globalThis.process?.env?.BASE_HP ?? 1150),
   baseAtk: 120,
   refFgoHp: 11500,
   refFgoAtk: 9000,

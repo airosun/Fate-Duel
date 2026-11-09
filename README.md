@@ -12,7 +12,8 @@ npm run sim -- 1000   # balance simulator
 
 ## Layout
 - `server.js` - Express + Socket.IO server (serves `public/` and the shared engine)
-- `public/` - browser client
+- `public/` - browser client (local hotseat duel: `js/app.js`, theme: `css/style.css`)
+- `public/art/` - servant art drop-in folder (see its README for file names)
 - `src/engine/constants.js` - every tuning number (card mults, NP gain, AP, seals, stat conversion)
 - `src/engine/engine.js` - pure rules engine: `createMatch`, `getLegalActions`, `validateAction`, `resolveTurn`
 - `src/data/servants.js` - servant definitions (prototype 4, **placeholder kits**; replace with your designs)

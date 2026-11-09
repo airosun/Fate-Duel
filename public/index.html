@@ -4,29 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fate Duel</title>
-  <style>
-    body { font-family: system-ui, sans-serif; background: #0f1220; color: #e8e6f0; display: grid; place-items: center; min-height: 100vh; margin: 0; }
-    main { text-align: center; max-width: 32rem; padding: 2rem; }
-    h1 { letter-spacing: .08em; margin-bottom: .25rem; }
-    .status { color: #9aa0c0; }
-    ul { list-style: none; padding: 0; }
-    li { padding: .25rem 0; }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Noto+Sans:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <main>
-    <h1>FATE DUEL</h1>
-    <p class="status" id="status">Connecting…</p>
-    <ul id="roster"></ul>
-  </main>
-  <script src="/socket.io/socket.io.js"></script>
-  <script>
-    const socket = io();
-    socket.on('hello', ({ message, servants }) => {
-      document.getElementById('status').textContent = message + ' — duel UI coming soon.';
-      document.getElementById('roster').innerHTML = servants.map(n => `<li>${n}</li>`).join('');
-    });
-    socket.on('disconnect', () => document.getElementById('status').textContent = 'Disconnected');
-  </script>
+  <div id="app"></div>
+  <div id="overlay" hidden></div>
+  <script type="module" src="/js/app.js"></script>
 </body>
 </html>
