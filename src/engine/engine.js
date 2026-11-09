@@ -21,7 +21,9 @@ const CARD_NAME = { quick: 'Quick', arts: 'Arts', buster: 'Buster' };
 // hpMult pays for a revive passive (Heracles, Cú). When Ea neutralizes the
 // revive, the servant gets full HP back: { uniquesOff: true }.
 export function deriveStats(servant, { uniquesOff = false } = {}) {
-  const hp = servant.hp ?? Math.round(T.baseHp * (servant.fgoHp / T.refFgoHp) ** T.statExponent * (uniquesOff ? 1 : servant.hpMult ?? 1));
+  const mult = servant.hpMult ?? 1;
+  const hpMult = uniquesOff ? mult + (1 - mult) * T.neutralizedHpRestore : mult;
+  const hp = servant.hp ?? Math.round(T.baseHp * (servant.fgoHp / T.refFgoHp) ** T.statExponent * hpMult);
   const atk = servant.atk ?? Math.round(T.baseAtk * (servant.fgoAtk / T.refFgoAtk) ** T.statExponent);
   return { hp, atk };
 }

@@ -267,6 +267,7 @@ export const SERVANTS = {
   gilgamesh: {
     id: 'gilgamesh', name: 'Gilgamesh', class: 'Archer',
     fgoHp: 13097, fgoAtk: 12280, fgoNpAtk: 0.34, fgoNpDef: 3,
+    hpMult: 1.06, // lore: the King of Heroes should edge out every matchup (Artoria closest)
     favoredCard: 'buster', maxAp: 10,
     passives: [
       classPassive('independentAction', 'A+'),

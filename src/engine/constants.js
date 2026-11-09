@@ -35,6 +35,10 @@ export const TUNING = {
     empowerBonus: 0.5,
   },
 
+  // When Ea neutralizes a revive, the servant gets back this share of the HP
+  // they gave up for it (hpMult): 0 = none, 1 = all.
+  neutralizedHpRestore: Number(globalThis.process?.env?.NEUT_HP ?? 0.75),
+
   maxDamageCut: 90,     // % cap on stacked damage cut
   maxTurns: 50,         // reaching the limit = draw (stalemate)
 
