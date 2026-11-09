@@ -1,7 +1,5 @@
 // Servant definitions. Pure data — the engine reads these, never modifies them.
 //
-// ⚠ PLACEHOLDER KITS: the skills/NPs below are stand-ins so the engine and
-// simulator have something to run. Replace them with your own designs.
 // ⚠ fgoHp / fgoAtk are approximate max (non-grailed) values from memory —
 // verify against the FGO wiki before finalizing. Game HP/ATK are derived
 // from them (see deriveStats); set `hp` / `atk` directly to override.
@@ -58,7 +56,7 @@ export const SERVANTS = {
   heracles: {
     id: 'heracles', name: 'Heracles', class: 'Berserker',
     fgoHp: 10327, fgoAtk: 10655, fgoNpAtk: 1.07, fgoNpDef: 5,
-    hp: 900, // override (FGO-derived would be 1119): his HP is split across two lives
+    hpMult: 0.73, // 27% below FGO-derived HP: his HP is split across two lives
     favoredCard: 'buster', maxAp: 8,
     passives: [
       classPassive('madness', 'B'),
@@ -84,37 +82,59 @@ export const SERVANTS = {
           postEffects: [{ type: 'defDown', value: 20, turns: 3, target: 'enemy' }] },
   },
 
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   medea: {
     id: 'medea', name: 'Medea', class: 'Caster',
-    fgoHp: 9000, fgoAtk: 6400,
-    favoredCard: 'arts', npGain: 1.2, maxAp: 12,
-    passives: [classPassive('territoryCreation', 'A')],
+    fgoHp: 8643, fgoAtk: 7418, fgoNpAtk: 1.64, fgoNpDef: 3,
+    favoredCard: 'arts', maxAp: 12,
+    passives: [
+      classPassive('territoryCreation', 'A'),
+      unique("Hecate's Staff", 'Her debuffs ignore up to 25% of enemy debuff resistance',
+        [{ type: 'debuffPotency', value: 25 }]),
+    ],
     skills: [
-      { id: 'argon_coin', name: 'Argon Coin', cost: 3,
-        effects: [{ type: 'heal', value: 15 }] },
-      { id: 'magic_shield', name: 'Bounded Field', cost: 4,
-        effects: [{ type: 'damageCut', value: 40, turns: 2 }] },
-      { id: 'high_speed', name: 'High-Speed Divine Words', cost: 6,
-        effects: [{ type: 'npCharge', value: 50 }] },
+      { id: 'high_speed', name: 'High-Speed Divine Words A', cost: 5,
+        desc: 'NP gauge +40%',
+        effects: [{ type: 'npCharge', value: 40 }] },
+      { id: 'argon_coin', name: 'Argon Coin: The Golden Fleece', cost: 3,
+        desc: 'Heal 20% HP and gain 2 AP',
+        effects: [{ type: 'heal', value: 20 }, { type: 'apGain', value: 2 }] },
+      { id: 'witch_of_colchis', name: 'Witch of Colchis A', cost: 6,
+        desc: 'Cleanse own debuffs; Arts +25%, NP damage +20% and NP gain +30% for 3 turns',
+        effects: [{ type: 'cleanse' },
+                  { type: 'cardUp', card: 'arts', value: 25, turns: 3 },
+                  { type: 'npUp', value: 20, turns: 3 },
+                  { type: 'npGainUp', value: 30, turns: 3 }] },
     ],
     np: { name: 'Rule Breaker', card: 'arts', mult: 3.0,
+          desc: 'Removes all enemy buffs (passives stay), then moderate Arts damage',
           preEffects: [{ type: 'removeBuffs', target: 'enemy' }] },
   },
 
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   kojirou: {
     id: 'kojirou', name: 'Sasaki Kojirou', class: 'Assassin',
-    fgoHp: 7000, fgoAtk: 5700,
-    favoredCard: 'quick', npGain: 1.0, maxAp: 10,
-    passives: [classPassive('presenceConcealment', 'D')],
-    skills: [
-      { id: 'minds_eye', name: "Mind's Eye (Fake)", cost: 4,
-        effects: [{ type: 'evade', turns: 2 }] },
-      { id: 'swallow_stance', name: 'Swallow Stance', cost: 3,
-        effects: [{ type: 'cardUp', card: 'quick', value: 50, turns: 3 }] },
-      { id: 'vitrification', name: 'Vitrification', cost: 5,
-        effects: [{ type: 'npCharge', value: 30 }, { type: 'heal', value: 10 }] },
+    fgoHp: 6220, fgoAtk: 5735, fgoNpAtk: 1.05, fgoNpDef: 4,
+    favoredCard: 'quick', maxAp: 10,
+    passives: [
+      classPassive('presenceConcealment', 'D'),
+      unique('Heaven Among the Mountains', 'Quick attacks always hit through Evade',
+        [{ type: 'sureHit', card: 'quick' }]),
     ],
-    np: { name: 'Tsubame Gaeshi', card: 'quick', mult: 3.6, ignoreDefense: true },
+    skills: [
+      { id: 'minds_eye', name: 'Eye of the Mind (False) A', cost: 4,
+        desc: 'Evade regular attacks and 10% damage cut for 2 turns',
+        effects: [{ type: 'evade', turns: 2 }, { type: 'damageCut', value: 10, turns: 2 }] },
+      { id: 'fade_out', name: 'Fade Out A+', cost: 4,
+        desc: 'Cleanse own debuffs; Quick +30% for 3 turns',
+        effects: [{ type: 'cleanse' }, { type: 'cardUp', card: 'quick', value: 30, turns: 3 }] },
+      { id: 'souwa', name: 'Knowledge of the Souwa B++', cost: 5,
+        desc: 'All attacks hit through Evade for 3 turns',
+        effects: [{ type: 'sureHit', turns: 3 }] },
+    ],
+    np: { name: 'Tsubame Gaeshi', card: 'quick', mult: 3.6,
+          desc: 'Quick +20% for 3 turns (boosts this NP too), then heavy Quick damage',
+          preEffects: [{ type: 'cardUp', card: 'quick', value: 20, turns: 3 }] },
   },
 };
 

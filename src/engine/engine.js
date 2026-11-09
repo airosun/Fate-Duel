@@ -19,7 +19,7 @@ const CARD_NAME = { quick: 'Quick', arts: 'Arts', buster: 'Buster' };
 // ---------- setup ----------
 
 export function deriveStats(servant) {
-  const hp = servant.hp ?? Math.round(T.baseHp * (servant.fgoHp / T.refFgoHp) ** T.statExponent);
+  const hp = servant.hp ?? Math.round(T.baseHp * (servant.fgoHp / T.refFgoHp) ** T.statExponent * (servant.hpMult ?? 1));
   const atk = servant.atk ?? Math.round(T.baseAtk * (servant.fgoAtk / T.refFgoAtk) ** T.statExponent);
   return { hp, atk };
 }
@@ -101,14 +101,16 @@ export function validateAction(state, idx, action) {
 
 const DEBUFFS = ['atkDown', 'defDown'];
 
-function resistScale(target, e) {
+function resistScale(target, e, user) {
   // Debuff resistance is deterministic: it weakens debuffs by X% instead of
-  // rolling a chance (the engine has no RNG).
+  // rolling a chance (the engine has no RNG). The caster's debuffPotency
+  // cancels resistance point-for-point (it can't push debuffs above 100%).
   if (e.target !== 'enemy') return 1;
-  return Math.max(0, 1 - sumBuff(target, 'debuffResist') / 100);
+  const resist = sumBuff(target, 'debuffResist') - (user ? sumBuff(user, 'debuffPotency') : 0);
+  return Math.min(1, Math.max(0, 1 - resist / 100));
 }
 
-function applyEffect(target, e, source) {
+function applyEffect(target, e, source, user) {
   switch (e.type) {
     case 'heal':
       target.hp = Math.min(target.maxHp, target.hp + Math.round(target.maxHp * e.value / 100));
@@ -117,20 +119,23 @@ function applyEffect(target, e, source) {
       target.np = Math.min(T.npMax, target.np + e.value);
       return;
     case 'npDrain':
-      target.np = Math.max(0, target.np - Math.round(e.value * resistScale(target, e)));
+      target.np = Math.max(0, target.np - Math.round(e.value * resistScale(target, e, user)));
       return;
     case 'apGain':
       target.ap = Math.min(target.maxAp, target.ap + e.value);
+      return;
+    case 'cleanse': // removes all debuffs from the target
+      target.buffs = target.buffs.filter(b => !b.debuff);
       return;
     case 'removeBuffs': // strips temporary, non-debuff buffs (passives stay)
       target.buffs = target.buffs.filter(b => b.turns === null || b.debuff);
       return;
     default: { // duration buff/debuff: atkUp, cardUp, npUp, damageCut, evade, invincible,
                // npGainUp, cardNpGainUp, debuffResist, guts, atkDown, defDown, apRegen,
-               // busterConvert, flatDamage
+               // busterConvert, flatDamage, sureHit{card?}, debuffPotency
       let turns = e.turns ?? T.defaultTurns[e.type] ?? null;
       if (e.type === 'invincible') turns = 1;
-      const value = Math.round((e.value ?? 0) * (DEBUFFS.includes(e.type) ? resistScale(target, e) : 1) * 10) / 10;
+      const value = Math.round((e.value ?? 0) * (DEBUFFS.includes(e.type) ? resistScale(target, e, user) : 1) * 10) / 10;
       target.buffs.push({
         type: e.type,
         value,
@@ -154,7 +159,7 @@ function conditionMet(user, e) {
 
 function applyEffects(user, enemy, effects, source) {
   for (const e of effects ?? []) {
-    if (conditionMet(user, e)) applyEffect(e.target === 'enemy' ? enemy : user, e, source);
+    if (conditionMet(user, e)) applyEffect(e.target === 'enemy' ? enemy : user, e, source, user);
   }
 }
 
@@ -165,9 +170,9 @@ function atkMultiplier(p, card) {
   return Math.max(0.1, 1 + pct / 100);
 }
 
-function defend(defender, raw, { isNp, ignoreDefense }) {
+function defend(defender, raw, { isNp, ignoreDefense, sureHit }) {
   if (hasBuff(defender, 'invincible')) return { amount: 0, blocked: 'invincible' };
-  if (!isNp && !ignoreDefense && hasBuff(defender, 'evade')) return { amount: 0, blocked: 'evade' };
+  if (!isNp && !ignoreDefense && !sureHit && hasBuff(defender, 'evade')) return { amount: 0, blocked: 'evade' };
   const cut = ignoreDefense ? 0 : Math.min(T.maxDamageCut, sumBuff(defender, 'damageCut'));
   const vuln = 1 + sumBuff(defender, 'defDown') / 100;
   return { amount: Math.round(raw * vuln * (1 - cut / 100)), blocked: null };
@@ -179,7 +184,8 @@ function attackPacket(att, def, card, { counter, empowered }) {
   if (counter) raw *= 1 + T.counterBonus;
   if (empowered) raw *= 1 + T.seals.empowerBonus;
   raw += sumBuff(att, 'flatDamage');
-  return defend(def, raw, { isNp: false, ignoreDefense: false });
+  const sureHit = att.buffs.some(b => b.type === 'sureHit' && (!b.card || b.card === card));
+  return defend(def, raw, { isNp: false, ignoreDefense: false, sureHit });
 }
 
 function npPacket(att, def, np) {

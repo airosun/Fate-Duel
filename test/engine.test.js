@@ -176,7 +176,7 @@ test('Artoria: Knight of Utopia doubles Buster NP gain; Excalibur refunds 15%', 
   s = resolveTurn(s, [skill('knight_of_utopia'), atk('arts')]).state;
   const np0 = s.players[0].np;
   s = resolveTurn(s, [atk('buster'), atk('quick')]).state;
-  assert.equal(s.players[0].np - np0, Math.round(10 * s.players[0].npGainAtk * 2));
+  assert.equal(s.players[0].np - np0, Math.round(T.cards.buster.npGain * s.players[0].npGainAtk * 2));
   s.players[0].np = 100;
   s = resolveTurn(s, [np(), atk('arts')]).state;
   assert.equal(s.players[0].np, 15);
@@ -225,4 +225,40 @@ test('Independent Action raises max and starting AP', async () => {
   const s = createMatch(dummy('A', { passives: [classPassive('independentAction', 'A')] }), dummy('B'));
   assert.equal(s.players[0].maxAp, 12);
   assert.equal(s.players[0].ap, T.startAp + 2);
+});
+
+test('Medea: Witch of Colchis cleanses debuffs; Hecate\'s Staff cancels debuff resistance', () => {
+  const hexer = { skills: [{ id: 'hex', name: 'Hex', cost: 3, effects: [{ type: 'atkDown', value: 20, turns: 3, target: 'enemy' }] }] };
+  let s = createMatch(SERVANTS.medea, dummy('B', hexer));
+  s.players[0].ap = 12;
+  s = resolveTurn(s, [atk('arts'), skill('hex')]).state;
+  assert.ok(s.players[0].buffs.some(b => b.type === 'atkDown'));
+  s = resolveTurn(s, [skill('witch_of_colchis'), atk('arts')]).state;
+  assert.equal(s.players[0].buffs.some(b => b.type === 'atkDown'), false);
+  // potency vs resistance: a 30% resist target loses only 5% of Medea-cast debuff value
+  const caster = createMatch(SERVANTS.medea, dummy('B')).players[0];
+  assert.equal(caster.buffs.find(b => b.type === 'debuffPotency').value, 25);
+});
+
+test('Kojirou: Quick attacks pierce evade; Souwa makes every card pierce', () => {
+  const ev = { skills: [{ id: 'ev', name: 'Ev', cost: 3, effects: [{ type: 'evade', turns: 3 }] }] };
+  let s = resolveTurn(createMatch(SERVANTS.kojirou, dummy('B', ev)), [atk('buster'), skill('ev')]).state;
+  assert.equal(s.players[1].hp, 1000);                       // buster evaded
+  s = resolveTurn(s, [atk('quick'), atk('buster')]).state;    // quick loses clash → whiff anyway
+  s = resolveTurn(createMatch(SERVANTS.kojirou, dummy('B', ev)), [atk('quick'), skill('ev')]).state;
+  assert.ok(s.players[1].hp < 1000);                          // quick pierces
+  let t = createMatch(SERVANTS.kojirou, dummy('B', ev));
+  t.players[0].ap = 10;
+  t = resolveTurn(t, [skill('souwa'), skill('ev')]).state;
+  t = resolveTurn(t, [atk('buster'), atk('quick')]).state;
+  assert.ok(t.players[1].hp < 1000);                          // buster pierces with Souwa
+});
+
+test('Kojirou: Tsubame Gaeshi buffs Quick before dealing damage', () => {
+  let s = createMatch(SERVANTS.kojirou, dummy('B'));
+  const k = s.players[0];
+  s.players[0].np = 100;
+  s = resolveTurn(s, [np(), skill('charge')]).state;
+  assert.equal(1000 - s.players[1].hp, Math.round(k.atk * 3.6 * 1.2));
+  assert.ok(s.players[0].buffs.some(b => b.type === 'cardUp' && b.card === 'quick' && b.turns === 2));
 });

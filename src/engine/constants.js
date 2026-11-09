@@ -3,9 +3,9 @@
 
 export const TUNING = {
   cards: {
-    quick:  { mult: 0.8, npGain: 18, apBonus: 1 },
-    arts:   { mult: 1.0, npGain: 32, apBonus: 0 },
-    buster: { mult: 1.5, npGain: 10, apBonus: 0 },
+    quick:  { mult: 0.8, npGain: Number(globalThis.process?.env?.NPQ ?? 22), apBonus: 1 },
+    arts:   { mult: 1.0, npGain: Number(globalThis.process?.env?.NPA ?? 38), apBonus: 0 },
+    buster: { mult: 1.5, npGain: Number(globalThis.process?.env?.NPB ?? 12), apBonus: 0 },
   },
   // key beats value
   beats: { quick: 'arts', arts: 'buster', buster: 'quick' },
@@ -16,7 +16,7 @@ export const TUNING = {
   affinityBonus: { quick: 0.15, arts: 0.15, buster: 0.08 },
 
   npMax: 100,
-  npGainOnHit: 14,      // defender gains this when hit (attack or NP)
+  npGainOnHit: Number(globalThis.process?.env?.NPH ?? 17),      // defender gains this when hit (attack or NP)
 
   startAp: 4,
   defaultMaxAp: 10,
@@ -43,8 +43,8 @@ export const TUNING = {
 
   // Stat conversion: GameStat = Base * (FGO / Reference) ^ statExponent
   // 0.5 = square root; lower = flatter (rarity matters less).
-  statExponent: Number(globalThis.process?.env?.STAT_EXP ?? 0.25),
-  baseHp: Number(globalThis.process?.env?.BASE_HP ?? 1150),
+  statExponent: Number(globalThis.process?.env?.STAT_EXP ?? 0.1),
+  baseHp: Number(globalThis.process?.env?.BASE_HP ?? 1250),
   baseAtk: 120,
   refFgoHp: 11500,
   refFgoAtk: 9000,

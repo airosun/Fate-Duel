@@ -32,6 +32,9 @@ export function describeEffect(e) {
     case 'defDown': return `${who}takes +${v}% damage${turnsText(e)}`;
     case 'flatDamage': return `+${v} flat damage per hit`;
     case 'maxApUp': return `Max AP +${v}`;
+    case 'cleanse': return `Cleanse own debuffs`;
+    case 'sureHit': return `${c ? c + ' attacks' : 'Attacks'} pierce Evade${turnsText(e)}`;
+    case 'debuffPotency': return `Debuffs ignore ${v}% resistance`;
     case 'heal': return `${who}Heal ${v}% HP`;
     case 'npCharge': return `NP +${v}%`;
     case 'npDrain': return `${who}NP −${v}%`;
@@ -62,14 +65,15 @@ const BUFF_LABEL = {
   atkUp: 'ATK↑', cardUp: '↑', npUp: 'NP Dmg↑', damageCut: 'DEF↑', evade: 'Evade',
   invincible: 'Invincible', npGainUp: 'NP Gain↑', cardNpGainUp: 'NP Gain↑', debuffResist: 'Debuff Res',
   guts: 'Guts', atkDown: 'ATK↓', apRegen: 'AP Regen', busterConvert: 'Buster Strike',
-  defDown: 'DEF↓', flatDamage: 'Flat Dmg',
+  defDown: 'DEF↓', flatDamage: 'Flat Dmg', sureHit: 'Sure Hit', debuffPotency: 'Debuff Potency',
 };
 
 export function buffChip(b) {
   let label = BUFF_LABEL[b.type] ?? b.type;
   if (b.type === 'cardUp') label = `${CARD_LABEL[b.card]}↑`;
   if (b.type === 'cardNpGainUp') label = `${CARD_LABEL[b.card]} NP↑`;
-  const val = b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage'].includes(b.type)
+  if (b.type === 'sureHit' && b.card) label = `${CARD_LABEL[b.card]} Sure Hit`;
+  const val = b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage', 'sureHit'].includes(b.type)
     ? ` ${Math.round(b.value)}%` : (['apRegen', 'flatDamage'].includes(b.type) ? ` +${b.value}` : '');
   const turns = b.turns === null ? '' : `<em>${b.turns}T</em>`;
   return { label: label + val, turns, debuff: !!b.debuff, passive: b.turns === null };
