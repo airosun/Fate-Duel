@@ -1,13 +1,18 @@
 // Balance simulator: plays every matchup N times with a simple heuristic bot
 // and prints match length, NP frequency, draw rate and matchup win rates.
-// Usage: node tools/simulate.js [gamesPerPairing=2000] [seed=1]
+// Usage: node tools/simulate.js [gamesPerPairing=2000] [seed=1] [--out reports/]
+//   --out writes winrates.csv, matchups.csv and run.csv for the win-rate dashboard.
 
 import { createMatch, resolveTurn, getLegalActions } from '../src/engine/engine.js';
 import { ROSTER } from '../src/data/servants.js';
 import { TUNING as T } from '../src/engine/constants.js';
+import { writeFileSync, mkdirSync } from 'node:fs';
 
-const N = Number(process.argv[2] ?? 2000);
-let seed = Number(process.argv[3] ?? 1);
+const args = process.argv.slice(2);
+const outIdx = args.indexOf('--out');
+const OUT = outIdx >= 0 ? args.splice(outIdx, 2)[1] : null;
+const N = Number(args[0] ?? 2000);
+let seed = Number(args[1] ?? 1);
 const rand = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32);
 const pick = arr => arr[Math.floor(rand() * arr.length)];
 const weighted = w => { // {key: weight}
@@ -112,3 +117,20 @@ console.log(`\nMatchup win rate (row servant as player 1 vs column):`);
 console.log('                ' + names.map(n => n.padStart(9)).join(''));
 for (const a of names) console.log(a.padEnd(16) + names.map(b => f(wins[a][b] / N).padStart(9)).join(''));
 console.log('');
+
+if (OUT) {
+  mkdirSync(OUT, { recursive: true });
+  const pct = x => (100 * x).toFixed(1);
+  const rows = ROSTER.map(s => {
+    const p = createMatch(s, s).players[0], ps = perServant[s.id];
+    return [s.name, s.class, pct(ps.fieldScore / ps.fieldGames), pct(ps.wins / ps.games), (ps.nps / ps.games).toFixed(2), p.hp, p.atk];
+  });
+  const csv = (header, data) => [header, ...data].map(r => r.map(v => /[",]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : v).join(',')).join('\n') + '\n';
+  writeFileSync(`${OUT}/winrates.csv`, csv(['servant', 'class', 'score_vs_field_pct', 'overall_win_pct', 'nps_per_match', 'hp', 'atk'], rows));
+  const mrows = [];
+  for (const a of ROSTER) for (const b of ROSTER) mrows.push([a.name, b.name, pct(wins[a.id][b.id] / N)]);
+  writeFileSync(`${OUT}/matchups.csv`, csv(['servant', 'opponent', 'win_pct'], mrows));
+  writeFileSync(`${OUT}/run.csv`, csv(['run_date', 'servants', 'games_per_pairing', 'total_games', 'mean_turns', 'draw_pct'],
+    [[new Date().toISOString().slice(0, 10), ROSTER.length, N, agg.games, mean.toFixed(1), pct(agg.draws / agg.games)]]));
+  console.log(`Wrote ${OUT}/winrates.csv, matchups.csv, run.csv`);
+}

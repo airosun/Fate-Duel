@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fate/Duel Roster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Sans:wght@400;600;700&display=swap">
+<style>
+:root {
+  /* Single-theme: the game's own night-sky navy with gold trim. Layout: filter bar, then a responsive grid of kit cards. */
+  --bg: #090d22; --panel: #121a3d; --panel-2: #19224b; --ink: #ece8f6; --muted: #a2a9cc;
+  --gold: #d8b25a; --gold-2: #f3dc93; --line: rgba(216,178,90,.28);
+  --quick: #2fbf71; --arts: #3d7fe6; --buster: #e2463a;
+  --display: 'Cinzel', 'Times New Roman', serif; --body: 'Noto Sans', system-ui, sans-serif;
+  color-scheme: dark;
+}
+[data-class="Saber"] { --cls: #3a74c9; } [data-class="Archer"] { --cls: #c9453a; } [data-class="Lancer"] { --cls: #2c9c8a; }
+[data-class="Rider"] { --cls: #c98b2c; } [data-class="Caster"] { --cls: #7b4cc9; } [data-class="Assassin"] { --cls: #5d6380; }
+[data-class="Berserker"] { --cls: #9c2c4f; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 28px clamp(16px, 3vw, 32px) 48px; display: flex; flex-direction: column; gap: 20px; }
+h1 { font-family: var(--display); font-weight: 800; color: var(--gold-2); letter-spacing: .06em; margin: 0; font-size: clamp(1.8rem, 4vw, 2.6rem); text-wrap: balance; }
+h1 span { color: var(--gold); font-weight: 600; }
+.intro { color: var(--muted); margin: 4px 0 0; max-width: 70ch; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.filters button { font: 600 .82rem var(--body); color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 99px; padding: 6px 14px; cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--gold); color: #1c1405; border-color: var(--gold); }
+.filters button:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 2px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 18px; align-items: start; }
+.servant { background: var(--panel); border: 1px solid var(--line); border-top: 4px solid var(--cls); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.servant[hidden] { display: none; }
+.servant header { display: flex; align-items: center; gap: 12px; }
+.badge { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; font: 800 1.05rem var(--display); color: #fff; background: radial-gradient(circle at 40% 35%, var(--cls), #0b0f24 90%); border: 1px solid var(--line); flex: none; }
+.cls { font-size: .7rem; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+h3 { font-family: var(--display); font-weight: 800; font-size: 1.3rem; color: var(--gold-2); margin: 0; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 8px; margin: 0; }
+.stats div { background: var(--panel-2); border-radius: 6px; padding: 6px 8px; }
+.stats .wide { grid-column: span 2; }
+dt { font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+dd small { color: var(--muted); font-weight: 400; margin-left: 3px; }
+h5 { font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); margin: 0 0 6px; }
+.rows { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
+.rows li { display: flex; flex-direction: column; gap: 2px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+.rows li:last-child { border-bottom: 0; }
+.rows .name { font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rows li > span:last-child { color: #d3cfe3; font-size: .9rem; }
+.rows em { color: var(--muted); font-style: normal; }
+.tag { font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; background: var(--gold); color: #1c1405; border-radius: 3px; padding: 1px 6px; }
+.ap { font-size: .72rem; font-weight: 700; color: #9ed0ff; border: 1px solid rgba(158,208,255,.4); border-radius: 4px; padding: 0 6px; }
+.card { font-size: .72rem; font-weight: 700; color: #fff; border-radius: 4px; padding: 1px 7px; }
+.card.quick { background: var(--quick); } .card.arts { background: var(--arts); } .card.buster { background: var(--buster); }
+.card.all, .card.modes { background: linear-gradient(90deg, var(--quick), var(--arts), var(--buster)); }
+.np { background: linear-gradient(160deg, rgba(216,178,90,.14), rgba(216,178,90,.03)); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+.np-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.np .label { width: 100%; font-size: .66rem; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
+.np h4 { font-family: var(--display); font-size: 1.05rem; color: var(--gold-2); margin: 0; }
+.mult { font-weight: 700; font-variant-numeric: tabular-nums; }
+.np p { margin: 6px 0 0; color: #d3cfe3; font-size: .9rem; }
+.modes-list { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 6px; font-size: .9rem; }
+.modes-list li { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; color: #d3cfe3; }
+.mode-name { font-weight: 700; color: var(--ink); }
+.mode-name em { color: var(--muted); font-style: normal; font-weight: 400; }
+.fgo { margin: 0; font-size: .75rem; color: var(--muted); }
+footer { color: var(--muted); font-size: .8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Fate<span>/</span>Duel Roster</h1>
+    <p class="intro">7 servants and their complete kits, generated from the game's own data. HP and ATK are the in-game values; NP gain is relative to an average servant (1.00×).</p>
+  </header>
+  <nav class="filters" aria-label="Filter by class">
+    <button type="button" data-filter="all" aria-pressed="true">All (7)</button>
+    <button type="button" data-filter="Saber" aria-pressed="false">Saber (1)</button>
+    <button type="button" data-filter="Archer" aria-pressed="false">Archer (1)</button>
+    <button type="button" data-filter="Lancer" aria-pressed="false">Lancer (1)</button>
+    <button type="button" data-filter="Rider" aria-pressed="false">Rider (1)</button>
+    <button type="button" data-filter="Caster" aria-pressed="false">Caster (1)</button>
+    <button type="button" data-filter="Assassin" aria-pressed="false">Assassin (1)</button>
+    <button type="button" data-filter="Berserker" aria-pressed="false">Berserker (1)</button>
+  </nav>
+  <main class="grid">
+
+  <article class="servant" id="artoria" data-class="Saber">
+    <header>
+      <div class="badge" aria-hidden="true">AP</div>
+      <div class="title"><span class="cls">Saber</span><h3>Artoria Pendragon</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>1,285</dd></div>
+      <div><dt>ATK</dt><dd>123</dd></div>
+      <div><dt>Max AP</dt><dd>10</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>1.04× <small>atk</small> · 1.00× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card buster">Buster</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Magic Resistance A</span><span>Enemy debuffs on self 20% weaker</span></li>
+        <li><span class="name">Riding B</span><span>Quick attacks +10% damage</span></li>
+        <li><span class="name">Invisible Air<span class="tag">Unique</span></span><span>Permanent 5% damage cut</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">Knight of Utopia EX<span class="ap">4 AP</span></span><span>ATK +20% and Buster NP gain +100% for 3 turns</span></li>
+        <li><span class="name">Dragon Reactor Core B<span class="ap">5 AP</span></span><span>Buster +25% and NP damage +15% for 3 turns; next attack hits as Buster (keeps its chosen card for the clash)</span></li>
+        <li><span class="name">Radiant Road EX<span class="ap">3 AP</span></span><span>NP gauge +25% and 15% damage cut for 2 turns</span></li>
+      </ul>
+    </section>
+    <div class="np">
+    <div class="np-head"><span class="label">Noble Phantasm</span><h4>Excalibur</h4><span class="card buster">Buster</span><span class="mult">3.5×</span></div>
+    <p>Heavy Buster damage, then refunds 15% NP</p></div>
+    <p class="fgo">FGO stats: 15,150 HP · 11,221 ATK · NP 0.86% / 3%</p>
+  </article>
+
+  <article class="servant" id="heracles" data-class="Berserker">
+    <header>
+      <div class="badge" aria-hidden="true">H</div>
+      <div class="title"><span class="cls">Berserker</span><h3>Heracles</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>903<small>×0.73</small></dd></div>
+      <div><dt>ATK</dt><dd>122</dd></div>
+      <div><dt>Max AP</dt><dd>8</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>1.16× <small>atk</small> · 1.29× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card buster">Buster</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Mad Enhancement B</span><span>Buster attacks +10% damage</span></li>
+        <li><span class="name">Divinity A</span><span>+10 flat damage on every hit</span></li>
+        <li><span class="name">12 Labors<span class="tag">Unique</span></span><span>Revives once at 25% HP, but his NP gauge and AP reset to 0</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">Bravery A+<span class="ap">4 AP</span></span><span>ATK +20% and debuffs on self 30% weaker for 3 turns</span></li>
+        <li><span class="name">Eye of the Mind (False) B<span class="ap">4 AP</span></span><span>Evade regular attacks for 2 turns</span></li>
+        <li><span class="name">Indomitable A<span class="ap">5 AP</span></span><span>Buster +20% for 3 turns; +40% instead after 12 Labors has revived him</span></li>
+      </ul>
+    </section>
+    <div class="np">
+    <div class="np-head"><span class="label">Noble Phantasm</span><h4>Nine Lives</h4><span class="card buster">Buster</span><span class="mult">3.6×</span></div>
+    <p>Heavy Buster damage, then the enemy takes 20% more damage for 2 turns</p></div>
+    <p class="fgo">FGO stats: 10,327 HP · 10,655 ATK · NP 1.07% / 5%</p>
+  </article>
+
+  <article class="servant" id="medea" data-class="Caster">
+    <header>
+      <div class="badge" aria-hidden="true">M</div>
+      <div class="title"><span class="cls">Caster</span><h3>Medea</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>1,215</dd></div>
+      <div><dt>ATK</dt><dd>118</dd></div>
+      <div><dt>Max AP</dt><dd>12</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>1.43× <small>atk</small> · 1.00× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card arts">Arts</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Territory Creation A</span><span>Arts attacks +12% damage</span></li>
+        <li><span class="name">Hecate&#39;s Staff<span class="tag">Unique</span></span><span>Her debuffs ignore up to 25% of enemy debuff resistance</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">High-Speed Divine Words A<span class="ap">5 AP</span></span><span>NP gauge +50%</span></li>
+        <li><span class="name">Argon Coin: The Golden Fleece<span class="ap">3 AP</span></span><span>Heal 20% HP and gain 2 AP</span></li>
+        <li><span class="name">Witch of Colchis A<span class="ap">6 AP</span></span><span>Cleanse own debuffs; Arts +25%, NP damage +20% and NP gain +30% for 3 turns</span></li>
+      </ul>
+    </section>
+    <div class="np">
+    <div class="np-head"><span class="label">Noble Phantasm</span><h4>Rule Breaker</h4><span class="card arts">Arts</span><span class="mult">2.4×</span></div>
+    <p>Removes all enemy buffs (passives stay), deals light Arts damage, then enemy ATK -20% for 3 turns</p></div>
+    <p class="fgo">FGO stats: 8,643 HP · 7,418 ATK · NP 1.64% / 3%</p>
+  </article>
+
+  <article class="servant" id="kojirou" data-class="Assassin">
+    <header>
+      <div class="badge" aria-hidden="true">SK</div>
+      <div class="title"><span class="cls">Assassin</span><h3>Sasaki Kojirou</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>1,175</dd></div>
+      <div><dt>ATK</dt><dd>115</dd></div>
+      <div><dt>Max AP</dt><dd>10</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>1.15× <small>atk</small> · 1.15× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card quick">Quick</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Presence Concealment D</span><span>NP gain +4%</span></li>
+        <li><span class="name">Heaven Among the Mountains<span class="tag">Unique</span></span><span>Quick attacks always hit through Evade</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">Eye of the Mind (False) A<span class="ap">4 AP</span></span><span>Evade regular attacks and 10% damage cut for 2 turns</span></li>
+        <li><span class="name">Fade Out A+<span class="ap">4 AP</span></span><span>Cleanse own debuffs; Quick +40% for 3 turns</span></li>
+        <li><span class="name">Knowledge of the Souwa B++<span class="ap">5 AP</span></span><span>All attacks hit through Evade for 3 turns</span></li>
+      </ul>
+    </section>
+    <div class="np">
+    <div class="np-head"><span class="label">Noble Phantasm</span><h4>Tsubame Gaeshi</h4><span class="card quick">Quick</span><span class="mult">3.6×</span></div>
+    <p>Quick +20% for 3 turns (boosts this NP too), then heavy Quick damage</p></div>
+    <p class="fgo">FGO stats: 6,220 HP · 5,735 ATK · NP 1.05% / 4%</p>
+  </article>
+
+  <article class="servant" id="emiya" data-class="Archer">
+    <header>
+      <div class="badge" aria-hidden="true">E</div>
+      <div class="title"><span class="cls">Archer</span><h3>EMIYA</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>1,250</dd></div>
+      <div><dt>ATK</dt><dd>121</dd></div>
+      <div><dt>Max AP</dt><dd>11</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>0.80× <small>atk</small> · 1.00× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card all">All</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Magic Resistance D</span><span>Enemy debuffs on self 5% weaker</span></li>
+        <li><span class="name">Independent Action B</span><span>+1 max AP and +1 starting AP</span></li>
+        <li><span class="name">Reality Marble<span class="tag">Unique</span></span><span>Has every favored-card bonus (Quick, Arts and Buster)</span></li>
+        <li><span class="name">Trace On<span class="tag">Unique</span></span><span>Copies the opponent&#39;s unique passive for the match (revives can&#39;t be copied)</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">Eye of the Mind (True) EX<span class="ap">5 AP</span></span><span>Evade and 10% damage cut for 2 turns; ATK +15% for 3 turns</span></li>
+        <li><span class="name">Hawkeye B+<span class="ap">3 AP</span></span><span>NP +20% now and NP gain +50% for 3 turns</span></li>
+        <li><span class="name">Circuit Connect EX<span class="ap">6 AP</span></span><span>Next landed attack is 50% more effective; set Unlimited Blade Works to a mode <em>Options: Buster Mode / Arts Mode / Quick Mode</em></span></li>
+      </ul>
+    </section>
+    <div class="np">
+      <div class="np-head"><span class="label">Noble Phantasm</span><h4>Unlimited Blade Works</h4><span class="card modes">Modes</span></div>
+      <ul class="modes-list">
+        <li><span class="mode-name">Buster Mode <em>(default)</em></span><span class="card buster">Buster</span><span class="mult">4.2×</span><span>Heavy Buster damage</span></li>
+        <li><span class="mode-name">Arts Mode</span><span class="card arts">Arts</span><span class="mult">3.2×</span><span>Good Arts damage, then NP +20%</span></li>
+        <li><span class="mode-name">Quick Mode</span><span class="card quick">Quick</span><span class="mult">2.6×</span><span>Light Quick damage, then enemy ATK -20% for 3 turns</span></li>
+      </ul></div>
+    <p class="fgo">FGO stats: 11,521 HP · 9,398 ATK · NP 0.51% / 3%</p>
+  </article>
+
+  <article class="servant" id="cu" data-class="Lancer">
+    <header>
+      <div class="badge" aria-hidden="true">CC</div>
+      <div class="title"><span class="cls">Lancer</span><h3>Cú Chulainn</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>1,019<small>×0.83</small></dd></div>
+      <div><dt>ATK</dt><dd>117</dd></div>
+      <div><dt>Max AP</dt><dd>10</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>1.16× <small>atk</small> · 1.15× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card quick">Quick</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Magic Resistance C</span><span>Enemy debuffs on self 10% weaker</span></li>
+        <li><span class="name">Divinity B</span><span>+8 flat damage on every hit</span></li>
+        <li><span class="name">Battle Continuation<span class="tag">Unique</span></span><span>Revives once at 1 HP (keeps his AP and NP gauge)</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">Ath nGabla A<span class="ap">4 AP</span></span><span>ATK +20% to +50% for 3 turns (20% + 30% × missing HP when used)</span></li>
+        <li><span class="name">Protection from Arrows B<span class="ap">4 AP</span></span><span>Evade and 10% damage cut for 2 turns</span></li>
+        <li><span class="name">Disengage C<span class="ap">4 AP</span></span><span>Cleanse own debuffs and heal 15% HP</span></li>
+      </ul>
+    </section>
+    <div class="np">
+    <div class="np-head"><span class="label">Noble Phantasm</span><h4>Gáe Bolg</h4><span class="card quick">Quick</span><span class="mult">3.4×</span></div>
+    <p>Sure Hit for 2 turns, heavy Quick damage, then the enemy takes 20% more damage for 2 turns</p></div>
+    <p class="fgo">FGO stats: 9,593 HP · 7,239 ATK · NP 1.07% / 4%</p>
+  </article>
+
+  <article class="servant" id="medusa" data-class="Rider">
+    <header>
+      <div class="badge" aria-hidden="true">M</div>
+      <div class="title"><span class="cls">Rider</span><h3>Medusa</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>1,219</dd></div>
+      <div><dt>ATK</dt><dd>117</dd></div>
+      <div><dt>Max AP</dt><dd>11</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>0.85× <small>atk</small> · 1.00× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card quick">Quick</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Magic Resistance B</span><span>Enemy debuffs on self 15% weaker</span></li>
+        <li><span class="name">Independent Action C</span><span>+1 max AP and +1 starting AP</span></li>
+        <li><span class="name">Riding A+</span><span>Quick attacks +13% damage</span></li>
+        <li><span class="name">Divinity E-</span><span>+1 flat damage on every hit</span></li>
+        <li><span class="name">Breaker Gorgon<span class="tag">Unique</span></span><span>Each buff the opponent gives themselves has a 10% chance to fail</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">Mystic Eyes A+<span class="ap">4 AP</span></span><span>Petrify the enemy: AP -3 now, and -2 AP from each attack for 3 turns</span></li>
+        <li><span class="name">Monstrous Snake Metamorphosis B<span class="ap">5 AP</span></span><span>ATK +20% for 3 turns; her next attack on a Petrified enemy deals +50% damage</span></li>
+        <li><span class="name">Blood Fort Andromeda B<span class="ap">4 AP</span></span><span>NP +35% now and NP gain +50% for 3 turns</span></li>
+      </ul>
+    </section>
+    <div class="np">
+    <div class="np-head"><span class="label">Noble Phantasm</span><h4>Bellerophon</h4><span class="card quick">Quick</span><span class="mult">4.4×</span></div>
+    <p>Heavy Quick damage, then the enemy gets -1 AP from each attack for 2 turns</p></div>
+    <p class="fgo">FGO stats: 8,937 HP · 7,200 ATK · NP 0.58% / 3%</p>
+  </article>
+  </main>
+  <footer>Generated from src/data/servants.js on 2026-11-09. Kits are rebuilt whenever a servant is added or rebalanced.</footer>
+</div>
+<script>
+  const buttons = document.querySelectorAll('.filters button');
+  buttons.forEach(b => b.addEventListener('click', () => {
+    buttons.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    document.querySelectorAll('.servant').forEach(s => { s.hidden = b.dataset.filter !== 'all' && s.dataset.class !== b.dataset.filter; });
+  }));
+</script>
+</body>
+</html>

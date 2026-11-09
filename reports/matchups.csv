@@ -1,0 +1,50 @@
+servant,opponent,win_pct
+Artoria Pendragon,Artoria Pendragon,48.0
+Artoria Pendragon,Heracles,48.8
+Artoria Pendragon,Medea,50.1
+Artoria Pendragon,Sasaki Kojirou,54.6
+Artoria Pendragon,EMIYA,43.0
+Artoria Pendragon,Cú Chulainn,51.2
+Artoria Pendragon,Medusa,52.0
+Heracles,Artoria Pendragon,46.4
+Heracles,Heracles,48.1
+Heracles,Medea,57.9
+Heracles,Sasaki Kojirou,49.6
+Heracles,EMIYA,43.0
+Heracles,Cú Chulainn,46.8
+Heracles,Medusa,54.3
+Medea,Artoria Pendragon,43.0
+Medea,Heracles,40.6
+Medea,Medea,50.0
+Medea,Sasaki Kojirou,41.4
+Medea,EMIYA,47.6
+Medea,Cú Chulainn,44.8
+Medea,Medusa,37.8
+Sasaki Kojirou,Artoria Pendragon,40.5
+Sasaki Kojirou,Heracles,41.7
+Sasaki Kojirou,Medea,53.4
+Sasaki Kojirou,Sasaki Kojirou,47.3
+Sasaki Kojirou,EMIYA,44.5
+Sasaki Kojirou,Cú Chulainn,39.1
+Sasaki Kojirou,Medusa,43.3
+EMIYA,Artoria Pendragon,50.4
+EMIYA,Heracles,49.8
+EMIYA,Medea,50.2
+EMIYA,Sasaki Kojirou,50.9
+EMIYA,EMIYA,48.0
+EMIYA,Cú Chulainn,41.4
+EMIYA,Medusa,47.2
+Cú Chulainn,Artoria Pendragon,41.9
+Cú Chulainn,Heracles,50.6
+Cú Chulainn,Medea,50.0
+Cú Chulainn,Sasaki Kojirou,54.1
+Cú Chulainn,EMIYA,53.9
+Cú Chulainn,Cú Chulainn,46.7
+Cú Chulainn,Medusa,53.7
+Medusa,Artoria Pendragon,41.5
+Medusa,Heracles,38.4
+Medusa,Medea,58.3
+Medusa,Sasaki Kojirou,53.1
+Medusa,EMIYA,47.3
+Medusa,Cú Chulainn,44.9
+Medusa,Medusa,48.0
