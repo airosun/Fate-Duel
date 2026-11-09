@@ -193,7 +193,7 @@ function applyEffect(target, e, source, user) {
                // npGainUp, cardNpGainUp, debuffResist, guts, atkDown, defDown, apRegen,
                // busterConvert, flatDamage, sureHit{card?}, debuffPotency,
                // nextHitUp (consumed by the next landed attack), affinityAll,
-               // buffFailChance, apRecoveryDown{status?}, bonusVsStatus{status}
+               // buffFailChance, apRecoveryDown{status?}, bonusVsStatus{status}, instantKillChance
       // turns: null = permanent (passives); undefined = use the default for this effect
       let turns = e.turns === undefined ? (T.defaultTurns[e.type] ?? null) : e.turns;
       if (e.type === 'invincible') turns = 1;
@@ -210,6 +210,7 @@ function applyEffect(target, e, source, user) {
         resetAp: e.resetAp,
         status: e.status,
         copiedFrom: e.copiedFrom,
+        npName: e.npName,
         debuff: DEBUFFS.includes(e.type),
         source,
       });
@@ -221,7 +222,7 @@ const BUFF_NAMES = {
   atkUp: 'ATK up', npUp: 'NP damage up', damageCut: 'damage cut', evade: 'Evade', invincible: 'Invincible',
   npGainUp: 'NP gain up', debuffResist: 'debuff resist', guts: 'Guts', apRegen: 'AP regen',
   busterConvert: 'Buster strike', flatDamage: 'flat damage', sureHit: 'Sure Hit', nextHitUp: 'next-hit boost',
-  bonusVsStatus: 'bonus damage', debuffPotency: 'debuff potency',
+  bonusVsStatus: 'bonus damage', debuffPotency: 'debuff potency', instantKillChance: 'instant kill',
 };
 const buffName = e => (e.type === 'cardUp' ? `${CARD_NAME[e.card]} up`
   : e.type === 'cardNpGainUp' ? `${CARD_NAME[e.card]} NP gain up` : BUFF_NAMES[e.type] ?? e.type);
@@ -365,8 +366,14 @@ export function resolveTurn(prev, actions) {
     const att = structuredClone(P[i]), def = structuredClone(P[1 - i]);
     applyEffects(att, def, npPre[i], 'np');
     // Empower boosts whichever comes first: the next regular attack or the next NP.
-    packets.push({ from: i, to: 1 - i, kind: 'np', card: nps[i].card, empowered: P[i].empower,
-      ...npPacket(att, def, nps[i], { empowered: P[i].empower }) });
+    const pk = { from: i, to: 1 - i, kind: 'np', card: nps[i].card, empowered: P[i].empower,
+      ...npPacket(att, def, nps[i], { empowered: P[i].empower }) };
+    // Instant kill (Shaytan's Arm): rolled only when the NP connects; ignores revives.
+    // npName ties the chance to one NP (Shaytan's Arm only works with Zabaniya).
+    const ik = P[i].buffs.filter(b => b.type === 'instantKillChance' && (!b.npName || b.npName === nps[i].name))
+      .reduce((a, b) => a + b.value, 0);
+    if (ik && !pk.blocked && roll(state) * 100 < ik) pk.instantKill = true;
+    packets.push(pk);
   }
   for (const i of npUsers) {
     P[i].np = 0;
@@ -417,6 +424,11 @@ export function resolveTurn(prev, actions) {
       continue;
     }
     def.hp -= pk.amount;
+    if (pk.instantKill) {
+      def.hp = 0;
+      def.instantKilled = true;
+      say(`Instant kill! ${def.name} is struck down outright and cannot revive.`, { type: 'instantKill', player: pk.to });
+    }
     gainNp(def, T.npGainOnHit, { defending: true });
     if (pk.kind === 'attack') {
       const artsBoosted = pk.hitAs === 'arts' && (effectiveness(att, 'arts') > 0 || pk.nextHit > 0);
@@ -435,6 +447,7 @@ export function resolveTurn(prev, actions) {
   // Guts
   for (const p of P) {
     if (p.hp > 0) continue;
+    if (p.instantKilled) { delete p.instantKilled; continue; } // revives don't trigger
     const g = p.buffs.find(b => b.type === 'guts');
     if (!g) continue;
     p.hp = Math.max(1, Math.round(p.maxHp * g.value / 100));

@@ -1,50 +1,65 @@
 servant,opponent,win_pct
-Artoria Pendragon,Artoria Pendragon,48.0
-Artoria Pendragon,Heracles,48.8
-Artoria Pendragon,Medea,50.1
-Artoria Pendragon,Sasaki Kojirou,54.6
-Artoria Pendragon,EMIYA,43.0
-Artoria Pendragon,Cú Chulainn,51.2
-Artoria Pendragon,Medusa,52.0
-Heracles,Artoria Pendragon,46.4
-Heracles,Heracles,48.1
-Heracles,Medea,57.9
-Heracles,Sasaki Kojirou,49.6
-Heracles,EMIYA,43.0
-Heracles,Cú Chulainn,46.8
-Heracles,Medusa,54.3
-Medea,Artoria Pendragon,43.0
-Medea,Heracles,40.6
-Medea,Medea,50.0
-Medea,Sasaki Kojirou,41.4
-Medea,EMIYA,47.6
-Medea,Cú Chulainn,44.8
-Medea,Medusa,37.8
+Artoria Pendragon,Artoria Pendragon,46.6
+Artoria Pendragon,Heracles,48.7
+Artoria Pendragon,Medea,53.1
+Artoria Pendragon,Sasaki Kojirou,55.1
+Artoria Pendragon,EMIYA,45.5
+Artoria Pendragon,Cú Chulainn,55.4
+Artoria Pendragon,Medusa,53.9
+Artoria Pendragon,Hassan of the Cursed Arm,49.9
+Heracles,Artoria Pendragon,46.3
+Heracles,Heracles,47.9
+Heracles,Medea,56.9
+Heracles,Sasaki Kojirou,50.8
+Heracles,EMIYA,44.5
+Heracles,Cú Chulainn,48.7
+Heracles,Medusa,55.6
+Heracles,Hassan of the Cursed Arm,51.3
+Medea,Artoria Pendragon,42.2
+Medea,Heracles,37.7
+Medea,Medea,46.7
+Medea,Sasaki Kojirou,42.6
+Medea,EMIYA,49.4
+Medea,Cú Chulainn,46.4
+Medea,Medusa,37.2
+Medea,Hassan of the Cursed Arm,37.5
 Sasaki Kojirou,Artoria Pendragon,40.5
-Sasaki Kojirou,Heracles,41.7
-Sasaki Kojirou,Medea,53.4
-Sasaki Kojirou,Sasaki Kojirou,47.3
-Sasaki Kojirou,EMIYA,44.5
-Sasaki Kojirou,Cú Chulainn,39.1
-Sasaki Kojirou,Medusa,43.3
-EMIYA,Artoria Pendragon,50.4
-EMIYA,Heracles,49.8
-EMIYA,Medea,50.2
-EMIYA,Sasaki Kojirou,50.9
-EMIYA,EMIYA,48.0
-EMIYA,Cú Chulainn,41.4
+Sasaki Kojirou,Heracles,40.9
+Sasaki Kojirou,Medea,53.1
+Sasaki Kojirou,Sasaki Kojirou,47.4
+Sasaki Kojirou,EMIYA,47.3
+Sasaki Kojirou,Cú Chulainn,39.5
+Sasaki Kojirou,Medusa,40.1
+Sasaki Kojirou,Hassan of the Cursed Arm,44.3
+EMIYA,Artoria Pendragon,50.6
+EMIYA,Heracles,48.6
+EMIYA,Medea,47.3
+EMIYA,Sasaki Kojirou,49.1
+EMIYA,EMIYA,49.5
+EMIYA,Cú Chulainn,43.9
 EMIYA,Medusa,47.2
-Cú Chulainn,Artoria Pendragon,41.9
-Cú Chulainn,Heracles,50.6
-Cú Chulainn,Medea,50.0
-Cú Chulainn,Sasaki Kojirou,54.1
-Cú Chulainn,EMIYA,53.9
-Cú Chulainn,Cú Chulainn,46.7
-Cú Chulainn,Medusa,53.7
-Medusa,Artoria Pendragon,41.5
-Medusa,Heracles,38.4
-Medusa,Medea,58.3
-Medusa,Sasaki Kojirou,53.1
-Medusa,EMIYA,47.3
-Medusa,Cú Chulainn,44.9
-Medusa,Medusa,48.0
+EMIYA,Hassan of the Cursed Arm,47.6
+Cú Chulainn,Artoria Pendragon,41.1
+Cú Chulainn,Heracles,48.9
+Cú Chulainn,Medea,48.5
+Cú Chulainn,Sasaki Kojirou,56.2
+Cú Chulainn,EMIYA,54.3
+Cú Chulainn,Cú Chulainn,45.5
+Cú Chulainn,Medusa,55.0
+Cú Chulainn,Hassan of the Cursed Arm,54.1
+Medusa,Artoria Pendragon,44.1
+Medusa,Heracles,37.1
+Medusa,Medea,58.0
+Medusa,Sasaki Kojirou,53.5
+Medusa,EMIYA,45.5
+Medusa,Cú Chulainn,42.1
+Medusa,Medusa,46.7
+Medusa,Hassan of the Cursed Arm,46.9
+Hassan of the Cursed Arm,Artoria Pendragon,45.0
+Hassan of the Cursed Arm,Heracles,44.3
+Hassan of the Cursed Arm,Medea,55.9
+Hassan of the Cursed Arm,Sasaki Kojirou,50.3
+Hassan of the Cursed Arm,EMIYA,47.7
+Hassan of the Cursed Arm,Cú Chulainn,40.3
+Hassan of the Cursed Arm,Medusa,46.7
+Hassan of the Cursed Arm,Hassan of the Cursed Arm,46.0

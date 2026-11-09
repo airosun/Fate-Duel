@@ -236,6 +236,32 @@ export const SERVANTS = {
           desc: 'Heavy Quick damage, then the enemy gets -1 AP from each attack for 2 turns',
           postEffects: [{ type: 'apRecoveryDown', value: 1, turns: 3, target: 'enemy' }] },
   },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
+  hassan: {
+    id: 'hassan', name: 'Hassan of the Cursed Arm', class: 'Assassin',
+    fgoHp: 7594, fgoAtk: 6280, fgoNpAtk: 1.07, fgoNpDef: 4,
+    favoredCard: 'quick', maxAp: 10,
+    passives: [
+      classPassive('presenceConcealment', 'A+'),
+      unique("Shaytan's Arm", 'Zabaniya has a 5% chance to kill outright. Revives do not trigger',
+        [{ type: 'instantKillChance', value: 5, npName: 'Zabaniya' }]),
+    ],
+    skills: [
+      { id: 'throwing', name: 'Throwing/Retrieval A', cost: 3,
+        desc: 'AP +2 now, then +2 AP at the end of this turn and the next',
+        effects: [{ type: 'apGain', value: 2 }, { type: 'apRegen', value: 2, turns: 2 }] },
+      { id: 'self_modification', name: 'Self-Modification C', cost: 3,
+        desc: 'Quick +45% for 3 turns',
+        effects: [{ type: 'cardUp', card: 'quick', value: 45, turns: 3 }] },
+      { id: 'protection_from_wind', name: 'Protection from Wind A', cost: 4,
+        desc: 'Evade for 2 turns and NP gain +30% for 3 turns',
+        effects: [{ type: 'evade', turns: 2 }, { type: 'npGainUp', value: 30, turns: 3 }] },
+    ],
+    np: { name: 'Zabaniya', card: 'quick', mult: 4.0,
+          desc: 'Heavy Quick damage, then ATK +20% for 3 turns',
+          postEffects: [{ type: 'atkUp', value: 20, turns: 4 }] },
+  },
 };
 
 export const ROSTER = Object.values(SERVANTS);

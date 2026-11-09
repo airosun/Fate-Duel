@@ -71,16 +71,16 @@ footer { color: var(--muted); font-size: .8rem; }
 <div class="wrap">
   <header>
     <h1>Fate<span>/</span>Duel Roster</h1>
-    <p class="intro">7 servants and their complete kits, generated from the game's own data. HP and ATK are the in-game values; NP gain is relative to an average servant (1.00×).</p>
+    <p class="intro">8 servants and their complete kits, generated from the game's own data. HP and ATK are the in-game values; NP gain is relative to an average servant (1.00×).</p>
   </header>
   <nav class="filters" aria-label="Filter by class">
-    <button type="button" data-filter="all" aria-pressed="true">All (7)</button>
+    <button type="button" data-filter="all" aria-pressed="true">All (8)</button>
     <button type="button" data-filter="Saber" aria-pressed="false">Saber (1)</button>
     <button type="button" data-filter="Archer" aria-pressed="false">Archer (1)</button>
     <button type="button" data-filter="Lancer" aria-pressed="false">Lancer (1)</button>
     <button type="button" data-filter="Rider" aria-pressed="false">Rider (1)</button>
     <button type="button" data-filter="Caster" aria-pressed="false">Caster (1)</button>
-    <button type="button" data-filter="Assassin" aria-pressed="false">Assassin (1)</button>
+    <button type="button" data-filter="Assassin" aria-pressed="false">Assassin (2)</button>
     <button type="button" data-filter="Berserker" aria-pressed="false">Berserker (1)</button>
   </nav>
   <main class="grid">
@@ -326,6 +326,39 @@ footer { color: var(--muted); font-size: .8rem; }
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Bellerophon</h4><span class="card quick">Quick</span><span class="mult">4.4×</span></div>
     <p>Heavy Quick damage, then the enemy gets -1 AP from each attack for 2 turns</p></div>
     <p class="fgo">FGO stats: 8,937 HP · 7,200 ATK · NP 0.58% / 3%</p>
+  </article>
+
+  <article class="servant" id="hassan" data-class="Assassin">
+    <header>
+      <div class="badge" aria-hidden="true">Ho</div>
+      <div class="title"><span class="cls">Assassin</span><h3>Hassan of the Cursed Arm</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>1,199</dd></div>
+      <div><dt>ATK</dt><dd>116</dd></div>
+      <div><dt>Max AP</dt><dd>10</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>1.16× <small>atk</small> · 1.15× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card quick">Quick</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Presence Concealment A+</span><span>NP gain +11%</span></li>
+        <li><span class="name">Shaytan&#39;s Arm<span class="tag">Unique</span></span><span>Zabaniya has a 5% chance to kill outright. Revives do not trigger</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">Throwing/Retrieval A<span class="ap">3 AP</span></span><span>AP +2 now, then +2 AP at the end of this turn and the next</span></li>
+        <li><span class="name">Self-Modification C<span class="ap">3 AP</span></span><span>Quick +45% for 3 turns</span></li>
+        <li><span class="name">Protection from Wind A<span class="ap">4 AP</span></span><span>Evade for 2 turns and NP gain +30% for 3 turns</span></li>
+      </ul>
+    </section>
+    <div class="np">
+    <div class="np-head"><span class="label">Noble Phantasm</span><h4>Zabaniya</h4><span class="card quick">Quick</span><span class="mult">4×</span></div>
+    <p>Heavy Quick damage, then ATK +20% for 3 turns</p></div>
+    <p class="fgo">FGO stats: 7,594 HP · 6,280 ATK · NP 1.07% / 4%</p>
   </article>
   </main>
   <footer>Generated from src/data/servants.js on 2026-11-09. Kits are rebuilt whenever a servant is added or rebalanced.</footer>

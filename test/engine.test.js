@@ -458,3 +458,35 @@ test('Empower boosts the next NP if it comes before an attack, then is used up',
   assert.equal(s.players[1].hp - r.players[1].hp, 100 * 4 * 1.5);
   assert.equal(r.players[0].empower, false);
 });
+
+test('Hassan: Zabaniya instant kill lands about 5% of the time and ignores revives', () => {
+  let kills = 0;
+  for (let seed = 1; seed <= 600; seed++) {
+    const s = createMatch(SERVANTS.hassan, SERVANTS.heracles, { seed });
+    s.players[0].np = 100;
+    const r = resolveTurn(s, [np(), atk('arts')]).state;
+    if (r.over) { kills++; assert.equal(r.result.winner, 0); assert.equal(r.players[1].hp, 0); }
+  }
+  assert.ok(kills / 600 > 0.025 && kills / 600 < 0.08, `kill rate ${kills / 600}`);
+});
+
+test('Hassan: Throwing/Retrieval gives AP now and at the end of this turn and the next', () => {
+  let s = createMatch(SERVANTS.hassan, dummy('B'), { seed: 1 });
+  const start = s.players[0].ap;               // 4
+  s = resolveTurn(s, [skill('throwing'), skill('charge')]).state;
+  assert.equal(s.players[0].ap, start - 3 + 2 + 2);
+  s = resolveTurn(s, [skill('self_modification'), atk('arts')]).state;
+  assert.equal(s.players[0].ap, start - 3 + 2 + 2 - 3 + 2);
+});
+
+test("EMIYA copies Shaytan's Arm but it does nothing without Zabaniya", () => {
+  let kills = 0;
+  for (let seed = 1; seed <= 300; seed++) {
+    const s = createMatch(SERVANTS.emiya, SERVANTS.hassan, { seed });
+    assert.ok(s.players[0].buffs.some(b => b.type === 'instantKillChance' && b.copiedFrom === "Shaytan's Arm"));
+    s.players[0].np = 100;
+    s.players[1].hp = 5000; s.players[1].maxHp = 5000;   // NP damage alone can't kill
+    if (resolveTurn(s, [np(), atk('arts')]).state.over) kills++;
+  }
+  assert.equal(kills, 0);
+});

@@ -401,3 +401,4 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
 #tipbox p { margin: 0; }
 #tipbox small { display: block; margin-top: .3rem; color: var(--muted); }
 .buff:focus-visible { outline: 2px solid var(--gold2); outline-offset: 1px; }
+.log-instantKill { color: #ff8a8a !important; font-weight: 800; }

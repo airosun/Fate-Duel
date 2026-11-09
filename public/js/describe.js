@@ -41,6 +41,7 @@ export function describeEffect(e) {
     case 'bonusVsStatus': return `Next attack vs ${e.status} +${v}% damage`;
     case 'buffFailChance': return `Enemy self-buffs ${v}% likely to fail`;
     case 'copyEnemyUnique': return `Copies the enemy's unique passive`;
+    case 'instantKillChance': return `NP ${v}% chance to kill outright`;
     case 'affinityAll': return `Every favored-card bonus`;
     case 'setNpMode': return `Change NP mode`;
     case 'heal': return `${who}Heal ${v}% HP`;
@@ -79,6 +80,7 @@ const BUFF_LABEL = {
   defDown: 'DEF↓', flatDamage: 'Flat Dmg', sureHit: 'Sure Hit', debuffPotency: 'Debuff Potency',
   nextHitUp: 'Next Hit↑', affinityAll: 'All Cards Favored', apRecoveryDown: 'AP Recovery↓',
   bonusVsStatus: 'vs Petrified↑', buffFailChance: 'Breaker Gorgon', copyEnemyUnique: 'Trace On',
+  instantKillChance: 'Instant Kill',
 };
 
 // Plain-language explanation of what a buff, debuff or passive does.
@@ -117,6 +119,9 @@ export function explainBuff(b) {
     case 'copyEnemyUnique': return "Copies the opponent's unique passive for the match. Revives can't be copied.";
     case 'apRecoveryDown': return `${b.status === 'petrified' ? 'Petrified: g' : 'G'}ains ${Math.round(b.value)} less AP from each attack.`;
     case 'bonusVsStatus': return `The next attack against a ${b.status} enemy deals ${v}% more damage.`;
+    case 'instantKillChance': return b.npName
+      ? `${b.npName} has a ${v}% chance to kill outright when it connects. Revives don't trigger.${b.copiedFrom ? ` Only works with ${b.npName}, so it has no effect here.` : ''}`
+      : `Each Noble Phantasm that connects has a ${v}% chance to kill outright. Revives don't trigger.`;
     default: return '';
   }
 }
