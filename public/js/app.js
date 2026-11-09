@@ -147,7 +147,7 @@ function kitHtml(s) {
         <div><label>Favored</label><b class="card-chip ${s.favoredCard}">${CARD_LABEL[s.favoredCard] ?? '—'}</b></div>
       </div>
       ${passives.length ? `<h3>Passives</h3>${passives.map(p => `
-        <div class="kit-row"><b>${esc(p.name)}</b><span>${esc(p.desc ?? describeEffects(p.effects))}</span></div>`).join('')}` : ''}
+        <div class="kit-row"><b>${esc(p.name)}${p.kind === 'unique' ? ' <em class="unique-tag">Unique</em>' : ''}</b><span>${esc(p.desc ?? describeEffects(p.effects))}</span></div>`).join('')}` : ''}
       <h3>Skills</h3>
       ${s.skills.map(sk => `
         <div class="kit-row"><b>${esc(sk.name)} <em class="ap-cost">${sk.cost} AP</em></b><span>${esc(describeSkill(sk))}</span></div>`).join('')}

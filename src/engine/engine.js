@@ -37,12 +37,15 @@ function createPlayer(servant) {
     npGainDef: servant.npGainDef ?? (servant.fgoNpDef ? Math.sqrt(servant.fgoNpDef / T.refFgoNpDef) : 1),
     favoredCard: servant.favoredCard ?? null,
     seals: T.seals.count,
+    revived: false,
     lastSkillId: null,
     empower: false,
     buffs: [],
   };
   const passives = servant.passives ?? (servant.passive ? [servant.passive] : []);
-  for (const pas of passives) for (const e of pas.effects) applyEffect(p, { ...e, turns: null }, 'passive');
+  const all = passives.flatMap(pas => pas.effects);
+  for (const e of all.filter(e => e.type === 'maxApUp')) p.maxAp += e.value;
+  for (const e of all.filter(e => e.type !== 'maxApUp')) applyEffect(p, { ...e, turns: null }, 'passive');
   p.ap = Math.min(p.ap, p.maxAp);
   return p;
 }
@@ -96,6 +99,8 @@ export function validateAction(state, idx, action) {
 
 // ---------- effects ----------
 
+const DEBUFFS = ['atkDown', 'defDown'];
+
 function resistScale(target, e) {
   // Debuff resistance is deterministic: it weakens debuffs by X% instead of
   // rolling a chance (the engine has no RNG).
@@ -121,25 +126,36 @@ function applyEffect(target, e, source) {
       target.buffs = target.buffs.filter(b => b.turns === null || b.debuff);
       return;
     default: { // duration buff/debuff: atkUp, cardUp, npUp, damageCut, evade, invincible,
-               // npGainUp, cardNpGainUp, debuffResist, guts, atkDown, apRegen, busterConvert
+               // npGainUp, cardNpGainUp, debuffResist, guts, atkDown, defDown, apRegen,
+               // busterConvert, flatDamage
       let turns = e.turns ?? T.defaultTurns[e.type] ?? null;
       if (e.type === 'invincible') turns = 1;
-      const value = (e.value ?? 0) * (e.type === 'atkDown' ? resistScale(target, e) : 1);
+      const value = Math.round((e.value ?? 0) * (DEBUFFS.includes(e.type) ? resistScale(target, e) : 1) * 10) / 10;
       target.buffs.push({
         type: e.type,
         value,
         card: e.card,
         turns,
         charges: e.charges,
-        debuff: e.type === 'atkDown',
+        resetNp: e.resetNp,
+        resetAp: e.resetAp,
+        debuff: DEBUFFS.includes(e.type),
         source,
       });
     }
   }
 }
 
+function conditionMet(user, e) {
+  if (!e.condition) return true;
+  if (e.condition === 'afterRevive') return user.revived;
+  throw new Error(`Unknown condition: ${e.condition}`);
+}
+
 function applyEffects(user, enemy, effects, source) {
-  for (const e of effects ?? []) applyEffect(e.target === 'enemy' ? enemy : user, e, source);
+  for (const e of effects ?? []) {
+    if (conditionMet(user, e)) applyEffect(e.target === 'enemy' ? enemy : user, e, source);
+  }
 }
 
 // ---------- damage ----------
@@ -153,7 +169,8 @@ function defend(defender, raw, { isNp, ignoreDefense }) {
   if (hasBuff(defender, 'invincible')) return { amount: 0, blocked: 'invincible' };
   if (!isNp && !ignoreDefense && hasBuff(defender, 'evade')) return { amount: 0, blocked: 'evade' };
   const cut = ignoreDefense ? 0 : Math.min(T.maxDamageCut, sumBuff(defender, 'damageCut'));
-  return { amount: Math.round(raw * (1 - cut / 100)), blocked: null };
+  const vuln = 1 + sumBuff(defender, 'defDown') / 100;
+  return { amount: Math.round(raw * vuln * (1 - cut / 100)), blocked: null };
 }
 
 function attackPacket(att, def, card, { counter, empowered }) {
@@ -161,13 +178,15 @@ function attackPacket(att, def, card, { counter, empowered }) {
   if (att.favoredCard === card) raw *= 1 + T.affinityBonus[card];
   if (counter) raw *= 1 + T.counterBonus;
   if (empowered) raw *= 1 + T.seals.empowerBonus;
+  raw += sumBuff(att, 'flatDamage');
   return defend(def, raw, { isNp: false, ignoreDefense: false });
 }
 
 function npPacket(att, def, np) {
   let mult = np.mult;
   if (np.missingHpBonus) mult *= 1 + np.missingHpBonus * (1 - def.hp / def.maxHp);
-  const raw = att.atk * mult * atkMultiplier(att, np.card) * (1 + sumBuff(att, 'npUp') / 100);
+  const raw = att.atk * mult * atkMultiplier(att, np.card) * (1 + sumBuff(att, 'npUp') / 100)
+    + sumBuff(att, 'flatDamage');
   return defend(def, raw, { isNp: true, ignoreDefense: !!np.ignoreDefense });
 }
 
@@ -290,6 +309,9 @@ export function resolveTurn(prev, actions) {
     const g = p.buffs.find(b => b.type === 'guts');
     if (!g) continue;
     p.hp = Math.max(1, Math.round(p.maxHp * g.value / 100));
+    p.revived = true;
+    if (g.resetNp) p.np = 0;
+    if (g.resetAp) p.ap = 0;
     if (g.charges != null && --g.charges > 0) { /* keep */ } else p.buffs.splice(p.buffs.indexOf(g), 1);
     say(`${p.name} refuses to fall! (guts: ${p.hp} HP)`, { type: 'guts', player: P.indexOf(p) });
   }

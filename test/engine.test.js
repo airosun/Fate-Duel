@@ -124,7 +124,7 @@ test('Rule Breaker strips buffs before damage', () => {
   let s = createMatch(SERVANTS.medea, dummy('B'));
   s.players[0].np = 100;
   const r = resolveTurn(s, [np(), skill('shield')]).state;
-  const expected = Math.round(s.players[0].atk * 3.0);
+  const expected = Math.round(s.players[0].atk * 3.0 * 1.12); // Territory Creation A = Arts +12%
   assert.equal(r.players[1].hp, 1000 - expected);
 });
 
@@ -186,4 +186,43 @@ test('Artoria: Magic Resistance weakens debuffs', () => {
   const hexer = { skills: [{ id: 'hex', name: 'Hex', cost: 3, effects: [{ type: 'atkDown', value: 50, turns: 2, target: 'enemy' }] }] };
   const s = resolveTurn(createMatch(SERVANTS.artoria, dummy('B', hexer)), [atk('arts'), skill('hex')]).state;
   assert.equal(s.players[0].buffs.find(b => b.type === 'atkDown').value, 40);
+});
+
+test('Heracles: 12 Labors revives at 25%; Indomitable is stronger after revive', () => {
+  let s = createMatch(dummy('A', { atk: 2000 }), SERVANTS.heracles);
+  s = resolveTurn(s, [atk('buster'), atk('quick')]).state; // lethal → revive
+  const h = s.players[1];
+  assert.equal(h.revived, true);
+  assert.equal(h.hp, Math.round(h.maxHp * 0.25));
+  assert.equal(h.np, 0); assert.equal(h.ap, 0);
+  h.ap = 8;
+  s = resolveTurn(s, [skill('shield'), skill('indomitable')]).state;
+  assert.equal(s.players[1].buffs.filter(b => b.type === 'cardUp' && b.card === 'buster' && b.turns !== null).length, 2);
+});
+
+test('Heracles: Divinity adds flat damage; Nine Lives applies defense down', () => {
+  const s0 = createMatch(SERVANTS.heracles, dummy('B'));
+  const he = s0.players[0];
+  let s = resolveTurn(s0, [atk('arts'), atk('buster')]).state;
+  assert.equal(1000 - s.players[1].hp, Math.round(he.atk * 1.0 * 1.25 + 10));
+  s.players[0].np = 100;
+  s = resolveTurn(s, [np(), skill('charge')]).state;
+  assert.equal(s.players[1].buffs.find(b => b.type === 'defDown').value, 20);
+  const before = s.players[1].hp;
+  s = resolveTurn(s, [atk('arts'), atk('buster')]).state;
+  assert.equal(before - s.players[1].hp, Math.round((he.atk * 1.25 + 10) * 1.2));
+});
+
+test('Artoria: Magic Resistance weakens Nine Lives defense down', () => {
+  let s = createMatch(SERVANTS.heracles, SERVANTS.artoria);
+  s.players[0].np = 100;
+  s = resolveTurn(s, [np(), atk('arts')]).state;
+  assert.equal(s.players[1].buffs.find(b => b.type === 'defDown').value, 16);
+});
+
+test('Independent Action raises max and starting AP', async () => {
+  const { classPassive } = await import('../src/data/passives.js');
+  const s = createMatch(dummy('A', { passives: [classPassive('independentAction', 'A')] }), dummy('B'));
+  assert.equal(s.players[0].maxAp, 12);
+  assert.equal(s.players[0].ap, T.startAp + 2);
 });

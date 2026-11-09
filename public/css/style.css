@@ -122,6 +122,7 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
 .kit-stats label { display: block; font-size: .65rem; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
 .kit-row { display: flex; flex-direction: column; padding: .45rem 0; border-bottom: 1px solid rgba(255,255,255,.06); }
 .kit-row span { color: #cfcbe0; font-size: .85rem; }
+.unique-tag { font-style: normal; font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; color: #1c1405; background: var(--gold); border-radius: 3px; padding: .05rem .35rem; margin-left: .35rem; vertical-align: middle; }
 .ap-cost { font-style: normal; font-size: .75rem; color: #9ed0ff; margin-left: .4rem; font-weight: 600; }
 
 /* ---------- battle layout ---------- */

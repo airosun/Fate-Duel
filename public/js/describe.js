@@ -29,6 +29,9 @@ export function describeEffect(e) {
     case 'atkDown': return `${who}ATK −${v}%${turnsText(e)}`;
     case 'apRegen': return `+${v} AP each turn`;
     case 'busterConvert': return `Next attack hits as Buster`;
+    case 'defDown': return `${who}takes +${v}% damage${turnsText(e)}`;
+    case 'flatDamage': return `+${v} flat damage per hit`;
+    case 'maxApUp': return `Max AP +${v}`;
     case 'heal': return `${who}Heal ${v}% HP`;
     case 'npCharge': return `NP +${v}%`;
     case 'npDrain': return `${who}NP −${v}%`;
@@ -38,7 +41,8 @@ export function describeEffect(e) {
   }
 }
 
-export const describeEffects = (effects = []) => effects.map(describeEffect).join(' · ');
+export const describeEffects = (effects = []) =>
+  effects.map(e => describeEffect(e) + (e.condition === 'afterRevive' ? ' (after revive)' : '')).join(' · ');
 
 export function describeSkill(s) {
   return s.desc ?? describeEffects(s.effects);
@@ -58,14 +62,15 @@ const BUFF_LABEL = {
   atkUp: 'ATK↑', cardUp: '↑', npUp: 'NP Dmg↑', damageCut: 'DEF↑', evade: 'Evade',
   invincible: 'Invincible', npGainUp: 'NP Gain↑', cardNpGainUp: 'NP Gain↑', debuffResist: 'Debuff Res',
   guts: 'Guts', atkDown: 'ATK↓', apRegen: 'AP Regen', busterConvert: 'Buster Strike',
+  defDown: 'DEF↓', flatDamage: 'Flat Dmg',
 };
 
 export function buffChip(b) {
   let label = BUFF_LABEL[b.type] ?? b.type;
   if (b.type === 'cardUp') label = `${CARD_LABEL[b.card]}↑`;
   if (b.type === 'cardNpGainUp') label = `${CARD_LABEL[b.card]} NP↑`;
-  const val = b.value && !['evade', 'invincible', 'busterConvert', 'apRegen'].includes(b.type)
-    ? ` ${Math.round(b.value)}%` : (b.type === 'apRegen' ? ` +${b.value}` : '');
+  const val = b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage'].includes(b.type)
+    ? ` ${Math.round(b.value)}%` : (['apRegen', 'flatDamage'].includes(b.type) ? ` +${b.value}` : '');
   const turns = b.turns === null ? '' : `<em>${b.turns}T</em>`;
   return { label: label + val, turns, debuff: !!b.debuff, passive: b.turns === null };
 }

@@ -14,11 +14,15 @@
 //             atkDown{value:%} apRegen{value} busterConvert (next attack hits as Buster)
 //   target: 'self' (default) or 'enemy'
 // Servant fields: fgoHp, fgoAtk, fgoNpAtk (% per hit), fgoNpDef (%), favoredCard,
-//   maxAp, passives: [{name, effects}] (or legacy passive: {...})
+//   maxAp, passives: class passives via classPassive(key, rank) + one unique(name, desc, effects)
+// Extra effect types: defDown{value:%} (enemy takes more damage), flatDamage{value}, maxApUp{value}
+// Effect condition: condition: 'afterRevive' (only applies once guts has triggered)
 //   turns counts the turn it's applied on (turns:2 = this turn + next). Passives are permanent.
 //
 // NP fields: name, card, mult (× ATK), ignoreDefense, missingHpBonus,
 //            preEffects (before damage), postEffects (after damage)
+
+import { classPassive, unique } from './passives.js';
 
 export const SERVANTS = {
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
@@ -27,10 +31,9 @@ export const SERVANTS = {
     fgoHp: 15150, fgoAtk: 11221, fgoNpAtk: 0.86, fgoNpDef: 3,
     favoredCard: 'buster', maxAp: 10,
     passives: [
-      { name: 'Magic Resistance A', desc: 'Enemy debuffs on her are 20% weaker',
-        effects: [{ type: 'debuffResist', value: 20 }] },
-      { name: 'Riding B', desc: 'Quick attacks +10% damage',
-        effects: [{ type: 'cardUp', card: 'quick', value: 10 }] },
+      classPassive('magicResistance', 'A'),
+      classPassive('riding', 'B'),
+      unique('Invisible Air', 'Permanent 5% damage cut', [{ type: 'damageCut', value: 5 }]),
     ],
     skills: [
       { id: 'knight_of_utopia', name: 'Knight of Utopia EX', cost: 4,
@@ -51,27 +54,41 @@ export const SERVANTS = {
           postEffects: [{ type: 'npCharge', value: 15 }] },
   },
 
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   heracles: {
     id: 'heracles', name: 'Heracles', class: 'Berserker',
-    fgoHp: 13068, fgoAtk: 10655,
-    favoredCard: 'buster', npGain: 0.8, maxAp: 8,
-    passive: { name: 'God Hand', effects: [{ type: 'guts', value: 10, charges: 1 }] },
-    skills: [
-      { id: 'valor', name: 'Valor', cost: 4,
-        effects: [{ type: 'atkUp', value: 20, turns: 3 }] },
-      { id: 'eye_of_mind', name: 'Eye of the Mind (False)', cost: 4,
-        effects: [{ type: 'evade', turns: 2 }] },
-      { id: 'divinity', name: 'Divinity Surge', cost: 5,
-        effects: [{ type: 'npCharge', value: 30 }] },
+    fgoHp: 10327, fgoAtk: 10655, fgoNpAtk: 1.07, fgoNpDef: 5,
+    hp: 900, // override (FGO-derived would be 1119): his HP is split across two lives
+    favoredCard: 'buster', maxAp: 8,
+    passives: [
+      classPassive('madness', 'B'),
+      classPassive('divinity', 'A'),
+      unique('12 Labors', 'Revives once at 25% HP, but his NP gauge and AP reset to 0',
+        [{ type: 'guts', value: 25, charges: 1, resetNp: true, resetAp: true }]),
     ],
-    np: { name: 'Nine Lives', card: 'buster', mult: 4.0 },
+    skills: [
+      { id: 'bravery', name: 'Bravery A+', cost: 4,
+        desc: 'ATK +20% and debuffs on self 30% weaker for 3 turns',
+        effects: [{ type: 'atkUp', value: 20, turns: 3 },
+                  { type: 'debuffResist', value: 30, turns: 3 }] },
+      { id: 'eye_of_mind', name: 'Eye of the Mind (False) B', cost: 4,
+        desc: 'Evade regular attacks for 2 turns',
+        effects: [{ type: 'evade', turns: 2 }] },
+      { id: 'indomitable', name: 'Indomitable A', cost: 5,
+        desc: 'Buster +20% for 3 turns; +40% instead after 12 Labors has revived him',
+        effects: [{ type: 'cardUp', card: 'buster', value: 20, turns: 3 },
+                  { type: 'cardUp', card: 'buster', value: 20, turns: 3, condition: 'afterRevive' }] },
+    ],
+    np: { name: 'Nine Lives', card: 'buster', mult: 3.6,
+          desc: 'Heavy Buster damage, then the enemy takes 20% more damage for 2 turns',
+          postEffects: [{ type: 'defDown', value: 20, turns: 3, target: 'enemy' }] },
   },
 
   medea: {
     id: 'medea', name: 'Medea', class: 'Caster',
     fgoHp: 9000, fgoAtk: 6400,
     favoredCard: 'arts', npGain: 1.2, maxAp: 12,
-    passive: { name: 'Territory Creation', effects: [{ type: 'apRegen', value: 1 }] },
+    passives: [classPassive('territoryCreation', 'A')],
     skills: [
       { id: 'argon_coin', name: 'Argon Coin', cost: 3,
         effects: [{ type: 'heal', value: 15 }] },
@@ -88,7 +105,7 @@ export const SERVANTS = {
     id: 'kojirou', name: 'Sasaki Kojirou', class: 'Assassin',
     fgoHp: 7000, fgoAtk: 5700,
     favoredCard: 'quick', npGain: 1.0, maxAp: 10,
-    passive: { name: 'Presence Concealment', effects: [{ type: 'npGainUp', value: 10 }] },
+    passives: [classPassive('presenceConcealment', 'D')],
     skills: [
       { id: 'minds_eye', name: "Mind's Eye (Fake)", cost: 4,
         effects: [{ type: 'evade', turns: 2 }] },
