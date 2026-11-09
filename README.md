@@ -36,7 +36,12 @@ State is plain JSON (safe to send over Socket.IO). `resolveTurn` never mutates i
 Tuning experiments without editing files: `BASE_HP=1100 STAT_EXP=0.3 npm run sim -- 500`
 
 ## Online play
-Online Duel → Create Room gives a 4-letter code and an invite link (`/?room=CODE`).
-The server owns each match: it validates every action and only reveals picks and
-locked-in actions once both players have chosen. Refreshing the page rejoins your seat.
-Rooms live in server memory, so a redeploy or a sleeping free-tier instance clears them.
+Online Duel → enter a Master name → Create Room (4-letter code + invite link `/?room=CODE`) or Join.
+- Rooms hold up to 6 people. The creator is the host; if they leave, host passes to the next member.
+- Members are either queued to battle or spectating. The host starts a duel with the first two
+  queued players; everyone else watches. "Return to Room" after a match moves the two duelists
+  to the back of the queue.
+- Duelists never see each other's pick or action early. Spectators see everything live:
+  servant browsing, action drafts and lock-ins.
+- The server validates every action. Refreshing the page rejoins your seat.
+- Rooms live in server memory, so a redeploy or a sleeping free-tier instance clears them.

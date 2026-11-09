@@ -271,3 +271,10 @@ test('Medea: Rule Breaker applies ATK down, which Hecate\'s Staff pushes through
   assert.equal(d.value, 20);    // potency 25 fully cancels resistance 20
   assert.equal(d.turns, 3);     // active for the next 3 turns
 });
+
+test('passive damage cut is permanent (Invisible Air never expires)', () => {
+  let s = createMatch(SERVANTS.artoria, dummy('B'));
+  for (let k = 0; k < 4; k++) s = resolveTurn(s, [atk('arts'), atk('arts')]).state;
+  const cut = s.players[0].buffs.find(b => b.type === 'damageCut');
+  assert.ok(cut && cut.turns === null);
+});

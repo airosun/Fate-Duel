@@ -133,7 +133,8 @@ function applyEffect(target, e, source, user) {
     default: { // duration buff/debuff: atkUp, cardUp, npUp, damageCut, evade, invincible,
                // npGainUp, cardNpGainUp, debuffResist, guts, atkDown, defDown, apRegen,
                // busterConvert, flatDamage, sureHit{card?}, debuffPotency
-      let turns = e.turns ?? T.defaultTurns[e.type] ?? null;
+      // turns: null = permanent (passives); undefined = use the default for this effect
+      let turns = e.turns === undefined ? (T.defaultTurns[e.type] ?? null) : e.turns;
       if (e.type === 'invincible') turns = 1;
       const value = Math.round((e.value ?? 0) * (DEBUFFS.includes(e.type) ? resistScale(target, e, user) : 1) * 10) / 10;
       target.buffs.push({

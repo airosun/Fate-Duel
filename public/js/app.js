@@ -56,21 +56,28 @@ const ui = {
   bars: {},                 // last shown % per bar, for animation
   logOpen: true,
   revealing: false,
-  net: { socket: null, code: null, seat: null, snap: null, revealedTurn: 0, error: '', online: true },
+  net: { socket: null, code: null, snap: null, revealedTurn: 0, error: '', online: true },
 };
 
+const NAME_KEY = 'fateduel.name';
+const savedName = () => localStorage.getItem(NAME_KEY) ?? '';
+
 const online = () => ui.mode === 'online';
-const mySeat = () => ui.net.seat;
+const mySeat = () => ui.net.snap?.seat ?? null;
+const isDuelist = () => online() && mySeat() !== null;
+const isHost = () => ui.net.snap?.hostId === ui.net.snap?.me?.id;
 function masterLabel(i) {
   if (!online()) return `Master ${i + 1}`;
-  return i === mySeat() ? 'You' : 'Opponent';
+  const name = ui.net.snap?.duel?.seats[i]?.name ?? `Master ${i + 1}`;
+  return i === mySeat() ? `${name} (You)` : name;
 }
 
 function show(screen) { ui.screen = screen; render(); }
 
 function render() {
   if (!ui.revealing) { overlay.hidden = true; overlay.innerHTML = ''; }
-  ({ title: renderTitle, lobby: renderLobby, room: renderRoom, select: renderSelect, battle: renderBattle, end: renderEnd })[ui.screen]();
+  ({ title: renderTitle, lobby: renderLobby, room: renderRoom, select: renderSelect, spectate: renderSpectateSelect,
+     battle: renderBattle, end: renderEnd })[ui.screen]();
   renderNetBanner();
   animateBars();
 }
@@ -100,8 +107,10 @@ function renderNetBanner() {
   const snap = ui.net.snap;
   let msg = '';
   if (!ui.net.online) msg = 'Connection lost. Reconnecting…';
-  else if (snap && snap.present[1 - snap.seat] && !snap.connected[1 - snap.seat] && snap.phase !== 'waiting')
-    msg = 'Your opponent disconnected. Waiting for them to come back…';
+  else if (snap?.duel && ['select', 'battle'].includes(snap.phase)) {
+    const gone = snap.duel.seats.filter((s, i) => i !== snap.seat && !s.connected);
+    if (gone.length) msg = `${gone.map(s => s.name).join(' and ')} disconnected. Waiting for them to come back…`;
+  }
   if (!msg) return;
   const el = document.createElement('div');
   el.id = 'net-banner';
@@ -190,31 +199,33 @@ function onSnapshot(snap) {
   ui.mode = 'online';
   ui.net.snap = snap;
   ui.net.code = snap.code;
-  ui.net.seat = snap.seat;
-  if (firstForRoom) ui.net.revealedTurn = snap.lastTurn?.turn ?? 0; // don't replay old turns after a refresh
-  if (snap.match) { ui.match = snap.match; ui.locked = snap.locked; }
+  const duel = snap.duel;
+  if (!duel?.lastTurn) ui.net.revealedTurn = 0;               // new match: nothing revealed yet
+  else if (firstForRoom) ui.net.revealedTurn = duel.lastTurn.turn; // refresh: don't replay old turns
+  if (duel?.match) { ui.match = duel.match; ui.locked = duel.locked; }
   if (ui.revealing) return; // applied when the reveal closes
 
-  if (snap.phase === 'waiting') return show('room');
+  if (snap.phase === 'lobby') return show('room');
   if (snap.phase === 'select') {
-    if (ui.screen !== 'select') { ui.focus = snap.picks[snap.seat] ?? ROSTER[0].id; ui.bars = {}; }
+    if (!isDuelist()) return show('spectate');
+    if (ui.screen !== 'select') { ui.focus = duel.picks[snap.seat] ?? ROSTER[0].id; ui.bars = {}; }
     show('select');
-    if (snap.picks[snap.seat]) waitingOverlay('Servant summoned', 'Waiting for your opponent to choose…');
+    if (duel.picks[snap.seat]) waitingOverlay('Servant summoned', 'Waiting for your opponent to choose…');
     return;
   }
   // battle / over
-  if (snap.lastTurn && snap.lastTurn.turn > ui.net.revealedTurn) {
-    ui.net.revealedTurn = snap.lastTurn.turn;
+  if (duel.lastTurn && duel.lastTurn.turn > ui.net.revealedTurn) {
+    ui.net.revealedTurn = duel.lastTurn.turn;
     ui.active = -1;
     show('battle');
-    return showReveal(snap.lastTurn, snap.match, () => {
+    return showReveal(duel.lastTurn, duel.match, () => {
       ui.revealing = false;
       onSnapshot(ui.net.snap); // re-apply whatever arrived during the reveal
     });
   }
   if (snap.phase === 'over') return show('end');
-  if (ui.draftTurn !== snap.match.turn) { ui.draft = { main: null, seal: null }; ui.draftTurn = snap.match.turn; }
-  ui.active = snap.locked[snap.seat] ? -1 : snap.seat;
+  if (ui.draftTurn !== duel.match.turn) { ui.draft = { main: null, seal: null }; ui.draftTurn = duel.match.turn; }
+  ui.active = isDuelist() && !duel.locked[snap.seat] ? snap.seat : -1;
   show('battle');
 }
 
@@ -231,7 +242,7 @@ function waitingOverlay(title, text) {
 async function leaveRoom() {
   await emit('room:leave');
   clearSession();
-  Object.assign(ui.net, { code: null, seat: null, snap: null, revealedTurn: 0, error: '' });
+  Object.assign(ui.net, { code: null, snap: null, revealedTurn: 0, error: '' });
   ui.mode = 'local';
   ui.match = null;
   history.replaceState(null, '', location.pathname);
@@ -245,10 +256,14 @@ function renderLobby() {
   app.innerHTML = `
     <div class="title-screen lobby">
       <h1 class="small-title">ONLINE <span>DUEL</span></h1>
+      <label class="name-field">
+        <span>Master name</span>
+        <input id="name" maxlength="16" placeholder="Your name" autocomplete="nickname" value="${esc(savedName())}" />
+      </label>
       <div class="lobby-cards">
         <section class="lobby-card">
           <h3>Create a room</h3>
-          <p class="muted">Get a code to share with your opponent.</p>
+          <p class="muted">Host a room for up to 6 people and share the code.</p>
           <button class="btn gold big" id="create">Create Room</button>
         </section>
         <section class="lobby-card">
@@ -263,41 +278,137 @@ function renderLobby() {
       <p class="error lobby-error">${esc(ui.net.error)}</p>
       <button class="btn ghost small" id="back">← Back</button>
     </div>`;
+  const nameInput = app.querySelector('#name');
   const codeInput = app.querySelector('#code');
+  if (!nameInput.value) nameInput.focus();
   codeInput.oninput = () => { codeInput.value = codeInput.value.toUpperCase().replace(/[^A-Z]/g, ''); };
+  const name = () => {
+    const n = nameInput.value.trim();
+    if (!n) { ui.net.error = 'Enter a Master name first.'; app.querySelector('.lobby-error').textContent = ui.net.error; nameInput.focus(); return null; }
+    localStorage.setItem(NAME_KEY, n);
+    return n;
+  };
   app.querySelector('#back').onclick = () => { ui.mode = 'local'; show('title'); };
   app.querySelector('#create').onclick = async () => {
-    const res = await emit('room:create');
+    const n = name(); if (!n) return;
+    const res = await emit('room:create', { name: n });
     if (!res.ok) { ui.net.error = res.error; return render(); }
     saveSession(res.code, res.token);
   };
   app.querySelector('#joinForm').onsubmit = async e => {
     e.preventDefault();
-    const res = await emit('room:join', { code: codeInput.value });
+    const n = name(); if (!n) return;
+    const res = await emit('room:join', { code: codeInput.value, name: n });
     if (!res.ok) { ui.net.error = res.error; return render(); }
     saveSession(res.code, res.token);
   };
 }
 
+// ---------- online: room lobby ----------
+
+function rosterHtml({ compact = false } = {}) {
+  const snap = ui.net.snap;
+  const duelSeats = snap.duel?.seats.map(s => s.id) ?? [];
+  const queuePos = id => snap.queue.indexOf(id);
+  const rows = snap.members.map(m => {
+    const isMe = m.id === snap.me.id;
+    const dueling = duelSeats.includes(m.id);
+    const tag = dueling ? '<span class="role-chip duel">Dueling</span>'
+      : m.role === 'player' ? `<span class="role-chip player">Queue #${queuePos(m.id) + 1}</span>`
+      : '<span class="role-chip spec">Spectating</span>';
+    return `<li class="${m.connected ? '' : 'offline'} ${isMe ? 'me' : ''}">
+      <span class="member-name">${esc(m.name)}${isMe ? ' <em>(you)</em>' : ''}</span>
+      ${m.id === snap.hostId ? '<span class="host-chip">Host</span>' : ''}
+      ${m.connected ? '' : '<span class="offline-chip">offline</span>'}
+      ${tag}
+    </li>`;
+  }).join('');
+  const me = snap.members.find(m => m.id === snap.me.id);
+  const inDuel = duelSeats.includes(me.id);
+  const toggle = inDuel ? '' : me.role === 'player'
+    ? '<button class="btn ghost small" id="toSpec">Switch to spectating</button>'
+    : '<button class="btn gold small" id="toPlayer">Queue up to battle</button>';
+  return `
+    <section class="roster-panel ${compact ? 'compact' : ''}">
+      <h3>Room ${esc(snap.code)} <small>${snap.members.length}/${snap.maxMembers}</small></h3>
+      <ul class="member-list">${rows}</ul>
+      <div class="roster-actions">${toggle}</div>
+    </section>`;
+}
+
+function bindRoster() {
+  const toSpec = app.querySelector('#toSpec');
+  if (toSpec) toSpec.onclick = () => emit('room:role', { role: 'spectator' });
+  const toPlayer = app.querySelector('#toPlayer');
+  if (toPlayer) toPlayer.onclick = () => emit('room:role', { role: 'player' });
+}
+
 function renderRoom() {
-  const code = ui.net.code;
-  const link = `${location.origin}/?room=${code}`;
+  const snap = ui.net.snap;
+  const link = `${location.origin}/?room=${snap.code}`;
+  const nameOf = id => snap.members.find(m => m.id === id)?.name;
+  const ready = snap.queue.filter(id => snap.members.find(m => m.id === id)?.connected);
+  const next = ready.length >= 2 ? `${esc(nameOf(ready[0]))} vs ${esc(nameOf(ready[1]))}` : null;
+  const host = isHost();
   app.innerHTML = `
-    <div class="title-screen lobby">
-      <p class="tag">Room code</p>
-      <div class="room-code">${esc(code)}</div>
-      <p class="muted">Share the code or the invite link. The duel starts when your opponent joins.</p>
-      <div class="title-actions">
-        <button class="btn gold" id="copy">Copy invite link</button>
-        <button class="btn ghost" id="leave">Leave room</button>
+    <div class="room-screen">
+      <header class="screen-head">
+        <button class="btn ghost small" id="leave">Leave room</button>
+        <h1>Room <span class="code-inline">${esc(snap.code)}</span></h1>
+        <button class="btn ghost small" id="copy">Copy invite link</button>
+      </header>
+      <div class="room-body">
+        ${rosterHtml()}
+        <section class="start-panel">
+          <p class="tag">Next duel</p>
+          <h2>${next ?? 'Waiting for players…'}</h2>
+          <p class="muted">${next ? 'The first two players in the queue duel. Everyone else watches.' : 'At least two people need to be queued up to battle.'}</p>
+          ${host
+            ? `<button class="btn gold big" id="start" ${next ? '' : 'disabled'}>Start Duel</button>`
+            : `<p class="muted">Waiting for the host (${esc(nameOf(snap.hostId))}) to start.</p>`}
+          <p class="error" id="startErr"></p>
+        </section>
       </div>
-      <div class="spinner"></div>
-      <p class="muted">Waiting for an opponent…</p>
     </div>`;
+  bindRoster();
+  app.querySelector('#leave').onclick = leaveRoom;
   app.querySelector('#copy').onclick = async e => {
     try { await navigator.clipboard.writeText(link); e.target.textContent = 'Copied!'; }
     catch { e.target.textContent = link; }
   };
+  const start = app.querySelector('#start');
+  if (start) start.onclick = async () => {
+    const res = await emit('room:start');
+    if (!res.ok) app.querySelector('#startErr').textContent = res.error;
+  };
+}
+
+// ---------- online: spectator servant select ----------
+
+function renderSpectateSelect() {
+  const d = ui.net.snap.duel;
+  const side = i => {
+    const id = d.picks[i] ?? d.focus[i];
+    const s = id ? byId(id) : null;
+    return `
+      <div class="spec-pick ${d.picked[i] ? 'done' : ''}">
+        <span class="master-tag">${esc(d.seats[i].name)}</span>
+        ${s ? art(s, 'spec-art') : '<div class="art spec-art empty"><div class="art-fallback"><span>?</span></div></div>'}
+        <b>${s ? esc(s.name) : 'Browsing…'}</b>
+        <span class="spec-status">${d.picked[i] ? 'Summoned ✓' : s ? 'Considering…' : 'Browsing…'}</span>
+      </div>`;
+  };
+  app.innerHTML = `
+    <div class="room-screen">
+      <header class="screen-head">
+        <button class="btn ghost small" id="leave">Leave room</button>
+        <h1>Masters are summoning</h1>
+        <div></div>
+      </header>
+      <div class="spec-select">${side(0)}<div class="versus">VS</div>${side(1)}</div>
+      <div class="room-body single">${rosterHtml({ compact: true })}</div>
+    </div>`;
+  bindRoster();
   app.querySelector('#leave').onclick = leaveRoom;
 }
 
@@ -332,9 +443,11 @@ function kitHtml(s) {
 function renderSelect() {
   const focus = ROSTER.find(s => s.id === ui.focus) ?? ROSTER[0];
   const snap = ui.net.snap;
-  const title = online() ? 'Summon your Servant' : `Master ${ui.selecting + 1} <span>— Summon your Servant</span>`;
+  const title = online() ? `${esc(snap.me.name)} <span>— Summon your Servant</span>` : `Master ${ui.selecting + 1} <span>— Summon your Servant</span>`;
+  const opp = online() ? snap.duel.seats[1 - snap.seat] : null;
+  const oppReady = online() && snap.duel.picked[1 - snap.seat];
   const status = online()
-    ? `<span class="opp-status ${snap.picked[1 - snap.seat] ? 'ready' : ''}">Opponent: ${snap.picked[1 - snap.seat] ? 'ready' : 'choosing…'}</span>`
+    ? `<span class="opp-status ${oppReady ? 'ready' : ''}">${esc(opp.name)}: ${oppReady ? 'ready' : 'choosing…'}</span>`
     : '<div></div>';
   app.innerHTML = `
     <div class="select-screen">
@@ -360,8 +473,10 @@ function renderSelect() {
     </div>`;
   app.querySelectorAll('.roster-card').forEach(b => b.onclick = () => {
     ui.focus = b.dataset.id;
+    const picked = online() && ui.net.snap.duel.picks[ui.net.snap.seat];
+    if (online() && !picked) emit('select:focus', { servantId: ui.focus });
     render();
-    if (online() && ui.net.snap.picks[ui.net.seat]) waitingOverlay('Servant summoned', 'Waiting for your opponent to choose…');
+    if (picked) waitingOverlay('Servant summoned', 'Waiting for your opponent to choose…');
   });
   app.querySelector('#back').onclick = () => online() ? leaveRoom() : show('title');
   app.querySelector('#confirm').onclick = async () => {
@@ -520,9 +635,40 @@ function controlsHtml() {
     </section>`;
 }
 
+function describeAction(i, action) {
+  if (!action?.main && !action?.seal) return null;
+  const s = ui.match.servants[i];
+  const main = action.main ? actionLabel(s, action) : 'No action yet';
+  return `${main}${action.seal ? ` + ${SEAL_INFO[action.seal].name}` : ''}`;
+}
+
+function spectatorHtml() {
+  const d = ui.net.snap.duel;
+  const col = i => {
+    const locked = d.lockedActions?.[i];
+    const draft = d.drafts?.[i];
+    const text = describeAction(i, locked ?? draft);
+    const kind = locked?.main ? (locked.main.type === 'attack' ? locked.main.card : locked.main.type)
+      : draft?.main ? (draft.main.type === 'attack' ? draft.main.card : draft.main.type) : '';
+    return `
+      <div class="spec-col ${locked ? 'locked' : ''}">
+        <span class="master-tag">${esc(d.seats[i].name)} · ${esc(ui.match.servants[i].name)}</span>
+        <div class="spec-action ${kind}">${text ? esc(text) : 'Thinking…'}</div>
+        <span class="spec-status">${locked ? 'LOCKED IN' : draft ? 'selecting…' : ''}</span>
+      </div>`;
+  };
+  return `
+    <section class="controls spectator">
+      <div class="controls-head"><h3>Spectating <span>· live selections</span></h3><span class="turn-tag">Turn ${ui.match.turn}</span></div>
+      <div class="spec-cols">${col(0)}${col(1)}</div>
+      ${rosterHtml({ compact: true })}
+    </section>`;
+}
+
 function waitingControlsHtml() {
   if (!online()) return '<section class="controls resolving"><p>Resolving the clash…</p></section>';
-  const mine = ui.net.snap.myAction;
+  if (!isDuelist()) return spectatorHtml();
+  const mine = ui.net.snap.duel.myAction;
   const s = ui.match.servants[mySeat()];
   return `
     <section class="controls resolving">
@@ -551,7 +697,7 @@ function logHtml() {
 function renderBattle() {
   app.innerHTML = `
     <div class="battle">
-      ${online() ? `<div class="room-tag">Room ${esc(ui.net.code)} <button class="btn ghost small" id="leaveBattle">Leave</button></div>` : ''}
+      ${online() ? `<div class="room-tag">${isDuelist() ? '' : '<span class="spec-badge">Spectating</span>'} Room ${esc(ui.net.code)} <button class="btn ghost small" id="leaveBattle">Leave</button></div>` : ''}
       <div class="field">
         ${panelHtml(0)}
         <div class="versus">VS</div>
@@ -567,6 +713,7 @@ function renderBattle() {
 
 function setDraft(patch) {
   Object.assign(ui.draft, patch);
+  if (isDuelist() && ui.active >= 0) emit('battle:draft', { action: ui.draft }); // spectators see it live
   const scroll = window.scrollY;
   render();
   window.scrollTo(0, scroll);
@@ -584,7 +731,10 @@ function bindControls() {
   const unlock = app.querySelector('#unlock');
   if (unlock) unlock.onclick = () => emit('battle:unlock');
   const leave = app.querySelector('#leaveBattle');
-  if (leave) leave.onclick = () => { if (confirm('Leave this duel? Your opponent will be returned to the lobby.')) leaveRoom(); };
+  if (leave) leave.onclick = () => {
+    if (!isDuelist() || confirm('Leave this duel? It will end and everyone returns to the room.')) leaveRoom();
+  };
+  bindRoster();
   app.querySelector('#logToggle').onclick = () => { ui.logOpen = !ui.logOpen; setDraft({}); };
 }
 
@@ -669,23 +819,31 @@ function renderEnd() {
   const draw = winner === null;
   const s = draw ? null : m.servants[winner];
   let headline = draw ? 'Stalemate' : 'Victory';
-  if (online() && !draw) headline = winner === mySeat() ? 'Victory' : 'Defeat';
+  if (isDuelist() && !draw) headline = winner === mySeat() ? 'Victory' : 'Defeat';
+  else if (online() && !draw) headline = `${esc(ui.net.snap.duel.seats[winner].name)} wins`;
   const sub = draw
     ? (reason === 'double KO' ? 'Both Servants fall. Both Masters survive to fight again.' : `The battle reaches turn ${T.maxTurns} without a victor.`)
-    : `${online() ? (winner === mySeat() ? 'You' : 'Your opponent') : `Master ${winner + 1}`} and ${esc(s.name)} claim the Grail. (${m.turn - 1} turns)`;
+    : `${online() ? (winner === mySeat() ? 'You' : esc(ui.net.snap.duel.seats[winner].name)) : `Master ${winner + 1}`} and ${esc(s.name)} claim the Grail. (${m.turn - 1} turns)`;
 
   let actions;
   if (online()) {
-    const votes = ui.net.snap.rematch;
-    const mine = votes[mySeat()], theirs = votes[1 - mySeat()];
+    const d = ui.net.snap.duel;
     const voteText = v => v === 'same' ? 'wants a rematch' : v === 'change' ? 'wants new servants' : '';
-    actions = `
-      <div class="title-actions">
-        <button class="btn gold big ${mine === 'same' ? 'voted' : ''}" id="rematch">Rematch</button>
-        <button class="btn ghost big ${mine === 'change' ? 'voted' : ''}" id="newpick">New Servants</button>
-        <button class="btn ghost big" id="leave">Leave Room</button>
-      </div>
-      <p class="muted">${mine ? `You ${voteText(mine)}. ` : ''}${theirs ? `Your opponent ${voteText(theirs)}.` : (mine ? 'Waiting for your opponent…' : '')}</p>`;
+    const votes = d.seats.map((st, i) => d.rematch[i] ? `${esc(st.name)} ${voteText(d.rematch[i])}.` : '').filter(Boolean).join(' ');
+    if (isDuelist()) {
+      const mine = d.rematch[mySeat()];
+      actions = `
+        <div class="title-actions">
+          <button class="btn gold big ${mine === 'same' ? 'voted' : ''}" id="rematch">Rematch</button>
+          <button class="btn ghost big ${mine === 'change' ? 'voted' : ''}" id="newpick">New Servants</button>
+          <button class="btn ghost big" id="toRoom">Return to Room</button>
+        </div>
+        <p class="muted">${votes || 'Rematch and New Servants need both masters to agree. Return to Room sends everyone back to the room.'}</p>`;
+    } else {
+      actions = `
+        <p class="muted">${votes || 'Waiting for the masters to decide what\'s next…'}</p>
+        <div class="title-actions">${isHost() ? '<button class="btn ghost big" id="toRoom">Return to Room</button>' : ''}</div>`;
+    }
   } else {
     actions = `
       <div class="title-actions">
@@ -704,9 +862,10 @@ function renderEnd() {
     </div>`;
 
   if (online()) {
-    app.querySelector('#rematch').onclick = () => emit('match:rematch', { choice: 'same' });
-    app.querySelector('#newpick').onclick = () => emit('match:rematch', { choice: 'change' });
-    app.querySelector('#leave').onclick = leaveRoom;
+    const $ = sel => app.querySelector(sel);
+    if ($('#rematch')) $('#rematch').onclick = () => emit('match:rematch', { choice: 'same' });
+    if ($('#newpick')) $('#newpick').onclick = () => emit('match:rematch', { choice: 'change' });
+    if ($('#toRoom')) $('#toRoom').onclick = () => emit('match:return');
   } else {
     app.querySelector('#rematch').onclick = startLocalMatch;
     app.querySelector('#newpick').onclick = () => { ui.picks = [null, null]; ui.selecting = 0; ui.focus = ROSTER[0].id; show('select'); };
