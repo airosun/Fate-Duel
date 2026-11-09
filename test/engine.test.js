@@ -306,12 +306,22 @@ test('NP clash: ATK down from one NP does not weaken the other NP', () => {
   assert.equal(before - r.players[0].hp, Math.round(k.atk * 3.6 * 1.2)); // Tsubame's own Quick +20% only
 });
 
-test('Arts effectiveness also raises NP gain from Arts hits', () => {
+test('Arts effectiveness adds a flat NP gain bonus once, however many Arts buffs', () => {
   const base = resolveTurn(fresh(), [atk('arts'), atk('buster')]).state.players[0].np;
-  const boosted = resolveTurn(fresh({ passives: [{ effects: [{ type: 'cardUp', card: 'arts', value: 50 }] }] }),
+  const one = resolveTurn(fresh({ passives: [{ effects: [{ type: 'cardUp', card: 'arts', value: 50 }] }] }),
+    [atk('arts'), atk('buster')]).state.players[0].np;
+  const two = resolveTurn(fresh({ passives: [{ effects: [{ type: 'cardUp', card: 'arts', value: 20 }, { type: 'cardUp', card: 'arts', value: 30 }] }] }),
     [atk('arts'), atk('buster')]).state.players[0].np;
   assert.equal(base, T.cards.arts.npGain);
-  assert.equal(boosted, Math.round(T.cards.arts.npGain * 1.5));
+  assert.equal(one, Math.round(T.cards.arts.npGain * (1 + T.artsEffectNpGain / 100)));
+  assert.equal(two, one);
+});
+
+test('Quick effectiveness gives +1 AP once, however many Quick buffs', () => {
+  const two = resolveTurn(fresh({ passives: [{ effects: [{ type: 'cardUp', card: 'quick', value: 10 }, { type: 'cardUp', card: 'quick', value: 30 }] }] }),
+    [atk('quick'), atk('arts')]).state.players[0].ap;
+  const plainAp = resolveTurn(fresh(), [atk('quick'), atk('arts')]).state.players[0].ap;
+  assert.equal(two - plainAp, 1);
 });
 
 test('Quick effectiveness gives +1 AP when attacking with Quick', () => {

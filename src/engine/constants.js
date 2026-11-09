@@ -10,6 +10,11 @@ export const TUNING = {
   // key beats value
   beats: { quick: 'arts', arts: 'buster', buster: 'quick' },
 
+  // Card "effectiveness" side effects. They don't stack: having any number of
+  // effectiveness buffs for that card gives the bonus once.
+  artsEffectNpGain: Number(globalThis.process?.env?.ARTS_NPG ?? 15), // % extra NP gain on Arts hits
+  quickEffectAp: 1,     // extra AP when attacking with Quick
+
   counterBonus: 0.25,   // winner of a clash
   // Favored-card damage bonus, per card. Buster is lower because it
   // multiplies an already-larger base (1.5x).

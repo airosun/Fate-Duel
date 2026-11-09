@@ -184,8 +184,9 @@ function applyEffects(user, enemy, effects, source) {
 // ---------- damage ----------
 
 // "Effectiveness" of a card type (cardUp buffs, plus extra such as Circuit
-// Connect's next-hit bonus). Buster: damage. Arts: damage + NP gain from that
-// hit. Quick: damage + 1 extra AP when used.
+// Connect's next-hit bonus). Damage % stacks across buffs. Side effects don't:
+// Arts gets a flat +artsEffectNpGain% NP gain on its hits and Quick gets
+// +quickEffectAp AP when used, once, no matter how many buffs are active.
 const effectiveness = (p, card) => (card ? sumBuff(p, 'cardUp', card) : 0);
 
 function atkMultiplier(p, card, extraPct = 0) {
@@ -308,7 +309,7 @@ export function resolveTurn(prev, actions) {
     const conv = P[i].buffs.find(b => b.type === 'busterConvert');
     const hitAs = conv ? 'buster' : card;
     if (conv) P[i].buffs.splice(P[i].buffs.indexOf(conv), 1);
-    const quickEff = card === 'quick' && effectiveness(P[i], 'quick') > 0 ? 1 : 0;
+    const quickEff = card === 'quick' && effectiveness(P[i], 'quick') > 0 ? T.quickEffectAp : 0; // once
     P[i].ap = Math.min(P[i].maxAp, P[i].ap + T.apPerAttack + T.cards[card].apBonus + quickEff);
 
     let lands = true, counter = false, reason = 'unopposed';
@@ -338,7 +339,8 @@ export function resolveTurn(prev, actions) {
     def.hp -= pk.amount;
     gainNp(def, T.npGainOnHit, { defending: true });
     if (pk.kind === 'attack') {
-      const artsEffect = pk.hitAs === 'arts' ? effectiveness(att, 'arts') + pk.nextHit : 0;
+      const artsBoosted = pk.hitAs === 'arts' && (effectiveness(att, 'arts') > 0 || pk.nextHit > 0);
+      const artsEffect = artsBoosted ? T.artsEffectNpGain : 0; // flat, once
       gainNp(att, T.cards[pk.hitAs].npGain, { card: pk.hitAs, artsEffect });
       const nextHitAp = pk.nextHit && pk.card === 'quick' ? 1 : 0;
       att.ap = Math.min(att.maxAp, att.ap + T.apOnLand + nextHitAp);
