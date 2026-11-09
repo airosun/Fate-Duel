@@ -449,3 +449,12 @@ test('EMIYA: Trace On copies the opponent\'s unique passive (not other copy effe
   const vsMedusa = createMatch(SERVANTS.emiya, SERVANTS.medusa).players[0];
   assert.ok(vsMedusa.buffs.some(b => b.type === 'buffFailChance'));
 });
+
+test('Empower boosts the next NP if it comes before an attack, then is used up', () => {
+  let s = fresh();
+  s = resolveTurn(s, [{ main: { type: 'skill', skillId: 'charge' }, seal: 'empower' }, atk('arts')]).state;
+  assert.equal(s.players[0].empower, true);
+  const r = resolveTurn(s, [np(), atk('arts')]).state;
+  assert.equal(s.players[1].hp - r.players[1].hp, 100 * 4 * 1.5);
+  assert.equal(r.players[0].empower, false);
+});

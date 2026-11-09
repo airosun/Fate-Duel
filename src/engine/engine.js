@@ -46,7 +46,9 @@ function createPlayer(servant) {
   const passives = servant.passives ?? (servant.passive ? [servant.passive] : []);
   const all = passives.flatMap(pas => pas.effects);
   for (const e of all.filter(e => e.type === 'maxApUp')) p.maxAp += e.value;
-  for (const e of all.filter(e => e.type !== 'maxApUp')) applyEffect(p, { ...e, turns: null }, 'passive');
+  for (const pas of passives) {
+    for (const e of pas.effects) if (e.type !== 'maxApUp') applyEffect(p, { ...e, turns: null }, pas.name);
+  }
   p.ap = Math.min(p.ap, p.maxAp);
   return p;
 }
@@ -63,7 +65,7 @@ function applyCopiedUniques(p, servant, foe) {
   for (const pa of foe.passives ?? []) {
     if (pa.kind !== 'unique' || pa.effects.some(e => e.type === 'copyEnemyUnique')) continue;
     if (pa.effects.some(e => e.type === 'guts')) { p.copyBlocked.push(pa.name); continue; }
-    for (const e of pa.effects) applyEffect(p, { ...e, turns: null, copiedFrom: pa.name }, 'passive');
+    for (const e of pa.effects) applyEffect(p, { ...e, turns: null, copiedFrom: pa.name }, 'Trace On');
     p.copied.push(pa.name);
   }
 }
@@ -287,8 +289,8 @@ function attackPacket(att, def, card, { counter, empowered, nextHit = 0, vsBonus
   return defend(def, raw, { isNp: false, ignoreDefense: false, sureHit });
 }
 
-function npPacket(att, def, np) {
-  let mult = np.mult;
+function npPacket(att, def, np, { empowered = false } = {}) {
+  let mult = np.mult * (empowered ? 1 + T.seals.empowerBonus : 1);
   if (np.missingHpBonus) mult *= 1 + np.missingHpBonus * (1 - def.hp / def.maxHp);
   const raw = att.atk * mult * atkMultiplier(att, np.card) * (1 + sumBuff(att, 'npUp') / 100)
     + sumBuff(att, 'flatDamage');
@@ -362,11 +364,14 @@ export function resolveTurn(prev, actions) {
   for (const i of npUsers) {
     const att = structuredClone(P[i]), def = structuredClone(P[1 - i]);
     applyEffects(att, def, npPre[i], 'np');
-    packets.push({ from: i, to: 1 - i, kind: 'np', card: nps[i].card, ...npPacket(att, def, nps[i]) });
+    // Empower boosts whichever comes first: the next regular attack or the next NP.
+    packets.push({ from: i, to: 1 - i, kind: 'np', card: nps[i].card, empowered: P[i].empower,
+      ...npPacket(att, def, nps[i], { empowered: P[i].empower }) });
   }
   for (const i of npUsers) {
     P[i].np = 0;
-    say(`${P[i].name} unleashes ${nps[i].name}${nps[i].modeName ? ` (${nps[i].modeName})` : ''}!`, { type: 'np', player: i });
+    say(`${P[i].name} unleashes ${nps[i].name}${nps[i].modeName ? ` (${nps[i].modeName})` : ''}${P[i].empower ? ', empowered by a Command Seal' : ''}!`, { type: 'np', player: i });
+    P[i].empower = false;
   }
 
   // 4. Regular attacks — RPS clash

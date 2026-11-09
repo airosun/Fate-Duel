@@ -173,7 +173,7 @@ function rulesHtml() {
           <li><b>Buster</b> hits hardest · <b>Arts</b> charges NP · <b>Quick</b> restores AP.</li>
           <li>Skills cost AP and resolve first. The same skill can't be used two turns in a row.</li>
           <li>A full NP gauge unleashes a Noble Phantasm, which beats every regular attack.</li>
-          <li>Command Seals (3 per match) are free extra actions: heal, recharge AP, empower, or all three to fill the NP gauge.</li>
+          <li>Command Seals (3 per match) are free extra actions: heal, recharge AP, empower the next attack or NP, or all three to fill the NP gauge.</li>
           <li>Reduce the enemy Servant to 0 HP. Double KO or reaching turn ${T.maxTurns} is a draw.</li>
         </ul>
       </div>
@@ -557,11 +557,29 @@ function animateBars() {
     document.querySelectorAll('.fill[data-target]').forEach(el => { el.style.width = el.dataset.target; })));
 }
 
+// Where a buff came from, in words: a skill or NP name, a passive name, or the opponent's.
+function sourceName(servant, b) {
+  if (b.copiedFrom) return `Trace On: ${b.copiedFrom}`;
+  if (b.debuff) { // debuffs come from the opponent
+    const foe = ui.match.servants.find(x => x !== servant) ?? servant;
+    const fsk = foe.skills.find(x => x.id === b.source);
+    if (fsk) return `${foe.name}: ${fsk.name}`;
+    if (b.source === 'np') return `${foe.name}: ${foe.np.name}`;
+    return 'Debuff';
+  }
+  const sk = servant.skills.find(x => x.id === b.source);
+  if (sk) return sk.name;
+  if (b.source === 'np') return servant.np.name;
+  return b.source ?? 'Passive';
+}
+
+const badge = (kind, label, title, body, meta) =>
+  `<span class="buff ${kind}" tabindex="0" data-tip-title="${esc(title)}" data-tip="${esc(body)}" data-tip-meta="${esc(meta)}">${esc(label)}</span>`;
+
 function panelHtml(i) {
   const m = ui.match, p = m.players[i], s = m.servants[i];
   const hpPct = Math.max(0, (p.hp / p.maxHp) * 100);
   const npFull = p.np >= T.npMax;
-  const buffs = p.buffs.map(buffChip);
   const highlight = online() ? i === mySeat() : vsCpu() ? i === 0 : ui.active === i;
   return `
     <section class="panel ${highlight ? 'active' : ''} side-${i}">
@@ -590,10 +608,11 @@ function panelHtml(i) {
           </div>
         </div>
         <div class="buffs">
-          ${p.empower ? '<span class="buff active" data-tip="Command Seal · next regular attack">Empowered</span>' : ''}
-          ${(p.copyBlocked ?? []).map(n => `<span class="buff passive blocked" tabindex="0" data-tip="Trace On can't copy revives">✕ ${esc(n)}</span>`).join('')}
-          ${buffs.sort((a, b) => ({ passive: 0, active: 1, debuff: 2 }[a.kind] - { passive: 0, active: 1, debuff: 2 }[b.kind]))
-            .map(b => `<span class="buff ${b.kind}" tabindex="0" data-tip="${esc(b.duration)}">${esc(b.label)}</span>`).join('')}
+          ${p.empower ? badge('active', 'Empowered', 'Command Seal: Empower', `The next attack or Noble Phantasm deals ${T.seals.empowerBonus * 100}% more damage, whichever comes first. An empowered attack also wins a tie.`, 'Used up by the next attack or NP') : ''}
+          ${(p.copyBlocked ?? []).map(n => badge('passive blocked', `✕ ${n}`, `Trace On: ${n}`, "Trace On couldn't copy this passive, because revives can't be copied.", '')).join('')}
+          ${p.buffs.map(b => ({ b, chip: buffChip(b) }))
+            .sort((x, y) => ({ passive: 0, active: 1, debuff: 2 }[x.chip.kind] - { passive: 0, active: 1, debuff: 2 }[y.chip.kind]))
+            .map(({ b, chip }) => badge(chip.kind, chip.label, sourceName(s, b), chip.explain, chip.duration)).join('')}
         </div>
       </div>
     </section>`;
@@ -616,7 +635,7 @@ const isFavored = (s, card) => s.favoredCard === card || favoredAll(s);
 const SEAL_INFO = {
   heal: { name: 'Heal', desc: `Restore ${T.seals.healPct}% HP`, cost: 1 },
   recharge: { name: 'Recharge', desc: `+${T.seals.rechargeAp} AP`, cost: 1 },
-  empower: { name: 'Empower', desc: `Next attack +${T.seals.empowerBonus * 100}%, wins ties`, cost: 1 },
+  empower: { name: 'Empower', desc: `Next attack or NP +${T.seals.empowerBonus * 100}% damage (attacks also win ties)`, cost: 1 },
   grandOrder: { name: 'Grand Order', desc: 'Spend all 3: fill NP gauge', cost: 3 },
 };
 
@@ -951,6 +970,31 @@ function renderEnd() {
     app.querySelector('#title').onclick = () => show('title');
   }
 }
+
+// ---------- badge tooltips (one floating box, so panels never clip it) ----------
+
+const tipBox = document.createElement('div');
+tipBox.id = 'tipbox';
+tipBox.hidden = true;
+document.body.appendChild(tipBox);
+function showTip(el) {
+  tipBox.replaceChildren();
+  const t = document.createElement('b'); t.textContent = el.dataset.tipTitle ?? '';
+  const p = document.createElement('p'); p.textContent = el.dataset.tip ?? '';
+  tipBox.append(t, p);
+  if (el.dataset.tipMeta) { const m = document.createElement('small'); m.textContent = el.dataset.tipMeta; tipBox.append(m); }
+  tipBox.hidden = false;
+  const r = el.getBoundingClientRect(), w = tipBox.offsetWidth, h = tipBox.offsetHeight;
+  const left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), window.innerWidth - w - 8);
+  const top = r.top - h - 8 >= 8 ? r.top - h - 8 : r.bottom + 8;
+  tipBox.style.left = `${left}px`;
+  tipBox.style.top = `${top}px`;
+}
+const hideTip = () => { tipBox.hidden = true; };
+document.addEventListener('mouseover', e => { const el = e.target.closest?.('[data-tip]'); if (el) showTip(el); else hideTip(); });
+document.addEventListener('focusin', e => { const el = e.target.closest?.('[data-tip]'); if (el) showTip(el); });
+document.addEventListener('focusout', hideTip);
+window.addEventListener('scroll', hideTip, true);
 
 // ---------- keyboard shortcuts (battle) ----------
 

@@ -165,11 +165,6 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
 .buff.passive { background: rgba(160,165,185,.16); border: 1px solid rgba(170,175,195,.45); color: #c9ccd8; }
 .buff.active { background: rgba(61,127,230,.28); border: 1px solid rgba(90,150,240,.7); color: #e3eeff; }
 .buff.debuff { background: rgba(226,70,58,.25); border: 1px solid rgba(226,70,58,.7); color: #ffe0dc; }
-.buff[data-tip]:hover::after, .buff[data-tip]:focus::after {
-  content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
-  white-space: nowrap; background: #05081a; color: var(--text); border: 1px solid var(--gold-dim); border-radius: 5px;
-  padding: .3rem .55rem; font-size: .72rem; z-index: 20; box-shadow: 0 4px 12px rgba(0,0,0,.5); pointer-events: none;
-}
 
 .lower { display: grid; grid-template-columns: 1fr 320px; gap: 1rem; align-items: start; }
 .controls { background: var(--panel); border: 1px solid var(--gold-dim); border-radius: var(--radius); padding: 1rem; }
@@ -395,3 +390,14 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
 
 .buff.passive.blocked { text-decoration: line-through; opacity: .6; }
 .log-buffFail { color: #c9a7ff !important; font-style: italic; }
+
+#tipbox {
+  position: fixed; z-index: 80; max-width: 280px; pointer-events: none;
+  background: #05081a; color: var(--text); border: 1px solid var(--gold-dim); border-radius: 6px;
+  padding: .5rem .65rem; box-shadow: 0 6px 18px rgba(0,0,0,.55); font-size: .78rem; line-height: 1.4;
+}
+#tipbox[hidden] { display: none; }
+#tipbox b { display: block; color: var(--gold2); font-size: .8rem; margin-bottom: .15rem; }
+#tipbox p { margin: 0; }
+#tipbox small { display: block; margin-top: .3rem; color: var(--muted); }
+.buff:focus-visible { outline: 2px solid var(--gold2); outline-offset: 1px; }
