@@ -38,6 +38,7 @@ function createPlayer(servant) {
     favoredCard: servant.favoredCard ?? null,
     seals: T.seals.count,
     revived: false,
+    npMode: servant.np?.defaultMode ?? null,
     lastSkillId: null,
     empower: false,
     buffs: [],
@@ -62,6 +63,14 @@ export function createMatch(servantA, servantB) {
 }
 
 // ---------- queries ----------
+
+// The NP as currently configured (servants like EMIYA switch NP modes).
+export function npOf(servant, player) {
+  const np = servant.np;
+  if (!np.modes) return np;
+  const mode = np.modes[player.npMode] ?? np.modes[np.defaultMode];
+  return { ...np, ...mode, name: np.name, modeName: mode.label };
+}
 
 const sumBuff = (p, type, card) =>
   p.buffs.filter(b => b.type === type && (card === undefined || b.card === card))
@@ -88,6 +97,10 @@ export function validateAction(state, idx, action) {
   if (!m) return 'Missing main action';
   if (m.type === 'attack' && !legal.attacks.includes(m.card)) return `Unknown card: ${m.card}`;
   if (m.type === 'skill' && !legal.skills.includes(m.skillId)) return `Skill not available: ${m.skillId}`;
+  if (m.type === 'skill') {
+    const sk = state.servants[idx].skills.find(s => s.id === m.skillId);
+    if (sk.options && !sk.options.some(o => o.id === m.option)) return `Choose an option for ${sk.name}`;
+  }
   if (m.type === 'np' && !legal.np) return 'NP gauge not full';
   if (!['attack', 'skill', 'np'].includes(m.type)) return `Unknown action: ${m.type}`;
   if (action.seal != null) {
@@ -124,6 +137,9 @@ function applyEffect(target, e, source, user) {
     case 'apGain':
       target.ap = Math.min(target.maxAp, target.ap + e.value);
       return;
+    case 'setNpMode':
+      target.npMode = e.value;
+      return;
     case 'cleanse': // removes all debuffs from the target
       target.buffs = target.buffs.filter(b => !b.debuff);
       return;
@@ -132,7 +148,8 @@ function applyEffect(target, e, source, user) {
       return;
     default: { // duration buff/debuff: atkUp, cardUp, npUp, damageCut, evade, invincible,
                // npGainUp, cardNpGainUp, debuffResist, guts, atkDown, defDown, apRegen,
-               // busterConvert, flatDamage, sureHit{card?}, debuffPotency
+               // busterConvert, flatDamage, sureHit{card?}, debuffPotency,
+               // nextHitUp (consumed by the next landed attack), affinityAll
       // turns: null = permanent (passives); undefined = use the default for this effect
       let turns = e.turns === undefined ? (T.defaultTurns[e.type] ?? null) : e.turns;
       if (e.type === 'invincible') turns = 1;
@@ -166,10 +183,17 @@ function applyEffects(user, enemy, effects, source) {
 
 // ---------- damage ----------
 
-function atkMultiplier(p, card) {
-  const pct = sumBuff(p, 'atkUp') + (card ? sumBuff(p, 'cardUp', card) : 0) - sumBuff(p, 'atkDown');
+// "Effectiveness" of a card type (cardUp buffs, plus extra such as Circuit
+// Connect's next-hit bonus). Buster: damage. Arts: damage + NP gain from that
+// hit. Quick: damage + 1 extra AP when used.
+const effectiveness = (p, card) => (card ? sumBuff(p, 'cardUp', card) : 0);
+
+function atkMultiplier(p, card, extraPct = 0) {
+  const pct = sumBuff(p, 'atkUp') + effectiveness(p, card) + extraPct - sumBuff(p, 'atkDown');
   return Math.max(0.1, 1 + pct / 100);
 }
+
+const hasAffinity = (p, card) => p.favoredCard === card || hasBuff(p, 'affinityAll');
 
 function defend(defender, raw, { isNp, ignoreDefense, sureHit }) {
   if (hasBuff(defender, 'invincible')) return { amount: 0, blocked: 'invincible' };
@@ -179,9 +203,9 @@ function defend(defender, raw, { isNp, ignoreDefense, sureHit }) {
   return { amount: Math.round(raw * vuln * (1 - cut / 100)), blocked: null };
 }
 
-function attackPacket(att, def, card, { counter, empowered }) {
-  let raw = att.atk * T.cards[card].mult * atkMultiplier(att, card);
-  if (att.favoredCard === card) raw *= 1 + T.affinityBonus[card];
+function attackPacket(att, def, card, { counter, empowered, nextHit = 0 }) {
+  let raw = att.atk * T.cards[card].mult * atkMultiplier(att, card, nextHit);
+  if (hasAffinity(att, card)) raw *= 1 + T.affinityBonus[card];
   if (counter) raw *= 1 + T.counterBonus;
   if (empowered) raw *= 1 + T.seals.empowerBonus;
   raw += sumBuff(att, 'flatDamage');
@@ -197,8 +221,8 @@ function npPacket(att, def, np) {
   return defend(def, raw, { isNp: true, ignoreDefense: !!np.ignoreDefense });
 }
 
-function gainNp(p, base, { defending = false, card } = {}) {
-  const pct = sumBuff(p, 'npGainUp') + (card ? sumBuff(p, 'cardNpGainUp', card) : 0);
+function gainNp(p, base, { defending = false, card, artsEffect = 0 } = {}) {
+  const pct = sumBuff(p, 'npGainUp') + (card ? sumBuff(p, 'cardNpGainUp', card) : 0) + artsEffect;
   const mod = (defending ? p.npGainDef : p.npGainAtk) * (1 + pct / 100);
   p.np = Math.min(T.npMax, p.np + Math.round(base * mod));
 }
@@ -242,24 +266,32 @@ export function resolveTurn(prev, actions) {
     P[i].lastSkillId = skill ? skill.id : null;
     if (!skill) continue;
     P[i].ap -= skill.cost;
-    applyEffects(P[i], P[1 - i], skill.effects.filter(e => e.target !== 'enemy'), skill.id);
-    say(`${P[i].name} uses ${skill.name}.`, { type: 'skill', player: i, skillId: skill.id });
+    const option = skill.options?.find(o => o.id === mains[i].option);
+    const effects = skill.effects.map(e => (e.type === 'setNpMode' ? { ...e, value: option.id } : e));
+    skillUses[i] = { ...skill, effects };
+    applyEffects(P[i], P[1 - i], effects.filter(e => e.target !== 'enemy'), skill.id);
+    say(`${P[i].name} uses ${skill.name}${option ? ` (${option.label})` : ''}.`, { type: 'skill', player: i, skillId: skill.id });
   }
   for (const i of [0, 1]) {
     const skill = skillUses[i];
     if (skill) applyEffects(P[i], P[1 - i], skill.effects.filter(e => e.target === 'enemy'), skill.id);
   }
 
-  // 3. Noble Phantasms — pre-effects, then packets computed simultaneously
+  // 3. Noble Phantasms — they hit simultaneously. Each NP's damage is worked
+  // out on a private copy of the field (its own pre-effects apply only to its
+  // own hit), so neither NP's effects touch the other. All NP effects land on
+  // the real field after all damage.
   const packets = []; // { from, to, amount, blocked, kind, card }
   const npUsers = [0, 1].filter(i => mains[i].type === 'np');
+  const nps = [0, 1].map(i => npOf(S[i], P[i]));
   for (const i of npUsers) {
-    P[i].np = 0;
-    applyEffects(P[i], P[1 - i], S[i].np.preEffects, 'np');
-    say(`${P[i].name} unleashes ${S[i].np.name}!`, { type: 'np', player: i });
+    const att = structuredClone(P[i]), def = structuredClone(P[1 - i]);
+    applyEffects(att, def, nps[i].preEffects, 'np');
+    packets.push({ from: i, to: 1 - i, kind: 'np', card: nps[i].card, ...npPacket(att, def, nps[i]) });
   }
   for (const i of npUsers) {
-    packets.push({ from: i, to: 1 - i, kind: 'np', card: S[i].np.card, ...npPacket(P[i], P[1 - i], S[i].np) });
+    P[i].np = 0;
+    say(`${P[i].name} unleashes ${nps[i].name}${nps[i].modeName ? ` (${nps[i].modeName})` : ''}!`, { type: 'np', player: i });
   }
 
   // 4. Regular attacks — RPS clash
@@ -276,7 +308,8 @@ export function resolveTurn(prev, actions) {
     const conv = P[i].buffs.find(b => b.type === 'busterConvert');
     const hitAs = conv ? 'buster' : card;
     if (conv) P[i].buffs.splice(P[i].buffs.indexOf(conv), 1);
-    P[i].ap = Math.min(P[i].maxAp, P[i].ap + T.apPerAttack + T.cards[card].apBonus);
+    const quickEff = card === 'quick' && effectiveness(P[i], 'quick') > 0 ? 1 : 0;
+    P[i].ap = Math.min(P[i].maxAp, P[i].ap + T.apPerAttack + T.cards[card].apBonus + quickEff);
 
     let lands = true, counter = false, reason = 'unopposed';
     if (mains[j].type === 'np') { lands = false; reason = 'overpowered by NP'; }
@@ -290,7 +323,9 @@ export function resolveTurn(prev, actions) {
       else { lands = false; reason = 'countered'; }
     }
     if (!lands) { say(`${P[i].name}'s ${CARD_NAME[card]} attack fails (${reason}).`, { type: 'whiff', player: i, card, reason }); continue; }
-    packets.push({ from: i, to: j, kind: 'attack', card, hitAs, reason, ...attackPacket(P[i], P[j], hitAs, { counter, empowered }) });
+    const nextHit = sumBuff(P[i], 'nextHitUp');
+    packets.push({ from: i, to: j, kind: 'attack', card, hitAs, reason, nextHit,
+      ...attackPacket(P[i], P[j], hitAs, { counter, empowered, nextHit }) });
   }
 
   // 5. Apply all damage simultaneously
@@ -303,12 +338,16 @@ export function resolveTurn(prev, actions) {
     def.hp -= pk.amount;
     gainNp(def, T.npGainOnHit, { defending: true });
     if (pk.kind === 'attack') {
-      gainNp(att, T.cards[pk.hitAs].npGain, { card: pk.hitAs });
-      att.ap = Math.min(att.maxAp, att.ap + T.apOnLand);
+      const artsEffect = pk.hitAs === 'arts' ? effectiveness(att, 'arts') + pk.nextHit : 0;
+      gainNp(att, T.cards[pk.hitAs].npGain, { card: pk.hitAs, artsEffect });
+      const nextHitAp = pk.nextHit && pk.card === 'quick' ? 1 : 0;
+      att.ap = Math.min(att.maxAp, att.ap + T.apOnLand + nextHitAp);
+      if (pk.nextHit) att.buffs = att.buffs.filter(b => b.type !== 'nextHitUp'); // consumed on a landed hit
     }
     say(`${att.name} hits ${def.name} for ${pk.amount}${pk.hitAs && pk.hitAs !== pk.card ? ` (${CARD_NAME[pk.card]} → Buster)` : ''}${pk.reason === 'counter' ? ' (counter!)' : ''}.`, { type: 'hit', ...pk });
   }
-  for (const i of npUsers) applyEffects(P[i], P[1 - i], S[i].np.postEffects, 'np');
+  for (const i of npUsers) applyEffects(P[i], P[1 - i], nps[i].preEffects, 'np');
+  for (const i of npUsers) applyEffects(P[i], P[1 - i], nps[i].postEffects, 'np');
 
   // Guts
   for (const p of P) {

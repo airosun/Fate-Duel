@@ -21,6 +21,7 @@ const weighted = w => { // {key: weight}
 function bot(state, i) {
   const me = state.players[i], foe = state.players[1 - i];
   const legal = getLegalActions(state, i);
+  const servant = state.servants[i];
   let seal = null;
   if (legal.seals.includes('heal') && me.hp / me.maxHp < 0.3 && rand() < 0.7) seal = 'heal';
   else if (legal.seals.includes('grandOrder') && me.np < 40 && foe.hp / foe.maxHp < 0.45 && rand() < 0.3) seal = 'grandOrder';
@@ -28,13 +29,16 @@ function bot(state, i) {
 
   if (legal.np && rand() < 0.75) return { main: { type: 'np' }, seal: seal === 'grandOrder' ? null : seal };
   // expect enemy NP? try a defensive skill
-  const servant = state.servants[i];
   if (foe.np >= T.npMax && legal.skills.length && rand() < 0.5) {
     const def = servant.skills.find(s => legal.skills.includes(s.id) &&
       s.effects.some(e => ['damageCut', 'invincible'].includes(e.type)));
     if (def) return { main: { type: 'skill', skillId: def.id }, seal };
   }
-  if (legal.skills.length && rand() < 0.3) return { main: { type: 'skill', skillId: pick(legal.skills) }, seal };
+  if (legal.skills.length && rand() < 0.3) {
+    const id = pick(legal.skills);
+    const sk = servant.skills.find(x => x.id === id);
+    return { main: { type: 'skill', skillId: sk.id, ...(sk.options ? { option: pick(sk.options).id } : {}) }, seal };
+  }
   const w = { quick: 1, arts: 1, buster: 1 };
   if (me.favoredCard) w[me.favoredCard] += 0.4;
   if (me.ap < 3) w.quick += 0.6;

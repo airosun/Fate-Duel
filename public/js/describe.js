@@ -35,6 +35,9 @@ export function describeEffect(e) {
     case 'cleanse': return `Cleanse own debuffs`;
     case 'sureHit': return `${c ? c + ' attacks' : 'Attacks'} pierce Evade${turnsText(e)}`;
     case 'debuffPotency': return `Debuffs ignore ${v}% resistance`;
+    case 'nextHitUp': return `Next landed attack ${v}% more effective`;
+    case 'affinityAll': return `Every favored-card bonus`;
+    case 'setNpMode': return `Change NP mode`;
     case 'heal': return `${who}Heal ${v}% HP`;
     case 'npCharge': return `NP +${v}%`;
     case 'npDrain': return `${who}NP −${v}%`;
@@ -52,6 +55,9 @@ export function describeSkill(s) {
 }
 
 export function describeNp(np) {
+  if (np.modes && !np.modeName) {
+    return Object.values(np.modes).map(m => `${m.label}: ${m.mult}× ${CARD_LABEL[m.card]}${m.desc ? ` (${m.desc})` : ''}`).join(' · ');
+  }
   if (np.desc) return np.desc;
   const parts = [`${np.mult}× ATK ${CARD_LABEL[np.card]} damage`];
   if (np.ignoreDefense) parts.push('ignores Damage Cut and Evade');
@@ -66,6 +72,7 @@ const BUFF_LABEL = {
   invincible: 'Invincible', npGainUp: 'NP Gain↑', cardNpGainUp: 'NP Gain↑', debuffResist: 'Debuff Res',
   guts: 'Guts', atkDown: 'ATK↓', apRegen: 'AP Regen', busterConvert: 'Buster Strike',
   defDown: 'DEF↓', flatDamage: 'Flat Dmg', sureHit: 'Sure Hit', debuffPotency: 'Debuff Potency',
+  nextHitUp: 'Next Hit↑', affinityAll: 'All Cards Favored',
 };
 
 export function buffChip(b) {

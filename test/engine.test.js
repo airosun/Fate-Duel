@@ -278,3 +278,82 @@ test('passive damage cut is permanent (Invisible Air never expires)', () => {
   const cut = s.players[0].buffs.find(b => b.type === 'damageCut');
   assert.ok(cut && cut.turns === null);
 });
+
+// ---------- clash simultaneity + effectiveness + EMIYA ----------
+const skillOpt = (skillId, option) => ({ main: { type: 'skill', skillId, option }, seal: null });
+
+test('NP clash: Rule Breaker does not strip Heracles\' buffs before Nine Lives lands', () => {
+  let s = createMatch(SERVANTS.medea, SERVANTS.heracles);
+  s.players[1].ap = 8;
+  s = resolveTurn(s, [atk('arts'), skill('bravery')]).state;   // Heracles ATK +20%
+  s.players[0].np = 100; s.players[1].np = 100;
+  const h = s.players[1], m = s.players[0];
+  const medeaHp = m.hp;
+  const r = resolveTurn(s, [np(), np()]).state;
+  // Nine Lives keeps Bravery (+20%) and Mad Enhancement (Buster +10%): 3.6 × (1 + .2 + .1) + 10 flat
+  assert.equal(medeaHp - r.players[0].hp, Math.round(h.atk * 3.6 * 1.3 + 10));
+  // Heracles' Bravery is removed afterwards, and Rule Breaker's ATK down lands afterwards
+  assert.equal(r.players[1].buffs.some(b => b.source === 'bravery'), false);
+  assert.ok(r.players[1].buffs.some(b => b.type === 'atkDown'));
+});
+
+test('NP clash: ATK down from one NP does not weaken the other NP', () => {
+  let s = createMatch(SERVANTS.medea, SERVANTS.kojirou);
+  s.players[0].np = 100; s.players[1].np = 100;
+  const k = s.players[1];
+  const before = s.players[0].hp;
+  const r = resolveTurn(s, [np(), np()]).state;
+  assert.equal(before - r.players[0].hp, Math.round(k.atk * 3.6 * 1.2)); // Tsubame's own Quick +20% only
+});
+
+test('Arts effectiveness also raises NP gain from Arts hits', () => {
+  const base = resolveTurn(fresh(), [atk('arts'), atk('buster')]).state.players[0].np;
+  const boosted = resolveTurn(fresh({ passives: [{ effects: [{ type: 'cardUp', card: 'arts', value: 50 }] }] }),
+    [atk('arts'), atk('buster')]).state.players[0].np;
+  assert.equal(base, T.cards.arts.npGain);
+  assert.equal(boosted, Math.round(T.cards.arts.npGain * 1.5));
+});
+
+test('Quick effectiveness gives +1 AP when attacking with Quick', () => {
+  const plain = resolveTurn(fresh(), [atk('quick'), atk('arts')]).state.players[0].ap;
+  const fast = resolveTurn(fresh({ passives: [{ effects: [{ type: 'cardUp', card: 'quick', value: 10 }] }] }),
+    [atk('quick'), atk('arts')]).state.players[0].ap;
+  assert.equal(fast - plain, 1);
+});
+
+test('NP card type: effectiveness buffs boost NPs of that type', () => {
+  let s = createMatch(dummy('A', { passives: [{ effects: [{ type: 'cardUp', card: 'buster', value: 25 }] }] }), dummy('B'));
+  s.players[0].np = 100;
+  const r = resolveTurn(s, [np(), skill('charge')]).state;
+  assert.equal(1000 - r.players[1].hp, Math.round(100 * 4 * 1.25));
+});
+
+test('EMIYA: Trace On gives every favored-card bonus', () => {
+  for (const [card, loser] of [['quick', 'arts'], ['arts', 'buster'], ['buster', 'quick']]) {
+    const s = createMatch(SERVANTS.emiya, dummy('B'));
+    const e = s.players[0];
+    const r = resolveTurn(s, [atk(card), atk(loser)]).state;
+    const eff = card === 'quick' ? 0 : 0;
+    assert.equal(1000 - r.players[1].hp, Math.round(e.atk * T.cards[card].mult * (1 + eff) * (1 + T.affinityBonus[card]) * 1.25), card);
+  }
+});
+
+test('EMIYA: Circuit Connect needs a mode, switches UBW, and boosts the next landed hit once', () => {
+  let s = createMatch(SERVANTS.emiya, dummy('B'));
+  s.players[0].ap = 11;
+  assert.throws(() => resolveTurn(s, [skill('circuit_connect'), atk('arts')]), /Choose an option/);
+  s = resolveTurn(s, [skillOpt('circuit_connect', 'quick'), atk('arts')]).state;
+  assert.equal(s.players[0].npMode, 'quick');
+  const e = s.players[0];
+  // whiffed attack keeps the bonus
+  s = resolveTurn(s, [atk('arts'), atk('quick')]).state;
+  assert.ok(s.players[0].buffs.some(b => b.type === 'nextHitUp'));
+  const hp = s.players[1].hp;
+  s = resolveTurn(s, [atk('buster'), atk('quick')]).state;
+  assert.equal(hp - s.players[1].hp, Math.round(e.atk * 1.5 * 1.5 * 1.08 * 1.25));
+  assert.equal(s.players[0].buffs.some(b => b.type === 'nextHitUp'), false);
+  // Quick Mode UBW applies ATK down
+  s.players[0].np = 100;
+  s = resolveTurn(s, [np(), atk('arts')]).state;
+  assert.equal(s.players[1].buffs.find(b => b.type === 'atkDown').value, 20);
+});

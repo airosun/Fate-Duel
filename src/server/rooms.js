@@ -31,7 +31,7 @@ function cleanAction(a) {
   if (!a || typeof a !== 'object') return null;
   const m = a.main ?? {};
   const main = m.type === 'attack' ? { type: 'attack', card: String(m.card) }
-    : m.type === 'skill' ? { type: 'skill', skillId: String(m.skillId) }
+    : m.type === 'skill' ? { type: 'skill', skillId: String(m.skillId), ...(m.option != null ? { option: String(m.option) } : {}) }
     : m.type === 'np' ? { type: 'np' }
     : null;
   return { main, seal: a.seal == null ? null : String(a.seal) };

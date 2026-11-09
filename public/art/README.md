@@ -9,6 +9,7 @@ The game tries `.png`, then `.jpg`, then `.webp`, and falls back to a class-colo
 | Heracles | `heracles.png` |
 | Medea | `medea.png` |
 | Sasaki Kojirou | `kojirou.png` |
+| EMIYA | `emiya.png` |
 
 Tips
 - Portrait-oriented full art works best (e.g. Final Ascension stage art). Images are cropped with

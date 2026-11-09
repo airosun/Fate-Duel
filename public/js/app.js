@@ -3,7 +3,7 @@
 //  - Online mode: the server owns the match; this client renders snapshots and
 //    sends intents (pick, lock in, rematch). Screens are shared between modes.
 
-import { createMatch, getLegalActions, resolveTurn, validateAction, deriveStats } from '/src/engine/engine.js';
+import { createMatch, getLegalActions, resolveTurn, validateAction, deriveStats, npOf } from '/src/engine/engine.js';
 import { ROSTER } from '/src/data/servants.js';
 import { TUNING as T, CARDS } from '/src/engine/constants.js';
 import { CARD_LABEL, describeSkill, describeNp, describeEffects, buffChip } from './describe.js';
@@ -427,15 +427,15 @@ function kitHtml(s) {
         <div><label>HP</label><b>${hp}</b></div>
         <div><label>ATK</label><b>${atk}</b></div>
         <div><label>Max AP</label><b>${s.maxAp ?? T.defaultMaxAp}</b></div>
-        <div><label>Favored</label><b class="card-chip ${s.favoredCard}">${CARD_LABEL[s.favoredCard] ?? '—'}</b></div>
+        <div><label>Favored</label>${favoredAll(s) ? '<b class="card-chip all">All</b>' : `<b class="card-chip ${s.favoredCard}">${CARD_LABEL[s.favoredCard] ?? '—'}</b>`}</div>
       </div>
       ${passives.length ? `<h3>Passives</h3>${passives.map(p => `
         <div class="kit-row"><b>${esc(p.name)}${p.kind === 'unique' ? ' <em class="unique-tag">Unique</em>' : ''}</b><span>${esc(p.desc ?? describeEffects(p.effects))}</span></div>`).join('')}` : ''}
       <h3>Skills</h3>
       ${s.skills.map(sk => `
-        <div class="kit-row"><b>${esc(sk.name)} <em class="ap-cost">${sk.cost} AP</em></b><span>${esc(describeSkill(sk))}</span></div>`).join('')}
+        <div class="kit-row"><b>${esc(sk.name)} <em class="ap-cost">${sk.cost} AP</em></b><span>${esc(describeSkill(sk))}${sk.options ? ` (${sk.options.map(o => o.label).join(' / ')})` : ''}</span></div>`).join('')}
       <h3>Noble Phantasm</h3>
-      <div class="kit-row np-row"><b>${esc(s.np.name)} <span class="card-chip ${s.np.card}">${CARD_LABEL[s.np.card]}</span></b>
+      <div class="kit-row np-row"><b>${esc(s.np.name)} ${s.np.modes ? '<span class="card-chip all">Modes</span>' : `<span class="card-chip ${s.np.card}">${CARD_LABEL[s.np.card]}</span>`}</b>
         <span>${esc(describeNp(s.np))}</span></div>
     </div>`;
 }
@@ -544,6 +544,7 @@ function panelHtml(i) {
         <div class="np-line">
           <label>NP</label>
           ${bar(`np${i}`, p.np, `np ${npFull ? 'full' : ''}`, `${p.np}%`)}
+          ${s.np.modes ? `<span class="np-mode ${npOf(s, p).card}">${esc(npOf(s, p).modeName)}</span>` : ''}
         </div>
         <div class="resource-line">
           <div class="ap" title="AP ${p.ap}/${p.maxAp}">
@@ -567,9 +568,16 @@ function panelHtml(i) {
 function actionLabel(servant, action) {
   const m = action.main;
   if (m.type === 'attack') return `${CARD_LABEL[m.card]} attack`;
-  if (m.type === 'skill') return servant.skills.find(s => s.id === m.skillId)?.name ?? m.skillId;
+  if (m.type === 'skill') {
+    const sk = servant.skills.find(s => s.id === m.skillId);
+    const opt = sk?.options?.find(o => o.id === m.option);
+    return `${sk?.name ?? m.skillId}${opt ? ` (${opt.label})` : ''}`;
+  }
   return servant.np.name;
 }
+
+const favoredAll = s => (s.passives ?? []).some(p => p.effects.some(e => e.type === 'affinityAll'));
+const isFavored = (s, card) => s.favoredCard === card || favoredAll(s);
 
 const SEAL_INFO = {
   heal: { name: 'Heal', desc: `Restore ${T.seals.healPct}% HP`, cost: 1 },
@@ -582,6 +590,8 @@ function controlsHtml() {
   const i = ui.active, m = ui.match, p = m.players[i], s = m.servants[i];
   const legal = getLegalActions(m, i);
   const d = ui.draft;
+  const np = npOf(s, p);
+  const optSkill = d.main?.type === 'skill' ? s.skills.find(x => x.id === d.main.skillId && x.options) : null;
   const sel = (type, key) => d.main && d.main.type === type && (key === undefined || d.main.card === key || d.main.skillId === key);
   const conv = p.buffs.some(b => b.type === 'busterConvert');
   const perk = { quick: `+${T.apPerAttack + T.cards.quick.apBonus} AP`, arts: `NP +${T.cards.arts.npGain}%`, buster: `${T.cards.buster.mult}× DMG` };
@@ -600,14 +610,14 @@ function controlsHtml() {
               <div class="cmd-frame">
                 <span class="cmd-name">${CARD_LABEL[c]}</span>
                 <span class="cmd-perk">${perk[c]}</span>
-                ${s.favoredCard === c ? '<span class="cmd-fav" title="Favored card">★</span>' : ''}
+                ${isFavored(s, c) ? '<span class="cmd-fav" title="Favored card">★</span>' : ''}
                 ${conv && c !== 'buster' ? '<span class="cmd-conv">hits as Buster</span>' : ''}
               </div>
             </button>`).join('')}
           <button class="np-card ${legal.np ? 'ready' : ''} ${sel('np') ? 'selected' : ''}" id="np" ${legal.np ? '' : 'disabled'}>
-            <span class="np-label">Noble Phantasm</span>
-            <b>${esc(s.np.name)}</b>
-            <small>${legal.np ? esc(describeNp(s.np)) : `Gauge ${p.np}%`}</small>
+            <span class="np-label">Noble Phantasm${np.modeName ? ` · ${esc(np.modeName)}` : ''}</span>
+            <b>${esc(np.name)}</b>
+            <small>${legal.np ? esc(describeNp(np)) : `Gauge ${p.np}%`}</small>
           </button>
         </div>
         <div class="skills">
@@ -620,6 +630,11 @@ function controlsHtml() {
             </button>`;
           }).join('')}
         </div>
+        ${optSkill ? `
+        <div class="option-row">
+          <label>${esc(optSkill.name)}: choose</label>
+          ${optSkill.options.map(o => `<button class="option-btn ${o.card ?? ''} ${d.main.option === o.id ? 'selected' : ''}" data-option="${o.id}">${esc(o.label)}${o.id === p.npMode ? ' <small>(current)</small>' : ''}</button>`).join('')}
+        </div>` : ''}
         <div class="seal-row">
           <label>Command Seal <small>(free action)</small></label>
           ${Object.entries(SEAL_INFO).map(([k, v]) => `
@@ -712,6 +727,14 @@ function renderBattle() {
   bindControls();
 }
 
+// A skill draft; skills with options start on the servant's current NP mode.
+function skillMain(skillId) {
+  const s = ui.match.servants[ui.active], p = ui.match.players[ui.active];
+  const sk = s.skills.find(x => x.id === skillId);
+  if (!sk?.options) return { type: 'skill', skillId };
+  return { type: 'skill', skillId, option: sk.options.find(o => o.id === p.npMode)?.id ?? sk.options[0].id };
+}
+
 function setDraft(patch) {
   Object.assign(ui.draft, patch);
   if (isDuelist() && ui.active >= 0) emit('battle:draft', { action: ui.draft }); // spectators see it live
@@ -723,7 +746,8 @@ function setDraft(patch) {
 function bindControls() {
   const $ = sel => app.querySelectorAll(sel);
   $('.cmd-card').forEach(b => b.onclick = () => setDraft({ main: { type: 'attack', card: b.dataset.card } }));
-  $('.skill').forEach(b => b.onclick = () => setDraft({ main: { type: 'skill', skillId: b.dataset.skill } }));
+  $('.skill').forEach(b => b.onclick = () => setDraft({ main: skillMain(b.dataset.skill) }));
+  $('.option-btn').forEach(b => b.onclick = () => setDraft({ main: { ...ui.draft.main, option: b.dataset.option } }));
   const np = app.querySelector('#np');
   if (np) np.onclick = () => setDraft({ main: { type: 'np' } });
   $('.seal-btn').forEach(b => b.onclick = () => setDraft({ seal: ui.draft.seal === b.dataset.seal ? null : b.dataset.seal }));
@@ -888,7 +912,7 @@ document.addEventListener('keydown', e => {
   else if (k === 'n' && legal.np) setDraft({ main: { type: 'np' } });
   else if (['1', '2', '3'].includes(k)) {
     const sk = s.skills[Number(k) - 1];
-    if (sk && legal.skills.includes(sk.id)) setDraft({ main: { type: 'skill', skillId: sk.id } });
+    if (sk && legal.skills.includes(sk.id)) setDraft({ main: skillMain(sk.id) });
   } else if (k === 'enter' && ui.draft.main) lockIn();
 });
 

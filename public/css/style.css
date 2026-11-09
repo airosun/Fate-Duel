@@ -380,3 +380,14 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
 .spec-action.skill { --c: #9ed0ff; } .spec-action.np { --c: var(--np); }
 .spec-badge { font-family: 'Noto Sans', sans-serif; font-size: .7rem; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.25); border-radius: 99px; padding: .15rem .6rem; color: var(--text); }
 @media (max-width: 760px) { .room-body, .spec-select, .controls.spectator .spec-cols { grid-template-columns: 1fr; } .spec-select .versus { display: none; } }
+
+/* ---------- NP modes / skill options ---------- */
+.card-chip.all { background: linear-gradient(90deg, var(--quick), var(--arts), var(--buster)); }
+.np-mode { font-size: .65rem; font-weight: 800; letter-spacing: .06em; padding: .1rem .45rem; border-radius: 4px; white-space: nowrap; color: #fff; background: var(--c, #555); }
+.np-mode.quick { --c: var(--quick); } .np-mode.arts { --c: var(--arts); } .np-mode.buster { --c: var(--buster); }
+.option-row { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; padding: .6rem .7rem; border-radius: 8px; background: rgba(158,208,255,.08); border: 1px solid rgba(158,208,255,.3); }
+.option-row label { font-size: .75rem; color: #9ed0ff; font-weight: 700; letter-spacing: .06em; margin-right: .3rem; }
+.option-btn { padding: .35rem .8rem; border-radius: 6px; font-size: .82rem; font-weight: 700; border: 2px solid var(--c, #555); background: color-mix(in srgb, var(--c, #555) 18%, transparent); }
+.option-btn.quick { --c: var(--quick); } .option-btn.arts { --c: var(--arts); } .option-btn.buster { --c: var(--buster); }
+.option-btn.selected { background: var(--c); box-shadow: 0 0 0 2px #fff; }
+.option-btn small { font-weight: 400; opacity: .8; }

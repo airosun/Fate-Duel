@@ -138,6 +138,43 @@ export const SERVANTS = {
           desc: 'Quick +20% for 3 turns (boosts this NP too), then heavy Quick damage',
           preEffects: [{ type: 'cardUp', card: 'quick', value: 20, turns: 3 }] },
   },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
+  emiya: {
+    id: 'emiya', name: 'EMIYA', class: 'Archer',
+    fgoHp: 11521, fgoAtk: 9398, fgoNpAtk: 0.51, fgoNpDef: 3,
+    favoredCard: 'arts', maxAp: 10,
+    passives: [
+      classPassive('magicResistance', 'D'),
+      classPassive('independentAction', 'B'),
+      unique('Trace On', 'Has every favored-card bonus (Quick, Arts and Buster)', [{ type: 'affinityAll' }]),
+    ],
+    skills: [
+      { id: 'eye_of_mind_true', name: 'Eye of the Mind (True) EX', cost: 5,
+        desc: 'Evade and 10% damage cut for 2 turns; ATK +15% for 3 turns',
+        effects: [{ type: 'evade', turns: 2 }, { type: 'damageCut', value: 10, turns: 2 },
+                  { type: 'atkUp', value: 15, turns: 3 }] },
+      { id: 'hawkeye', name: 'Hawkeye B+', cost: 3,
+        desc: 'NP +20% now and NP gain +50% for 3 turns',
+        effects: [{ type: 'npCharge', value: 20 }, { type: 'npGainUp', value: 50, turns: 3 }] },
+      { id: 'circuit_connect', name: 'Circuit Connect EX', cost: 6,
+        desc: 'Next landed attack is 50% more effective; set Unlimited Blade Works to a mode',
+        options: [
+          { id: 'buster', label: 'Buster Mode', card: 'buster' },
+          { id: 'arts', label: 'Arts Mode', card: 'arts' },
+          { id: 'quick', label: 'Quick Mode', card: 'quick' },
+        ],
+        effects: [{ type: 'nextHitUp', value: 50, turns: 3 }, { type: 'setNpMode' }] },
+    ],
+    np: { name: 'Unlimited Blade Works', defaultMode: 'buster',
+          modes: {
+            buster: { label: 'Buster Mode', card: 'buster', mult: 4.2, desc: 'Heavy Buster damage' },
+            arts: { label: 'Arts Mode', card: 'arts', mult: 3.2, desc: 'Good Arts damage, then NP +20%',
+                    postEffects: [{ type: 'npCharge', value: 20 }] },
+            quick: { label: 'Quick Mode', card: 'quick', mult: 2.6, desc: 'Light Quick damage, then enemy ATK -20% for 3 turns',
+                     postEffects: [{ type: 'atkDown', value: 20, turns: 4, target: 'enemy' }] },
+          } },
+  },
 };
 
 export const ROSTER = Object.values(SERVANTS);
