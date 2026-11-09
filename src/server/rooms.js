@@ -271,7 +271,7 @@ export class RoomManager {
         picked: d.picks.map(Boolean),
         picks: hidePicks ? d.picks.map((p, i) => (i === seat ? p : null)) : d.picks,
         focus: omniscient ? d.focus : null,
-        match: d.match,
+        match: d.match ? { ...d.match, rng: undefined } : null, // the RNG seed stays on the server
         locked: d.locked.map(Boolean),
         myAction: seat >= 0 ? d.locked[seat] : null,
         drafts: omniscient ? d.drafts : null,

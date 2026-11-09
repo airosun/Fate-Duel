@@ -147,7 +147,8 @@ export const SERVANTS = {
     passives: [
       classPassive('magicResistance', 'D'),
       classPassive('independentAction', 'B'),
-      unique('Trace On', 'Has every favored-card bonus (Quick, Arts and Buster)', [{ type: 'affinityAll' }]),
+      unique('Reality Marble', 'Has every favored-card bonus (Quick, Arts and Buster)', [{ type: 'affinityAll' }]),
+      unique('Trace On', "Copies the opponent's unique passive for the match (revives can't be copied)", [{ type: 'copyEnemyUnique' }]),
     ],
     skills: [
       { id: 'eye_of_mind_true', name: 'Eye of the Mind (True) EX', cost: 5,
@@ -203,6 +204,37 @@ export const SERVANTS = {
           desc: 'Sure Hit for 2 turns, heavy Quick damage, then the enemy takes 20% more damage for 2 turns',
           preEffects: [{ type: 'sureHit', turns: 3 }],
           postEffects: [{ type: 'defDown', value: 20, turns: 3, target: 'enemy' }] },
+  },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
+  medusa: {
+    id: 'medusa', name: 'Medusa', class: 'Rider',
+    fgoHp: 8937, fgoAtk: 7200, fgoNpAtk: 0.58, fgoNpDef: 3,
+    favoredCard: 'quick', maxAp: 10,
+    passives: [
+      classPassive('magicResistance', 'B'),
+      classPassive('independentAction', 'C'),
+      classPassive('riding', 'A+'),
+      classPassive('divinity', 'E-'),
+      unique('Breaker Gorgon', 'Each buff the opponent gives themselves has a 10% chance to fail',
+        [{ type: 'buffFailChance', value: 10 }]),
+    ],
+    skills: [
+      { id: 'mystic_eyes', name: 'Mystic Eyes A+', cost: 4,
+        desc: 'Petrify the enemy: AP -3 now, and -2 AP from each attack for 3 turns',
+        effects: [{ type: 'apDrain', value: 3, target: 'enemy' },
+                  { type: 'apRecoveryDown', value: 2, status: 'petrified', turns: 4, target: 'enemy' }] },
+      { id: 'monstrous_snake', name: 'Monstrous Snake Metamorphosis B', cost: 5,
+        desc: 'ATK +20% for 3 turns; her next attack on a Petrified enemy deals +50% damage',
+        effects: [{ type: 'atkUp', value: 20, turns: 3 },
+                  { type: 'bonusVsStatus', status: 'petrified', value: 50, turns: 3 }] },
+      { id: 'blood_fort', name: 'Blood Fort Andromeda B', cost: 4,
+        desc: 'NP +35% now and NP gain +50% for 3 turns',
+        effects: [{ type: 'npCharge', value: 35 }, { type: 'npGainUp', value: 50, turns: 3 }] },
+    ],
+    np: { name: 'Bellerophon', card: 'quick', mult: 4.4,
+          desc: 'Heavy Quick damage, then the enemy gets -1 AP from each attack for 2 turns',
+          postEffects: [{ type: 'apRecoveryDown', value: 1, turns: 3, target: 'enemy' }] },
   },
 };
 

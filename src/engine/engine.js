@@ -51,15 +51,47 @@ function createPlayer(servant) {
   return p;
 }
 
-export function createMatch(servantA, servantB) {
+// Copy-the-opponent passives (EMIYA's Trace On): take every unique passive the
+// opponent has, except other copy effects. Revives (guts) can't be copied: the
+// sim showed a free copied revive swings matchups by 20+ points. Copies are
+// permanent passives.
+function applyCopiedUniques(p, servant, foe) {
+  const copies = (servant.passives ?? []).some(pa => pa.effects.some(e => e.type === 'copyEnemyUnique'));
+  if (!copies) return;
+  p.copied = [];
+  p.copyBlocked = [];
+  for (const pa of foe.passives ?? []) {
+    if (pa.kind !== 'unique' || pa.effects.some(e => e.type === 'copyEnemyUnique')) continue;
+    if (pa.effects.some(e => e.type === 'guts')) { p.copyBlocked.push(pa.name); continue; }
+    for (const e of pa.effects) applyEffect(p, { ...e, turns: null, copiedFrom: pa.name }, 'passive');
+    p.copied.push(pa.name);
+  }
+}
+
+export function createMatch(servantA, servantB, { seed } = {}) {
+  const players = [createPlayer(servantA), createPlayer(servantB)];
+  applyCopiedUniques(players[0], servantA, servantB);
+  applyCopiedUniques(players[1], servantB, servantA);
   return {
     turn: 1,
     over: false,
     result: null, // { winner: 0 | 1 | null, reason }
     servants: [servantA, servantB],
-    players: [createPlayer(servantA), createPlayer(servantB)],
+    players,
     history: [],
+    // Seeded RNG state (mulberry32). Kept in the match so turns are reproducible;
+    // the server never sends it to clients.
+    rng: (seed ?? Math.floor(Math.random() * 2 ** 32)) >>> 0,
   };
+}
+
+// Draw a number in [0, 1) and advance the match's RNG.
+function roll(state) {
+  state.rng = (state.rng + 0x6D2B79F5) >>> 0;
+  let t = state.rng;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }
 
 // ---------- queries ----------
@@ -112,7 +144,13 @@ export function validateAction(state, idx, action) {
 
 // ---------- effects ----------
 
-const DEBUFFS = ['atkDown', 'defDown'];
+const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown'];
+
+// Lasting positive effects a servant puts on itself (what Breaker Gorgon can make fail).
+const BUFF_TYPES = new Set(['atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
+  'cardNpGainUp', 'debuffResist', 'guts', 'apRegen', 'busterConvert', 'flatDamage', 'sureHit',
+  'nextHitUp', 'bonusVsStatus', 'debuffPotency']);
+const hasStatus = (p, status) => p.buffs.some(b => b.status === status);
 
 function resistScale(target, e, user) {
   // Debuff resistance is deterministic: it weakens debuffs by X% instead of
@@ -137,6 +175,9 @@ function applyEffect(target, e, source, user) {
     case 'apGain':
       target.ap = Math.min(target.maxAp, target.ap + e.value);
       return;
+    case 'apDrain':
+      target.ap = Math.max(0, target.ap - Math.round(e.value * resistScale(target, e, user)));
+      return;
     case 'setNpMode':
       target.npMode = e.value;
       return;
@@ -149,7 +190,8 @@ function applyEffect(target, e, source, user) {
     default: { // duration buff/debuff: atkUp, cardUp, npUp, damageCut, evade, invincible,
                // npGainUp, cardNpGainUp, debuffResist, guts, atkDown, defDown, apRegen,
                // busterConvert, flatDamage, sureHit{card?}, debuffPotency,
-               // nextHitUp (consumed by the next landed attack), affinityAll
+               // nextHitUp (consumed by the next landed attack), affinityAll,
+               // buffFailChance, apRecoveryDown{status?}, bonusVsStatus{status}
       // turns: null = permanent (passives); undefined = use the default for this effect
       let turns = e.turns === undefined ? (T.defaultTurns[e.type] ?? null) : e.turns;
       if (e.type === 'invincible') turns = 1;
@@ -164,11 +206,40 @@ function applyEffect(target, e, source, user) {
         charges: e.charges,
         resetNp: e.resetNp,
         resetAp: e.resetAp,
+        status: e.status,
+        copiedFrom: e.copiedFrom,
         debuff: DEBUFFS.includes(e.type),
         source,
       });
     }
   }
+}
+
+const BUFF_NAMES = {
+  atkUp: 'ATK up', npUp: 'NP damage up', damageCut: 'damage cut', evade: 'Evade', invincible: 'Invincible',
+  npGainUp: 'NP gain up', debuffResist: 'debuff resist', guts: 'Guts', apRegen: 'AP regen',
+  busterConvert: 'Buster strike', flatDamage: 'flat damage', sureHit: 'Sure Hit', nextHitUp: 'next-hit boost',
+  bonusVsStatus: 'bonus damage', debuffPotency: 'debuff potency',
+};
+const buffName = e => (e.type === 'cardUp' ? `${CARD_NAME[e.card]} up`
+  : e.type === 'cardNpGainUp' ? `${CARD_NAME[e.card]} NP gain up` : BUFF_NAMES[e.type] ?? e.type);
+
+// Breaker Gorgon: each buff the user puts on itself may fail to land.
+function screenBuffs(state, user, enemy, effects, say) {
+  const chance = sumBuff(enemy, 'buffFailChance');
+  if (!chance || !effects?.length) return effects ?? [];
+  return effects.filter(e => {
+    if (e.target === 'enemy' || !BUFF_TYPES.has(e.type)) return true;
+    if (roll(state) * 100 >= chance) return true;
+    say(`${user.name}'s ${buffName(e)} buff fails to take hold! (Breaker Gorgon)`, { type: 'buffFail' });
+    return false;
+  });
+}
+
+// AP from attacking, reduced by AP-recovery debuffs (Petrify, Bellerophon).
+function gainAttackAp(p, amount) {
+  const cut = Math.round(sumBuff(p, 'apRecoveryDown'));
+  p.ap = Math.min(p.maxAp, p.ap + Math.max(0, amount - cut));
 }
 
 function conditionMet(user, e) {
@@ -206,8 +277,8 @@ function defend(defender, raw, { isNp, ignoreDefense, sureHit }) {
   return { amount: Math.round(raw * vuln * (1 - cut / 100)), blocked: null };
 }
 
-function attackPacket(att, def, card, { counter, empowered, nextHit = 0 }) {
-  let raw = att.atk * T.cards[card].mult * atkMultiplier(att, card, nextHit);
+function attackPacket(att, def, card, { counter, empowered, nextHit = 0, vsBonus = 0 }) {
+  let raw = att.atk * T.cards[card].mult * atkMultiplier(att, card, nextHit) * (1 + vsBonus / 100);
   if (hasAffinity(att, card)) raw *= 1 + T.affinityBonus[card];
   if (counter) raw *= 1 + T.counterBonus;
   if (empowered) raw *= 1 + T.seals.empowerBonus;
@@ -272,8 +343,8 @@ export function resolveTurn(prev, actions) {
     const option = skill.options?.find(o => o.id === mains[i].option);
     const effects = skill.effects.map(e => (e.type === 'setNpMode' ? { ...e, value: option.id } : e));
     skillUses[i] = { ...skill, effects };
-    applyEffects(P[i], P[1 - i], effects.filter(e => e.target !== 'enemy'), skill.id);
     say(`${P[i].name} uses ${skill.name}${option ? ` (${option.label})` : ''}.`, { type: 'skill', player: i, skillId: skill.id });
+    applyEffects(P[i], P[1 - i], screenBuffs(state, P[i], P[1 - i], effects.filter(e => e.target !== 'enemy'), say), skill.id);
   }
   for (const i of [0, 1]) {
     const skill = skillUses[i];
@@ -287,9 +358,10 @@ export function resolveTurn(prev, actions) {
   const packets = []; // { from, to, amount, blocked, kind, card }
   const npUsers = [0, 1].filter(i => mains[i].type === 'np');
   const nps = [0, 1].map(i => npOf(S[i], P[i]));
+  const npPre = [0, 1].map(i => (npUsers.includes(i) ? screenBuffs(state, P[i], P[1 - i], nps[i].preEffects, say) : []));
   for (const i of npUsers) {
     const att = structuredClone(P[i]), def = structuredClone(P[1 - i]);
-    applyEffects(att, def, nps[i].preEffects, 'np');
+    applyEffects(att, def, npPre[i], 'np');
     packets.push({ from: i, to: 1 - i, kind: 'np', card: nps[i].card, ...npPacket(att, def, nps[i]) });
   }
   for (const i of npUsers) {
@@ -312,7 +384,7 @@ export function resolveTurn(prev, actions) {
     const hitAs = conv ? 'buster' : card;
     if (conv) P[i].buffs.splice(P[i].buffs.indexOf(conv), 1);
     const quickEff = card === 'quick' && effectiveness(P[i], 'quick') > 0 ? T.quickEffectAp : 0; // once
-    P[i].ap = Math.min(P[i].maxAp, P[i].ap + T.apPerAttack + T.cards[card].apBonus + quickEff);
+    gainAttackAp(P[i], T.apPerAttack + T.cards[card].apBonus + quickEff);
 
     let lands = true, counter = false, reason = 'unopposed';
     if (mains[j].type === 'np') { lands = false; reason = 'overpowered by NP'; }
@@ -327,8 +399,9 @@ export function resolveTurn(prev, actions) {
     }
     if (!lands) { say(`${P[i].name}'s ${CARD_NAME[card]} attack fails (${reason}).`, { type: 'whiff', player: i, card, reason }); continue; }
     const nextHit = sumBuff(P[i], 'nextHitUp');
-    packets.push({ from: i, to: j, kind: 'attack', card, hitAs, reason, nextHit,
-      ...attackPacket(P[i], P[j], hitAs, { counter, empowered, nextHit }) });
+    const vs = P[i].buffs.find(b => b.type === 'bonusVsStatus' && hasStatus(P[j], b.status));
+    packets.push({ from: i, to: j, kind: 'attack', card, hitAs, reason, nextHit, vsBonus: vs ? vs.value : 0,
+      ...attackPacket(P[i], P[j], hitAs, { counter, empowered, nextHit, vsBonus: vs ? vs.value : 0 }) });
   }
 
   // 5. Apply all damage simultaneously
@@ -347,11 +420,12 @@ export function resolveTurn(prev, actions) {
       const nextHitAp = pk.nextHit && pk.card === 'quick' ? 1 : 0;
       att.ap = Math.min(att.maxAp, att.ap + T.apOnLand + nextHitAp);
       if (pk.nextHit) att.buffs = att.buffs.filter(b => b.type !== 'nextHitUp'); // consumed on a landed hit
+      if (pk.vsBonus) att.buffs = att.buffs.filter(b => b.type !== 'bonusVsStatus'); // one attack only
     }
     say(`${att.name} hits ${def.name} for ${pk.amount}${pk.hitAs && pk.hitAs !== pk.card ? ` (${CARD_NAME[pk.card]} → Buster)` : ''}${pk.reason === 'counter' ? ' (counter!)' : ''}.`, { type: 'hit', ...pk });
   }
-  for (const i of npUsers) applyEffects(P[i], P[1 - i], nps[i].preEffects, 'np');
-  for (const i of npUsers) applyEffects(P[i], P[1 - i], nps[i].postEffects, 'np');
+  for (const i of npUsers) applyEffects(P[i], P[1 - i], npPre[i], 'np');
+  for (const i of npUsers) applyEffects(P[i], P[1 - i], screenBuffs(state, P[i], P[1 - i], nps[i].postEffects, say), 'np');
 
   // Guts
   for (const p of P) {

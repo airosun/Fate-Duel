@@ -101,7 +101,9 @@ export function predictOpponent(state, j) {
  */
 export function chooseAction(state, i, { strength = 0.7, random = Math.random } = {}) {
   const j = 1 - i;
-  const base = { ...state, history: [] }; // history isn't needed to simulate, and copying it is slow
+  // History isn't needed to simulate (and is slow to copy). The RNG is re-seeded
+  // so the CPU can't foresee random outcomes (e.g. Breaker Gorgon) it wouldn't know.
+  const base = { ...state, history: [], rng: Math.floor(random() * 2 ** 32) };
   const opp = predictOpponent(state, j);
   const cands = myCandidates(state, i);
 

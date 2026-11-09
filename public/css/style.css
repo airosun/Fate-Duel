@@ -392,3 +392,6 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
 .option-btn.selected { background: var(--c); box-shadow: 0 0 0 2px #fff; }
 .option-btn small { font-weight: 400; opacity: .8; }
 .title-screen h1 .slash { color: var(--gold); font-weight: 500; margin: 0 .05em; }
+
+.buff.passive.blocked { text-decoration: line-through; opacity: .6; }
+.log-buffFail { color: #c9a7ff !important; font-style: italic; }

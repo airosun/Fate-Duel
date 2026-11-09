@@ -591,6 +591,7 @@ function panelHtml(i) {
         </div>
         <div class="buffs">
           ${p.empower ? '<span class="buff active" data-tip="Command Seal · next regular attack">Empowered</span>' : ''}
+          ${(p.copyBlocked ?? []).map(n => `<span class="buff passive blocked" tabindex="0" data-tip="Trace On can't copy revives">✕ ${esc(n)}</span>`).join('')}
           ${buffs.sort((a, b) => ({ passive: 0, active: 1, debuff: 2 }[a.kind] - { passive: 0, active: 1, debuff: 2 }[b.kind]))
             .map(b => `<span class="buff ${b.kind}" tabindex="0" data-tip="${esc(b.duration)}">${esc(b.label)}</span>`).join('')}
         </div>

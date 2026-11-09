@@ -391,3 +391,61 @@ test('Cu: Gae Bolg grants Sure Hit for the next 2 turns and lowers enemy DEF', (
   s = resolveTurn(s, [atk('buster'), atk('quick')]).state;  // buster through evade
   assert.ok(s.players[1].hp < hp);
 });
+
+// ---------- Medusa, RNG, Trace On copying ----------
+test('RNG is seeded: the same seed gives the same match', () => {
+  const run = seed => {
+    let s = createMatch(SERVANTS.medusa, SERVANTS.artoria, { seed });
+    for (let k = 0; k < 6; k++) s = resolveTurn(s, [atk(['quick', 'arts', 'buster'][k % 3]), k === 1 ? skill('radiant_road') : atk('arts')]).state;
+    return JSON.stringify(s.players);
+  };
+  assert.equal(run(123), run(123));
+});
+
+test('Breaker Gorgon: about 10% of the opponent\'s self-buffs fail', () => {
+  let failed = 0, total = 0;
+  for (let seed = 1; seed <= 400; seed++) {
+    const s = createMatch(SERVANTS.medusa, SERVANTS.kojirou, { seed });
+    s.players[1].ap = 10;
+    const r = resolveTurn(s, [atk('arts'), skill('fade_out')]);
+    total++;
+    if (!r.state.players[1].buffs.some(b => b.source === 'fade_out')) failed++;
+  }
+  assert.ok(failed / total > 0.06 && failed / total < 0.14, `fail rate ${failed / total}`);
+});
+
+test('Medusa: Mystic Eyes drains AP and petrifies; petrified attackers recover less AP', () => {
+  let s = createMatch(SERVANTS.medusa, dummy('B'), { seed: 1 });
+  s.players[1].ap = 6;
+  s = resolveTurn(s, [skill('mystic_eyes'), skill('charge')]).state;
+  assert.equal(s.players[1].ap, 6 - 3 - 3);                // skill cost 3, drained 3
+  assert.ok(s.players[1].buffs.some(b => b.status === 'petrified'));
+  const ap = s.players[1].ap;
+  s = resolveTurn(s, [atk('arts'), atk('buster')]).state;  // B's buster loses: +2 attack AP -2 petrify
+  assert.equal(s.players[1].ap, ap);
+});
+
+test('Medusa: Monstrous Snake boosts one attack against a Petrified enemy', () => {
+  let s = createMatch(SERVANTS.medusa, dummy('B'), { seed: 3 });
+  s.players[0].ap = 11;
+  s = resolveTurn(s, [skill('mystic_eyes'), skill('charge')]).state;
+  s = resolveTurn(s, [skill('monstrous_snake'), atk('quick')]).state;
+  const m = s.players[0];
+  const hp = s.players[1].hp;
+  s = resolveTurn(s, [atk('arts'), atk('buster')]).state;
+  assert.equal(hp - s.players[1].hp, Math.round(m.atk * 1.0 * 1.2 * 1.5 * 1.25 + 1));
+  assert.equal(s.players[0].buffs.some(b => b.type === 'bonusVsStatus'), false);
+});
+
+test('EMIYA: Trace On copies the opponent\'s unique passive (not other copy effects)', () => {
+  const vsHeracles = createMatch(SERVANTS.emiya, SERVANTS.heracles).players[0];
+  assert.deepEqual(vsHeracles.copied, []);                     // revives can't be copied
+  assert.deepEqual(vsHeracles.copyBlocked, ['12 Labors']);
+  assert.equal(vsHeracles.buffs.some(b => b.type === 'guts'), false);
+  const vsArtoria = createMatch(SERVANTS.emiya, SERVANTS.artoria).players[0];
+  assert.ok(vsArtoria.buffs.some(b => b.type === 'damageCut' && b.copiedFrom === 'Invisible Air'));
+  const mirror = createMatch(SERVANTS.emiya, SERVANTS.emiya).players[0];
+  assert.deepEqual(mirror.copied, ['Reality Marble']);
+  const vsMedusa = createMatch(SERVANTS.emiya, SERVANTS.medusa).players[0];
+  assert.ok(vsMedusa.buffs.some(b => b.type === 'buffFailChance'));
+});

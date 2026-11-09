@@ -36,6 +36,11 @@ export function describeEffect(e) {
     case 'sureHit': return `${c ? c + ' attacks' : 'Attacks'} pierce Evade${turnsText(e)}`;
     case 'debuffPotency': return `Debuffs ignore ${v}% resistance`;
     case 'nextHitUp': return `Next landed attack ${v}% more effective`;
+    case 'apDrain': return `${who}AP −${v}`;
+    case 'apRecoveryDown': return `${who}${e.status === 'petrified' ? 'Petrified: ' : ''}−${v} AP from attacks${turnsText(e)}`;
+    case 'bonusVsStatus': return `Next attack vs ${e.status} +${v}% damage`;
+    case 'buffFailChance': return `Enemy self-buffs ${v}% likely to fail`;
+    case 'copyEnemyUnique': return `Copies the enemy's unique passive`;
     case 'affinityAll': return `Every favored-card bonus`;
     case 'setNpMode': return `Change NP mode`;
     case 'heal': return `${who}Heal ${v}% HP`;
@@ -72,7 +77,8 @@ const BUFF_LABEL = {
   invincible: 'Invincible', npGainUp: 'NP Gain↑', cardNpGainUp: 'NP Gain↑', debuffResist: 'Debuff Res',
   guts: 'Guts', atkDown: 'ATK↓', apRegen: 'AP Regen', busterConvert: 'Buster Strike',
   defDown: 'DEF↓', flatDamage: 'Flat Dmg', sureHit: 'Sure Hit', debuffPotency: 'Debuff Potency',
-  nextHitUp: 'Next Hit↑', affinityAll: 'All Cards Favored',
+  nextHitUp: 'Next Hit↑', affinityAll: 'All Cards Favored', apRecoveryDown: 'AP Recovery↓',
+  bonusVsStatus: 'vs Petrified↑', buffFailChance: 'Breaker Gorgon', copyEnemyUnique: 'Trace On',
 };
 
 export function buffChip(b) {
@@ -80,13 +86,18 @@ export function buffChip(b) {
   if (b.type === 'cardUp') label = `${CARD_LABEL[b.card]}↑`;
   if (b.type === 'cardNpGainUp') label = `${CARD_LABEL[b.card]} NP↑`;
   if (b.type === 'sureHit' && b.card) label = `${CARD_LABEL[b.card]} Sure Hit`;
-  const val = b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage', 'sureHit'].includes(b.type)
-    ? ` ${Math.round(b.value)}%` : (['apRegen', 'flatDamage'].includes(b.type) ? ` +${b.value}` : '');
+  if (b.type === 'apRecoveryDown' && b.status === 'petrified') label = 'Petrified';
+  const val = b.type === 'apRecoveryDown' ? ` −${Math.round(b.value)} AP`
+    : b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage', 'sureHit', 'copyEnemyUnique'].includes(b.type)
+      ? ` ${Math.round(b.value)}%` : (['apRegen', 'flatDamage'].includes(b.type) ? ` +${b.value}` : '');
   const kind = b.debuff ? 'debuff' : b.turns === null ? 'passive' : 'active';
   let duration;
   if (b.turns === null) duration = b.charges != null ? `Passive · ${b.charges} use${b.charges === 1 ? '' : 's'} left` : 'Passive · permanent';
   else if (b.turns === 1) duration = 'Ends after this turn';
   else duration = `${b.turns} turns left (including this one)`;
   if (b.type === 'busterConvert') duration += ' · used on the next attack';
+  if (b.type === 'bonusVsStatus') duration += ' · used on the next attack vs a Petrified enemy';
+  if (b.type === 'apRecoveryDown') duration += ` · −${Math.round(b.value)} AP gained from each attack`;
+  if (b.copiedFrom) duration = `Copied from ${b.copiedFrom} via Trace On · permanent`;
   return { label: label + val, kind, duration };
 }
