@@ -124,7 +124,7 @@ test('Rule Breaker strips buffs before damage', () => {
   let s = createMatch(SERVANTS.medea, dummy('B'));
   s.players[0].np = 100;
   const r = resolveTurn(s, [np(), skill('shield')]).state;
-  const expected = Math.round(s.players[0].atk * 3.0 * 1.12); // Territory Creation A = Arts +12%
+  const expected = Math.round(s.players[0].atk * 2.4 * 1.12); // Territory Creation A = Arts +12%
   assert.equal(r.players[1].hp, 1000 - expected);
 });
 
@@ -261,4 +261,13 @@ test('Kojirou: Tsubame Gaeshi buffs Quick before dealing damage', () => {
   s = resolveTurn(s, [np(), skill('charge')]).state;
   assert.equal(1000 - s.players[1].hp, Math.round(k.atk * 3.6 * 1.2));
   assert.ok(s.players[0].buffs.some(b => b.type === 'cardUp' && b.card === 'quick' && b.turns === 2));
+});
+
+test('Medea: Rule Breaker applies ATK down, which Hecate\'s Staff pushes through Magic Resistance', () => {
+  let s = createMatch(SERVANTS.medea, SERVANTS.artoria);   // Artoria: Magic Resistance A (20%)
+  s.players[0].np = 100;
+  s = resolveTurn(s, [np(), atk('arts')]).state;
+  const d = s.players[1].buffs.find(b => b.type === 'atkDown');
+  assert.equal(d.value, 20);    // potency 25 fully cancels resistance 20
+  assert.equal(d.turns, 3);     // active for the next 3 turns
 });

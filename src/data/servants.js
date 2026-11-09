@@ -94,8 +94,8 @@ export const SERVANTS = {
     ],
     skills: [
       { id: 'high_speed', name: 'High-Speed Divine Words A', cost: 5,
-        desc: 'NP gauge +40%',
-        effects: [{ type: 'npCharge', value: 40 }] },
+        desc: 'NP gauge +50%',
+        effects: [{ type: 'npCharge', value: 50 }] },
       { id: 'argon_coin', name: 'Argon Coin: The Golden Fleece', cost: 3,
         desc: 'Heal 20% HP and gain 2 AP',
         effects: [{ type: 'heal', value: 20 }, { type: 'apGain', value: 2 }] },
@@ -106,9 +106,11 @@ export const SERVANTS = {
                   { type: 'npUp', value: 20, turns: 3 },
                   { type: 'npGainUp', value: 30, turns: 3 }] },
     ],
-    np: { name: 'Rule Breaker', card: 'arts', mult: 3.0,
-          desc: 'Removes all enemy buffs (passives stay), then moderate Arts damage',
-          preEffects: [{ type: 'removeBuffs', target: 'enemy' }] },
+    // Utility NP: hampers the enemy rather than nuking them
+    np: { name: 'Rule Breaker', card: 'arts', mult: 2.4,
+          desc: 'Removes all enemy buffs (passives stay), deals light Arts damage, then enemy ATK -20% for 3 turns',
+          preEffects: [{ type: 'removeBuffs', target: 'enemy' }],
+          postEffects: [{ type: 'atkDown', value: 20, turns: 4, target: 'enemy' }] },
   },
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
