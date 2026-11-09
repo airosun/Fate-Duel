@@ -20,6 +20,8 @@ npm run sim -- 1000   # balance simulator
 - `src/data/servants.js` - servant definitions (prototype 4, **placeholder kits**; replace with your designs)
 - `test/engine.test.js` - rules tests (`npm test`)
 - `tools/simulate.js` - balance simulator (`npm run sim -- 1000`)
+- `src/engine/ai.js` - CPU opponent; `src/engine/difficulty.js` - adaptive difficulty
+- `tools/cpu-bench.js` - CPU strength curve and adaptive-difficulty check (`node tools/cpu-bench.js 300`)
 
 ## Using the engine
 ```js
@@ -45,3 +47,10 @@ Online Duel → enter a Master name → Create Room (4-letter code + invite link
   servant browsing, action drafts and lock-ins.
 - The server validates every action. Refreshing the page rejoins your seat.
 - Rooms live in server memory, so a redeploy or a sleeping free-tier instance clears them.
+
+## Play vs CPU
+The CPU simulates each of its legal moves against a prediction of your next move
+(learned from the cards you've played this match) using the real engine, then picks
+by weighted chance, so it's never fully predictable. Its strength (0-1, shown as
+level 0-10) is saved in your browser and moves up after you win and down after you lose,
+settling where you win about half the time.

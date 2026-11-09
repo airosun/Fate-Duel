@@ -7,6 +7,8 @@ import { createMatch, getLegalActions, resolveTurn, validateAction, deriveStats,
 import { ROSTER } from '/src/data/servants.js';
 import { TUNING as T, CARDS } from '/src/engine/constants.js';
 import { CARD_LABEL, describeSkill, describeNp, describeEffects, buffChip } from './describe.js';
+import { chooseAction } from '/src/engine/ai.js';
+import { nextStrength, START_STRENGTH } from '/src/engine/difficulty.js';
 
 const app = document.getElementById('app');
 const overlay = document.getElementById('overlay');
@@ -43,7 +45,7 @@ function art(servant, cls = '') {
 // ---------- ui state ----------
 
 const ui = {
-  mode: 'local',            // local | online
+  mode: 'local',            // local | online | cpu
   screen: 'title',          // title | lobby | room | select | battle | end
   selecting: 0,             // local: which master is picking a servant
   focus: null,              // servant id shown in the select detail panel
@@ -63,10 +65,20 @@ const NAME_KEY = 'fateduel.name';
 const savedName = () => localStorage.getItem(NAME_KEY) ?? '';
 
 const online = () => ui.mode === 'online';
+const vsCpu = () => ui.mode === 'cpu';
+
+// ---------- CPU difficulty (adapts per browser to keep matches near 50/50) ----------
+const CPU_KEY = 'fateduel.cpuStrength';
+const cpuStrength = () => { const v = Number(localStorage.getItem(CPU_KEY)); return Number.isFinite(v) && localStorage.getItem(CPU_KEY) !== null ? v : START_STRENGTH; };
+const cpuLevel = () => Math.round(cpuStrength() * 10);
+function recordCpuResult(result) {
+  localStorage.setItem(CPU_KEY, String(nextStrength(cpuStrength(), result)));
+}
 const mySeat = () => ui.net.snap?.seat ?? null;
 const isDuelist = () => online() && mySeat() !== null;
 const isHost = () => ui.net.snap?.hostId === ui.net.snap?.me?.id;
 function masterLabel(i) {
+  if (vsCpu()) return i === 0 ? 'You' : 'CPU';
   if (!online()) return `Master ${i + 1}`;
   const name = ui.net.snap?.duel?.seats[i]?.name ?? `Master ${i + 1}`;
   return i === mySeat() ? `${name} (You)` : name;
@@ -128,6 +140,7 @@ function renderTitle() {
       <p class="tag">Servant versus Servant · Master versus Master</p>
       <div class="title-actions">
         <button class="btn gold big" id="online">Online Duel</button>
+        <button class="btn ghost big" id="cpu">Play vs CPU</button>
         <button class="btn ghost big" id="local">Local Duel <small>one screen</small></button>
       </div>
       ${rulesHtml()}
@@ -138,6 +151,11 @@ function renderTitle() {
     show('select');
   };
   app.querySelector('#online').onclick = () => { ui.mode = 'online'; ui.net.error = ''; connect(); show('lobby'); };
+  app.querySelector('#cpu').onclick = () => {
+    ui.mode = 'cpu';
+    ui.picks = [null, null]; ui.selecting = 0; ui.focus = ROSTER[0].id;
+    show('select');
+  };
 }
 
 function rulesHtml() {
@@ -443,11 +461,14 @@ function kitHtml(s) {
 function renderSelect() {
   const focus = ROSTER.find(s => s.id === ui.focus) ?? ROSTER[0];
   const snap = ui.net.snap;
-  const title = online() ? `${esc(snap.me.name)} <span>— Summon your Servant</span>` : `Master ${ui.selecting + 1} <span>— Summon your Servant</span>`;
+  const title = online() ? `${esc(snap.me.name)} <span>— Summon your Servant</span>`
+    : vsCpu() ? (ui.selecting === 0 ? 'Summon your Servant' : 'Choose the <span>CPU\'s Servant</span>')
+    : `Master ${ui.selecting + 1} <span>— Summon your Servant</span>`;
   const opp = online() ? snap.duel.seats[1 - snap.seat] : null;
   const oppReady = online() && snap.duel.picked[1 - snap.seat];
   const status = online()
     ? `<span class="opp-status ${oppReady ? 'ready' : ''}">${esc(opp.name)}: ${oppReady ? 'ready' : 'choosing…'}</span>`
+    : vsCpu() ? `<span class="opp-status" title="Adapts after every match to keep games close">CPU level ${cpuLevel()}/10</span>`
     : '<div></div>';
   app.innerHTML = `
     <div class="select-screen">
@@ -467,7 +488,8 @@ function renderSelect() {
         <aside class="detail">
           ${art(focus, 'detail-art')}
           ${kitHtml(focus)}
-          <button class="btn gold big" id="confirm">Summon ${esc(focus.name.split(' ')[0])}</button>
+          <button class="btn gold big" id="confirm">${vsCpu() && ui.selecting === 1 ? 'CPU summons' : 'Summon'} ${esc(focus.name.split(' ')[0])}</button>
+          ${vsCpu() && ui.selecting === 1 ? '<button class="btn ghost" id="randomCpu">Random Servant</button>' : ''}
         </aside>
       </div>
     </div>`;
@@ -478,7 +500,11 @@ function renderSelect() {
     render();
     if (picked) waitingOverlay('Servant summoned', 'Waiting for your opponent to choose…');
   });
-  app.querySelector('#back').onclick = () => online() ? leaveRoom() : show('title');
+  app.querySelector('#back').onclick = () => {
+    if (online()) return leaveRoom();
+    if (ui.selecting === 1) { ui.selecting = 0; ui.focus = ui.picks[0] ?? ROSTER[0].id; return show('select'); }
+    show('title');
+  };
   app.querySelector('#confirm').onclick = async () => {
     if (online()) {
       const res = await emit('select:pick', { servantId: focus.id });
@@ -489,8 +515,13 @@ function renderSelect() {
     if (ui.selecting === 0) {
       ui.selecting = 1; ui.focus = ROSTER[0].id;
       show('select');
-      passScreen(1, 'Choose your Servant. Your opponent\'s pick stays hidden until the duel begins.', () => render());
+      if (!vsCpu()) passScreen(1, 'Choose your Servant. Your opponent\'s pick stays hidden until the duel begins.', () => render());
     } else startLocalMatch();
+  };
+  const randomCpu = app.querySelector('#randomCpu');
+  if (randomCpu) randomCpu.onclick = () => {
+    ui.picks[1] = ROSTER[Math.floor(Math.random() * ROSTER.length)].id;
+    startLocalMatch();
   };
 }
 
@@ -502,6 +533,7 @@ function startLocalMatch() {
   ui.match = createMatch(byId(ui.picks[0]), byId(ui.picks[1]));
   ui.bars = {};
   ui.locked = [null, null];
+  ui.resultRecorded = false;
   beginLocalTurn(0, true);
 }
 
@@ -509,6 +541,7 @@ function beginLocalTurn(i, first = false) {
   ui.active = i;
   ui.draft = { main: null, seal: null };
   show('battle');
+  if (vsCpu()) return; // no hand-off screens against the CPU
   const msg = first && i === 0 ? 'The Holy Grail War begins. Choose your first action.' : `Turn ${ui.match.turn}: choose your action.`;
   passScreen(i, msg, () => { overlay.hidden = true; });
 }
@@ -529,7 +562,7 @@ function panelHtml(i) {
   const hpPct = Math.max(0, (p.hp / p.maxHp) * 100);
   const npFull = p.np >= T.npMax;
   const buffs = p.buffs.map(buffChip);
-  const highlight = online() ? i === mySeat() : ui.active === i;
+  const highlight = online() ? i === mySeat() : vsCpu() ? i === 0 : ui.active === i;
   return `
     <section class="panel ${highlight ? 'active' : ''} side-${i}">
       ${art(s, 'battle-art')}
@@ -682,6 +715,7 @@ function spectatorHtml() {
 }
 
 function waitingControlsHtml() {
+  if (vsCpu()) return '<section class="controls resolving"><div><div class="spinner"></div><p class="muted">The CPU is choosing…</p></div></section>';
   if (!online()) return '<section class="controls resolving"><p>Resolving the clash…</p></section>';
   if (!isDuelist()) return spectatorHtml();
   const mine = ui.net.snap.duel.myAction;
@@ -774,6 +808,15 @@ async function lockIn() {
     return; // the server's snapshot moves us on
   }
   ui.locked[i] = action;
+  if (vsCpu()) {
+    ui.active = -1;
+    show('battle'); // shows "CPU is choosing…"
+    setTimeout(() => {
+      ui.locked[1] = chooseAction(ui.match, 1, { strength: cpuStrength() });
+      resolveLocal();
+    }, 450);
+    return;
+  }
   if (i === 0) beginLocalTurn(1);
   else resolveLocal();
 }
@@ -845,10 +888,19 @@ function renderEnd() {
   const s = draw ? null : m.servants[winner];
   let headline = draw ? 'Stalemate' : 'Victory';
   if (isDuelist() && !draw) headline = winner === mySeat() ? 'Victory' : 'Defeat';
+  else if (vsCpu() && !draw) headline = winner === 0 ? 'Victory' : 'Defeat';
   else if (online() && !draw) headline = `${esc(ui.net.snap.duel.seats[winner].name)} wins`;
   const sub = draw
     ? (reason === 'double KO' ? 'Both Servants fall. Both Masters survive to fight again.' : `The battle reaches turn ${T.maxTurns} without a victor.`)
-    : `${online() ? (winner === mySeat() ? 'You' : esc(ui.net.snap.duel.seats[winner].name)) : `Master ${winner + 1}`} and ${esc(s.name)} claim the Grail. (${m.turn - 1} turns)`;
+    : `${online() ? (winner === mySeat() ? 'You' : esc(ui.net.snap.duel.seats[winner].name)) : vsCpu() ? (winner === 0 ? 'You' : 'The CPU') : `Master ${winner + 1}`} and ${esc(s.name)} claim the Grail. (${m.turn - 1} turns)`;
+
+  let cpuNote = '';
+  if (vsCpu()) {
+    const before = cpuLevel();
+    if (!ui.resultRecorded) { recordCpuResult(draw ? 'draw' : winner === 0 ? 'win' : 'loss'); ui.resultRecorded = true; ui.cpuLevelBefore = before; }
+    const from = ui.cpuLevelBefore, to = cpuLevel();
+    cpuNote = `<p class="muted">CPU level ${from}/10${to !== from ? ` → ${to}/10` : ''}. The CPU adapts after every match to keep games close.</p>`;
+  }
 
   let actions;
   if (online()) {
@@ -878,6 +930,7 @@ function renderEnd() {
       </div>`;
   }
 
+  if (cpuNote) actions = cpuNote + actions;
   app.innerHTML = `
     <div class="end-screen ${draw ? 'draw' : ''}">
       ${draw ? `<div class="end-pair">${art(m.servants[0], 'end-art')}${art(m.servants[1], 'end-art')}</div>` : art(s, `end-art ${headline === 'Defeat' ? 'loser' : 'winner'}`)}

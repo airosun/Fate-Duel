@@ -65,7 +65,7 @@ function play(a, b) {
 const names = ROSTER.map(s => s.id);
 const wins = Object.fromEntries(names.map(n => [n, Object.fromEntries(names.map(m => [m, 0]))]));
 const agg = { games: 0, turns: [], draws: 0, timeouts: 0, npPerServant: 0, skillsPerServant: 0, cards: { quick: 0, arts: 0, buster: 0 } };
-const perServant = Object.fromEntries(names.map(n => [n, { games: 0, wins: 0, nps: 0 }]));
+const perServant = Object.fromEntries(names.map(n => [n, { games: 0, wins: 0, nps: 0, fieldGames: 0, fieldScore: 0 }]));
 
 for (const a of ROSTER) for (const b of ROSTER) {
   for (let g = 0; g < N; g++) {
@@ -79,6 +79,10 @@ for (const a of ROSTER) for (const b of ROSTER) {
     [a, b].forEach((s, i) => {
       perServant[s.id].games++; perServant[s.id].nps += r.stats.nps[i];
       if (r.result.winner === i) perServant[s.id].wins++;
+      if (a.id !== b.id) {
+        perServant[s.id].fieldGames++;
+        perServant[s.id].fieldScore += r.result.winner === i ? 1 : r.result.winner === null ? 0.5 : 0;
+      }
     });
     if (r.result.winner === 0) wins[a.id][b.id]++;
   }
@@ -101,7 +105,7 @@ console.log(`\nServant stats (derived) and overall win rate (mirror matches incl
 for (const s of ROSTER) {
   const p = createMatch(s, s).players[0];
   const ps = perServant[s.id];
-  console.log(`  ${s.name.padEnd(20)} HP ${String(p.hp).padStart(4)}  ATK ${String(p.atk).padStart(3)}  win ${f(ps.wins / ps.games)}  NPs/match ${(ps.nps / ps.games).toFixed(2)}`);
+  console.log(`  ${s.name.padEnd(20)} HP ${String(p.hp).padStart(4)}  ATK ${String(p.atk).padStart(3)}  win ${f(ps.wins / ps.games)}  vs field ${f(ps.fieldScore / ps.fieldGames)}  NPs/match ${(ps.nps / ps.games).toFixed(2)}`);
 }
 
 console.log(`\nMatchup win rate (row servant as player 1 vs column):`);
