@@ -39,8 +39,8 @@ Tuning experiments without editing files: `BASE_HP=1100 STAT_EXP=0.3 npm run sim
 Online Duel → enter a Master name → Create Room (4-letter code + invite link `/?room=CODE`) or Join.
 - Rooms hold up to 6 people. The creator is the host; if they leave, host passes to the next member.
 - Members are either queued to battle or spectating. The host starts a duel with the first two
-  queued players; everyone else watches. "Return to Room" after a match moves the two duelists
-  to the back of the queue.
+  queued players; everyone else watches. "Return to Room" after a match is winner-stays-on: the
+  winner goes to the front of the queue and the loser to the back (a draw sends both back).
 - Duelists never see each other's pick or action early. Spectators see everything live:
   servant browsing, action drafts and lock-ins.
 - The server validates every action. Refreshing the page rejoins your seat.

@@ -111,14 +111,26 @@ test('rematch votes: same -> new match, change -> back to select', () => {
   assert.equal(room.phase, 'select');
 });
 
-test('return to room rotates the duelists to the back of the queue', () => {
+test('return to room: winner stays on, loser goes to the back of the queue', () => {
   const { rm, room, H, B, C } = room3();
   startBattle(rm, room, H, B, ['artoria', 'kojirou']);
-  finish(rm, room, H, B);
+  finish(rm, room, H, B);                // H (seat 0) wins
   assert.throws(() => rm.returnToRoom(room, C), /duelists or the host/);
   rm.returnToRoom(room, B);
   assert.equal(room.phase, 'lobby');
   assert.equal(room.duel, null);
+  assert.deepEqual(room.queue, [H, C, B]);
+  rm.start(room, H);
+  assert.deepEqual(room.duel.seats, [H, C]); // champion vs next challenger
+});
+
+test('return to room after a draw sends both duelists to the back', () => {
+  const { rm, room, H, B, C } = room3();
+  startBattle(rm, room, H, B, ['artoria', 'kojirou']);
+  room.duel.match.players[0].hp = 1; room.duel.match.players[1].hp = 1;
+  rm.lock(room, H, atk('buster')); rm.lock(room, B, atk('buster'));
+  assert.equal(room.duel.match.result.winner, null);
+  rm.returnToRoom(room, H);
   assert.deepEqual(room.queue, [C, H, B]);
 });
 

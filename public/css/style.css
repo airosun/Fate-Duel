@@ -161,11 +161,15 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
 .ap b { margin-left: .35rem; font-size: .85rem; }
 .seals { display: flex; gap: 5px; }
 .buffs { display: flex; flex-wrap: wrap; gap: .3rem; min-height: 1.4rem; }
-.buff { font-size: .7rem; padding: .12rem .45rem; border-radius: 4px; background: rgba(61,127,230,.25); border: 1px solid rgba(61,127,230,.5); }
-.buff em { font-style: normal; color: var(--gold2); margin-left: .3rem; }
-.buff.passive { background: rgba(216,178,90,.12); border-color: rgba(216,178,90,.4); }
-.buff.debuff { background: rgba(226,70,58,.2); border-color: rgba(226,70,58,.55); }
-.buff.empower { background: rgba(224,51,74,.3); border-color: var(--seal); }
+.buff { position: relative; font-size: .7rem; padding: .12rem .45rem; border-radius: 4px; cursor: default; }
+.buff.passive { background: rgba(160,165,185,.16); border: 1px solid rgba(170,175,195,.45); color: #c9ccd8; }
+.buff.active { background: rgba(61,127,230,.28); border: 1px solid rgba(90,150,240,.7); color: #e3eeff; }
+.buff.debuff { background: rgba(226,70,58,.25); border: 1px solid rgba(226,70,58,.7); color: #ffe0dc; }
+.buff[data-tip]:hover::after, .buff[data-tip]:focus::after {
+  content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  white-space: nowrap; background: #05081a; color: var(--text); border: 1px solid var(--gold-dim); border-radius: 5px;
+  padding: .3rem .55rem; font-size: .72rem; z-index: 20; box-shadow: 0 4px 12px rgba(0,0,0,.5); pointer-events: none;
+}
 
 .lower { display: grid; grid-template-columns: 1fr 320px; gap: 1rem; align-items: start; }
 .controls { background: var(--panel); border: 1px solid var(--gold-dim); border-radius: var(--radius); padding: 1rem; }

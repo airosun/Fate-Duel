@@ -556,8 +556,9 @@ function panelHtml(i) {
           </div>
         </div>
         <div class="buffs">
-          ${p.empower ? '<span class="buff empower">Empowered</span>' : ''}
-          ${buffs.map(b => `<span class="buff ${b.debuff ? 'debuff' : ''} ${b.passive ? 'passive' : ''}">${esc(b.label)}${b.turns}</span>`).join('')}
+          ${p.empower ? '<span class="buff active" data-tip="Command Seal · next regular attack">Empowered</span>' : ''}
+          ${buffs.sort((a, b) => ({ passive: 0, active: 1, debuff: 2 }[a.kind] - { passive: 0, active: 1, debuff: 2 }[b.kind]))
+            .map(b => `<span class="buff ${b.kind}" tabindex="0" data-tip="${esc(b.duration)}">${esc(b.label)}</span>`).join('')}
         </div>
       </div>
     </section>`;

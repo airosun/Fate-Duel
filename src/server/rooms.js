@@ -240,13 +240,16 @@ export class RoomManager {
     this.#endDuel(room, { rotate: true });
   }
 
-  // rotate: the two duelists go to the back of the queue so others get a turn.
+  // Winner stays on: the winner moves to the front of the queue and the loser
+  // to the back. On a draw, both duelists go to the back.
   #endDuel(room, { rotate }) {
     const seats = room.duel?.seats ?? [];
     if (rotate) {
-      const stay = room.queue.filter(q => !seats.includes(q));
-      const back = seats.filter(s => room.queue.includes(s));
-      room.queue = [...stay, ...back];
+      const w = room.duel?.match?.result?.winner;
+      const winner = w === 0 || w === 1 ? seats[w] : null;
+      const losers = seats.filter(s => s !== winner && room.queue.includes(s));
+      const others = room.queue.filter(q => !seats.includes(q));
+      room.queue = [...(winner && room.queue.includes(winner) ? [winner] : []), ...others, ...losers];
     }
     room.duel = null;
     room.phase = 'lobby';

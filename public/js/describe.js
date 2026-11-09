@@ -75,6 +75,11 @@ export function buffChip(b) {
   if (b.type === 'sureHit' && b.card) label = `${CARD_LABEL[b.card]} Sure Hit`;
   const val = b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage', 'sureHit'].includes(b.type)
     ? ` ${Math.round(b.value)}%` : (['apRegen', 'flatDamage'].includes(b.type) ? ` +${b.value}` : '');
-  const turns = b.turns === null ? '' : `<em>${b.turns}T</em>`;
-  return { label: label + val, turns, debuff: !!b.debuff, passive: b.turns === null };
+  const kind = b.debuff ? 'debuff' : b.turns === null ? 'passive' : 'active';
+  let duration;
+  if (b.turns === null) duration = b.charges != null ? `Passive · ${b.charges} use${b.charges === 1 ? '' : 's'} left` : 'Passive · permanent';
+  else if (b.turns === 1) duration = 'Ends after this turn';
+  else duration = `${b.turns} turns left (including this one)`;
+  if (b.type === 'busterConvert') duration += ' · used on the next attack';
+  return { label: label + val, kind, duration };
 }
