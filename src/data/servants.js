@@ -459,8 +459,8 @@ export const SERVANTS = {
         effects: [{ type: 'cleanse' }, { type: 'damageCut', value: 20, turns: 2 }, { type: 'npCharge', value: 20 }] },
     ],
     np: { name: 'Clarent Blood Arthur', card: 'buster', mult: 3.6,
-          desc: 'Heavy Buster damage, then NP +15%',
-          postEffects: [{ type: 'npCharge', value: 15 }] },
+          desc: 'Heavy Buster damage, then NP +20%',
+          postEffects: [{ type: 'npCharge', value: 20 }] },
   },
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
