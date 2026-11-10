@@ -668,8 +668,8 @@ export const SERVANTS = {
     favoredCard: 'quick', maxAp: 10,
     passives: [
       classPassive('presenceConcealment', 'A+'),
-      unique('The Misty Night of London', 'When her Quick attack meets a Buster attack, a 10% chance her Quick wins the clash instead',
-        [{ type: 'rpsOverride', card: 'quick', vs: 'buster', value: 10 }]),
+      unique('The Misty Night of London', 'When her Quick attack meets a Buster attack, a 20% chance her Quick wins the clash instead',
+        [{ type: 'rpsOverride', card: 'quick', vs: 'buster', value: 20 }]),
     ],
     skills: [
       { id: 'murderer_misty_night', name: 'Murderer of the Misty Night EX', cost: 6,
@@ -683,7 +683,7 @@ export const SERVANTS = {
         desc: 'Heal 20% HP; AP +2',
         effects: [{ type: 'heal', value: 20 }, { type: 'apGain', value: 2 }] },
     ],
-    np: { name: 'Maria the Ripper', card: 'quick', mult: 3.3, ignoreCut: true,
+    np: { name: 'Maria the Ripper', card: 'quick', mult: 3.25, ignoreCut: true,
           desc: 'Heavy Quick damage that ignores damage cut' },
   },
 

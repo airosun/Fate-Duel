@@ -940,7 +940,7 @@ test('Astolfo: Black Luna Terror on ~10% of hits; Trap of Argalia ~50% skip next
   assert.ok(npDmg(false).evade);
 });
 
-test('Jack: Misty Night flips ~10% of Quick-vs-Buster clashes; Information Erasure strips buffs and drains AP; Maria ignores cut', () => {
+test('Jack: Misty Night flips ~20% of Quick-vs-Buster clashes; Information Erasure strips buffs and drains AP; Maria ignores cut', () => {
   let flips = 0, n = 600;
   for (let seed = 1; seed <= n; seed++) {
     const r = resolveTurn(createMatch(SERVANTS.jack, dummy('B'), { seed }), [atk('quick'), atk('buster')]);
@@ -949,7 +949,7 @@ test('Jack: Misty Night flips ~10% of Quick-vs-Buster clashes; Information Erasu
     if (jackHit) { flips++; assert.ok(!foeHit, 'the Buster attack is countered'); }
     else assert.ok(foeHit);
   }
-  assert.ok(flips / n > 0.06 && flips / n < 0.14, `flip rate ${flips / n}`);
+  assert.ok(flips / n > 0.15 && flips / n < 0.25, `flip rate ${flips / n}`);
   // Never triggers in other matchups
   const r = resolveTurn(createMatch(SERVANTS.jack, dummy('B'), { seed: 1 }), [atk('quick'), atk('arts')]);
   assert.ok(!r.state.players[0].stats.procs['The Misty Night of London (clashes overturned)']);
