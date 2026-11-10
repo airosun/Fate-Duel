@@ -563,3 +563,16 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
   .screen-head h1 { grid-column: 1 / -1; grid-row: 2; font-size: 1.2rem; }
   .screen-head > div:empty { display: none; }
 }
+
+/* Teacher's Wisdom */
+.foresight-btn { margin: .2rem 0 .6rem; border-color: #7fd0c0; color: #bff3e8; }
+.foresight-btn em { color: var(--muted); font-style: normal; font-size: .8em; }
+.foresight-box { display: flex; flex-wrap: wrap; gap: .3rem .7rem; align-items: baseline; margin: .2rem 0 .6rem; padding: .6rem .8rem;
+  border: 1px solid #7fd0c0; border-radius: 8px; background: rgba(127, 208, 192, .08); font-size: .9rem; }
+.foresight-box b { color: #9fe8d8; font-family: var(--title); }
+.foresight-box strong { color: #fff; }
+.foresight-box.revealed { box-shadow: 0 0 14px rgba(127, 208, 192, .25); }
+.foresight-box.warn { border-color: #e9a55b; background: rgba(233, 165, 91, .08); }
+.foresight-box.warn b { color: #f3c48a; }
+.foresight-note { color: #f3c48a; font-size: .9rem; max-width: 34rem; margin: .3rem auto; }
+.log-foresight { color: #9fe8d8; }

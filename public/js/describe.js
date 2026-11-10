@@ -46,6 +46,10 @@ export function describeEffect(e) {
     case 'ignoreDamageCut': return `Attacks and NP ignore damage cut${turnsText(e)}`;
     case 'missChance': return `Attacks on him ${v}% likely to miss`;
     case 'maxApUp': return `Max AP +${v}${turnsText(e)}`;
+    case 'doubleShot': return `${v}% chance of a second arrow on ${c} attacks`;
+    case 'foresight': return `${e.charges}× per battle: see the opponent's locked action first`;
+    case 'hpCost': return `lose ${v}% HP (can't KO)`;
+    case 'removeDefBuffs': return `${who}loses Evade, Invincible and damage cut`;
     case 'statusOnHit': return `${v}% chance to mark the enemy ${e.status} on hit`;
     case 'dmgVsStatus': return `+${v}% damage vs ${e.status}${turnsText(e)}`;
     case 'terror': return `${who}Terror (${v}% chance to skip an attack)${turnsText(e)}`;
@@ -94,7 +98,7 @@ const BUFF_LABEL = {
   defDown: 'DEF↓', flatDamage: 'Flat Dmg', sureHit: 'Sure Hit', debuffPotency: 'Debuff Potency', debuffUp: 'Debuff↑',
   nextHitUp: 'Next Hit↑', affinityAll: 'All Cards Favored', apRecoveryDown: 'AP Recovery↓',
   bonusVsStatus: 'vs Petrified↑', buffFailChance: 'Breaker Gorgon', copyEnemyUnique: 'Trace On',
-  instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF', terror: 'Terror', curse: 'Curse', maxApUp: 'Max AP↑', statusOnHit: "Fafnir's Blood", dmgVsStatus: 'vs Dragon↑', extraHitChance: 'Sea Demons', missChance: 'Decoys', buffSuccessUp: 'Buff Success↑', cardVuln: '↓ Resist',
+  instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF', terror: 'Terror', curse: 'Curse', doubleShot: 'Golden Apple', foresight: 'Foresight', maxApUp: 'Max AP↑', statusOnHit: "Fafnir's Blood", dmgVsStatus: 'vs Dragon↑', extraHitChance: 'Sea Demons', missChance: 'Decoys', buffSuccessUp: 'Buff Success↑', cardVuln: '↓ Resist',
   mirrorAtkUp: 'Arms Mastery', apRecoveryUp: 'AP Recovery↑',
 };
 
@@ -135,6 +139,8 @@ export function explainBuff(b) {
     case 'copyEnemyUnique': return "Copies the opponent's unique passive for the match. Revives can't be copied.";
     case 'apRecoveryDown': return `${b.status === 'petrified' ? 'Petrified: g' : 'G'}ains ${Math.round(b.value)} less AP from each attack.`;
     case 'bonusVsStatus': return `The next attack or Noble Phantasm against a ${b.status} enemy deals ${v}% more damage.`;
+    case 'doubleShot': return `${c} attacks have a ${v}% chance to loose a second arrow: +${b.ratio ?? 50}% damage if the attack landed, or a full-damage hit if it was beaten (Evade and Invincible still stop it).`;
+    case 'foresight': return `${b.charges ?? 0} use${b.charges === 1 ? '' : 's'} left: see the opponent's locked-in action before choosing.`;
     case 'maxApUp': return `Max AP +${v}. AP above the normal maximum is lost when this ends.`;
     case 'statusMark': return b.status === 'dragon' ? 'Dragon: no effect on its own, but Siegfried\'s Dragon Slayer and Balmung deal extra damage to it.' : `Marked: ${b.status}.`;
     case 'statusOnHit': return `A landed regular attack has a ${v}% chance to mark the enemy as ${b.status[0].toUpperCase() + b.status.slice(1)} for the next turn.`;
@@ -164,6 +170,8 @@ export function buffChip(b) {
   if (b.type === 'apRecoveryDown' && b.status === 'petrified') label = 'Petrified';
   if (b.type === 'cardVuln') label = `${CARD_LABEL[b.card]} Resist↓`;
   if (b.type === 'terror') label = 'Terror';
+  if (b.type === 'foresight') label = `Foresight ×${b.charges ?? 0}`;
+  if (b.type === 'doubleShot') label = `2nd Arrow ${Math.round(b.value)}%`;
   if (b.type === 'statusMark') label = b.status[0].toUpperCase() + b.status.slice(1);
   if (b.type === 'curse') label = `Curse ${Math.round(b.value)}`;
   const val = b.type === 'apRecoveryDown' ? ` −${Math.round(b.value)} AP` : b.type === 'apRecoveryUp' ? ` +${Math.round(b.value)} AP`

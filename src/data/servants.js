@@ -488,6 +488,63 @@ export const SERVANTS = {
     np: { name: 'Balmung', card: 'buster', mult: 3.5, vsStatus: { status: 'dragon', value: 40 },
           desc: 'Heavy Buster damage; +40% damage to a Dragon' },
   },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
+  atalanta: {
+    id: 'atalanta', name: 'Atalanta', class: 'Archer',
+    fgoHp: 12476, fgoAtk: 8633, fgoNpAtk: 0.5, fgoNpDef: 3,
+    favoredCard: 'quick', maxAp: 10,
+    passives: [
+      classPassive('magicResistance', 'D'),
+      classPassive('independentAction', 'A'),
+      unique('Golden Apple', 'Quick attacks have a 35% chance to loose a second arrow: +50% damage if the attack landed, or a full-damage hit if it was beaten (Evade and Invincible still stop it)',
+        [{ type: 'doubleShot', card: 'quick', value: 35, ratio: 50 }]),
+    ],
+    skills: [
+      { id: 'crossing_arcadia', name: 'Crossing Arcadia', cost: 3,
+        desc: 'Quick +40% for 3 turns',
+        effects: [{ type: 'cardUp', card: 'quick', value: 40, turns: 3 }] },
+      { id: 'art_of_the_hunt', name: 'Art of the Hunt C', cost: 3,
+        desc: 'AP +2 now; Sure Hit for 3 turns',
+        effects: [{ type: 'apGain', value: 2 }, { type: 'sureHit', turns: 3 }] },
+      { id: 'calydonian_hunt', name: 'Calydonian Hunt EX', cost: 6,
+        desc: 'Evade for 2 turns; NP +30% now; NP gain +30% and ATK +15% for 3 turns',
+        effects: [{ type: 'evade', turns: 2 }, { type: 'npCharge', value: 30 },
+                  { type: 'npGainUp', value: 30, turns: 3 }, { type: 'atkUp', value: 15, turns: 3 }] },
+    ],
+    np: { name: 'Phoebus Catastrophe', card: 'quick', mult: 4.3,
+          desc: 'Heavy Quick damage, then AP +3',
+          postEffects: [{ type: 'apGain', value: 3 }] },
+  },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
+  chiron: {
+    id: 'chiron', name: 'Chiron', class: 'Archer',
+    fgoHp: 12250, fgoAtk: 9294, fgoNpAtk: 0.68, fgoNpDef: 3,
+    favoredCard: 'arts', maxAp: 10,
+    passives: [
+      classPassive('magicResistance', 'B'),
+      classPassive('independentAction', 'A'),
+      classPassive('divinity', 'C'),
+      unique("Teacher's Wisdom", "3 times per battle, see the opponent's locked-in action before choosing his own",
+        [{ type: 'foresight', charges: 3 }]),
+    ],
+    skills: [
+      { id: 'eye_of_mind_chiron', name: 'Eye of the Mind (True) A', cost: 4,
+        desc: 'Evade and damage cut 20% for 2 turns',
+        effects: [{ type: 'evade', turns: 2 }, { type: 'damageCut', value: 20, turns: 2 }] },
+      { id: 'eternal_consecration', name: 'Eternal Consecration EX', cost: 3,
+        desc: 'AP +5 now; lose 5% HP (cannot KO him)',
+        effects: [{ type: 'apGain', value: 5 }, { type: 'hpCost', value: 5 }] },
+      { id: 'wisdom_of_divine', name: 'Wisdom of Divine A+', cost: 6,
+        desc: 'Quick, Arts and Buster +20% and ATK +15% for 3 turns',
+        effects: [{ type: 'cardUp', card: 'quick', value: 20, turns: 3 }, { type: 'cardUp', card: 'arts', value: 20, turns: 3 },
+                  { type: 'cardUp', card: 'buster', value: 20, turns: 3 }, { type: 'atkUp', value: 15, turns: 3 }] },
+    ],
+    np: { name: 'Antares Snipe', card: 'arts', mult: 3.5,
+          desc: "Strip the enemy's Evade, Invincible and damage cut, then heavy Arts damage",
+          preEffects: [{ type: 'removeDefBuffs', target: 'enemy' }] },
+  },
 };
 
 export const ROSTER = Object.values(SERVANTS);

@@ -163,3 +163,23 @@ test('empty rooms are swept after 15 minutes', () => {
   rm.sweep();
   assert.equal(rm.rooms.size, 0);
 });
+
+test("Teacher's Wisdom online: reveal only to the reader, opponent's lock becomes final", () => {
+  const { rm, room, H, B, C } = room3();
+  rm.setRole(room, C, 'spectator');
+  startBattle(rm, room, H, B, ['chiron', 'medea']);
+  assert.throws(() => rm.foresight(room, B), /uses left/);             // Medea has none
+  rm.foresight(room, H);
+  assert.throws(() => rm.lock(room, H, atk('arts')), /Wait for your opponent/);
+  assert.equal(rm.snapshot(room, B).duel.foresight.seat, 0);             // Rin is told it's being used
+  assert.equal(rm.snapshot(room, B).duel.foresight.revealed, null);
+  rm.lock(room, B, atk('buster'));
+  assert.throws(() => rm.unlock(room, B), /can't be changed/);
+  assert.deepEqual(rm.snapshot(room, H).duel.foresight.revealed.main, { type: 'attack', card: 'buster' });
+  assert.equal(rm.snapshot(room, B).duel.foresight.revealed, null);
+  assert.equal(rm.lock(room, H, atk('arts')), true);                     // resolves
+  const d = room.duel;
+  assert.equal(d.foresight, null);
+  assert.equal(d.lastTurn.actions[0].foresight, true);
+  assert.equal(d.match.players[0].buffs.find(b => b.type === 'foresight').charges, 2);
+});

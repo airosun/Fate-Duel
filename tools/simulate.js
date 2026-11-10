@@ -51,11 +51,36 @@ function bot(state, i) {
   return { main: { type: 'attack', card: weighted(w) }, seal };
 }
 
+// Teacher's Wisdom: a bot with uses left sometimes reads the opponent's action first
+// (more often when the opponent's NP is ready) and answers it with the best counter.
+function counterTo(state, i, other) {
+  const legal = getLegalActions(state, i), servant = state.servants[i];
+  const m = other.main;
+  if (m.type === 'attack') {
+    const card = Object.keys(T.beats).find(c => T.beats[c] === m.card);
+    return { main: { type: 'attack', card }, seal: null };
+  }
+  if (legal.np) return { main: { type: 'np' }, seal: null };
+  if (m.type === 'np') {
+    const def = servant.skills.find(s => legal.skills.includes(s.id) && s.effects.some(e => ['damageCut', 'invincible'].includes(e.type)));
+    if (def) return { main: { type: 'skill', skillId: def.id }, seal: null };
+  }
+  return { main: { type: 'attack', card: state.players[i].favoredCard ?? 'buster' }, seal: null };
+}
+function botTurn(state) {
+  const readers = [0, 1].filter(i => getLegalActions(state, i).foresight > 0
+    && rand() < (state.players[1 - i].np >= T.npMax ? 0.8 : 0.2));
+  if (readers.length !== 1) return [bot(state, 0), bot(state, 1)];
+  const r = readers[0], other = bot(state, 1 - r);
+  const mine = { ...counterTo(state, r, other), foresight: true };
+  return r === 0 ? [mine, other] : [other, mine];
+}
+
 function play(a, b) {
   let s = createMatch(a, b);
   const stats = { nps: [0, 0], seals: [0, 0], skills: [0, 0], cards: { quick: 0, arts: 0, buster: 0 } };
   while (!s.over) {
-    const acts = [bot(s, 0), bot(s, 1)];
+    const acts = botTurn(s);
     acts.forEach((x, i) => {
       if (x.main.type === 'np') stats.nps[i]++;
       if (x.main.type === 'skill') stats.skills[i]++;

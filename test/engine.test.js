@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createMatch, resolveTurn, getLegalActions } from '../src/engine/engine.js';
+import { createMatch, resolveTurn, getLegalActions, validateAction } from '../src/engine/engine.js';
 import { SERVANTS } from '../src/data/servants.js';
 import { TUNING as T } from '../src/engine/constants.js';
 
@@ -728,4 +728,61 @@ test('match stats: damage dealt matches HP lost; hits, NPs and chance effects ar
   let s = createMatch(SERVANTS.gilles, dummy('B'), { seed: 9 });
   s = resolveTurn(s, [atk('arts'), atk('buster')]).state;
   assert.equal(s.players[0].stats.procs['Summoning: Sea Demons (follow-up hits)'].tries, 1);
+});
+
+test('Atalanta: Golden Apple adds 50% on ~35% of landed Quick attacks; a beaten Quick may fire a full second arrow', () => {
+  let extra = 0, arrows = 0, n = 400;
+  for (let seed = 1; seed <= n; seed++) {
+    const r = resolveTurn(createMatch(SERVANTS.atalanta, dummy('B'), { seed }), [atk('quick'), atk('arts')]);   // Quick beats Arts
+    const hit = r.log.find(l => l.type === 'hit' && l.kind === 'attack' && l.from === 0);
+    const x = r.log.find(l => l.kind === 'extra' && l.from === 0);
+    if (x) { extra++; assert.equal(x.amount, Math.round(hit.amount * 0.5)); }
+    const r2 = resolveTurn(createMatch(SERVANTS.atalanta, dummy('B'), { seed }), [atk('quick'), atk('buster')]); // Buster beats Quick
+    const second = r2.log.find(l => l.secondArrow);
+    if (second) {
+      arrows++;
+      const plain = resolveTurn(createMatch(SERVANTS.atalanta, dummy('B'), { seed }), [atk('quick'), skill('charge')]).log
+        .find(l => l.type === 'hit' && l.from === 0 && l.kind === 'attack');
+      assert.ok(Math.abs(second.amount - plain.amount) <= 1, 'second arrow is a full, non-counter hit');
+    }
+  }
+  assert.ok(extra / n > 0.28 && extra / n < 0.42, `extra ${extra / n}`);
+  assert.ok(arrows / n > 0.28 && arrows / n < 0.42, `arrows ${arrows / n}`);
+  // Evade still stops the second arrow
+  let blocked = 0;
+  for (let seed = 1; seed <= 100; seed++) {
+    const s = createMatch(SERVANTS.atalanta, dummy('B'), { seed });
+    s.players[1].buffs.push({ type: 'evade', value: 0, turns: 2 });
+    const r = resolveTurn(s, [atk('quick'), atk('buster')]);
+    assert.equal(r.state.players[1].hp, 1000);
+    if (r.log.some(l => l.type === 'blocked' && l.secondArrow)) blocked++;
+  }
+  assert.ok(blocked > 15);
+});
+
+test("Chiron: Teacher's Wisdom has 3 uses, Ea switches it off; Eternal Consecration can't KO; Antares strips defenses first", () => {
+  let s = createMatch(SERVANTS.chiron, dummy('B'), { seed: 1 });
+  assert.equal(getLegalActions(s, 0).foresight, 3);
+  for (let k = 0; k < 3; k++) s = resolveTurn(s, [{ ...atk('arts'), foresight: true }, atk('quick')]).state;
+  assert.equal(getLegalActions(s, 0).foresight, 0);
+  assert.match(validateAction(s, 0, { ...atk('arts'), foresight: true }), /Teacher's Wisdom/);
+  assert.equal(s.players[0].stats.procs["Teacher's Wisdom (opponent's move read)"].hits, 3);
+  assert.equal(getLegalActions(createMatch(SERVANTS.gilgamesh, SERVANTS.chiron), 1).foresight, 0);
+
+  let c = createMatch(SERVANTS.chiron, dummy('B'), { seed: 2 });
+  c.players[0].hp = 10; c.players[0].ap = 3;
+  c = resolveTurn(c, [skill('eternal_consecration'), skill('charge')]).state;
+  assert.equal(c.players[0].hp, 1);
+  assert.equal(c.players[0].ap, 3 - 3 + 5);
+
+  const npDmg = defBuffs => {
+    const x = createMatch(SERVANTS.chiron, dummy('B'), { seed: 3 });
+    x.players[0].np = 100; x.players[1].buffs.push(...defBuffs);
+    const r = resolveTurn(x, [np(), atk('quick')]).state;
+    return { dmg: 1000 - r.players[1].hp, left: r.players[1].buffs };
+  };
+  const plain = npDmg([]).dmg;
+  const guarded = npDmg([{ type: 'damageCut', value: 50, turns: 2 }, { type: 'invincible', value: 0, turns: 1 }]);
+  assert.equal(guarded.dmg, plain);
+  assert.equal(guarded.left.filter(b => ['damageCut', 'invincible'].includes(b.type)).length, 0);
 });

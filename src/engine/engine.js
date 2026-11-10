@@ -162,7 +162,9 @@ export function getLegalActions(state, idx) {
   if (p.seals >= 1) seals.push('heal', 'recharge');
   if (p.seals >= 1 && !p.empower) seals.push('empower');
   if (p.seals >= 3 && p.np < T.npMax) seals.push('grandOrder');
-  return { attacks: [...CARDS], skills, np: p.np >= T.npMax, seals };
+  // Teacher's Wisdom: uses left of "see the opponent's locked action first"
+  const foresight = p.buffs.filter(b => b.type === 'foresight').reduce((a, b) => a + (b.charges ?? 0), 0);
+  return { attacks: [...CARDS], skills, np: p.np >= T.npMax, seals, foresight };
 }
 
 export function validateAction(state, idx, action) {
@@ -178,6 +180,7 @@ export function validateAction(state, idx, action) {
   }
   if (m.type === 'np' && !legal.np) return 'NP gauge not full';
   if (!['attack', 'skill', 'np'].includes(m.type)) return `Unknown action: ${m.type}`;
+  if (action.foresight && !legal.foresight) return "No Teacher's Wisdom uses left";
   if (action.seal != null) {
     if (!SEALS.includes(action.seal)) return `Unknown seal: ${action.seal}`;
     if (!legal.seals.includes(action.seal)) return `Seal not available: ${action.seal}`;
@@ -192,7 +195,7 @@ const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', '
 // Lasting positive effects a servant puts on itself (what Breaker Gorgon can make fail).
 const BUFF_TYPES = new Set(['ignoreDamageCut', 'buffSuccessUp', 'apRecoveryUp', 'atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
   'cardNpGainUp', 'debuffResist', 'guts', 'apRegen', 'busterConvert', 'flatDamage', 'sureHit',
-  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit']);
+  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight']);
 const hasStatus = (p, status) => p.buffs.some(b => b.status === status);
 
 function resistScale(target, e, user) {
@@ -237,6 +240,12 @@ function applyEffectRaw(target, e, source, user) {
       return;
     case 'apDrain':
       target.ap = Math.max(0, target.ap - Math.round(e.value * resistScale(target, e, user)));
+      return;
+    case 'hpCost': // demerit: lose X% max HP, but never below 1 (Eternal Consecration)
+      target.hp = Math.max(1, target.hp - Math.round(target.maxHp * e.value / 100));
+      return;
+    case 'removeDefBuffs': // strips temporary Evade, Invincible and damage cut (Antares Snipe)
+      target.buffs = target.buffs.filter(b => b.turns === null || !['evade', 'invincible', 'damageCut'].includes(b.type));
       return;
     case 'setNpMode':
       target.npMode = e.value;
@@ -414,6 +423,15 @@ export function resolveTurn(prev, actions) {
   const say = (msg, data = {}) => log.push({ msg, ...data });
   const mains = actions.map(a => a.main);
 
+  // 0. Teacher's Wisdom: spend a charge for seeing the opponent's action first (the UI/server did the showing)
+  for (const i of [0, 1]) {
+    if (!actions[i].foresight) continue;
+    const fb = P[i].buffs.find(b => b.type === 'foresight' && b.charges > 0);
+    fb.charges--;
+    proc(P[i], `${fb.copiedFrom ? 'Trace On: ' : ''}${fb.copiedFrom ?? fb.source} (opponent's move read)`, true);
+    say(`${P[i].name} read ${P[1 - i].name}'s move in advance! (${fb.copiedFrom ?? fb.source}, ${fb.charges} left)`, { type: 'foresight', player: i });
+  }
+
   // 1. Command Seals
   for (const i of [0, 1]) {
     const seal = actions[i].seal;
@@ -519,7 +537,18 @@ export function resolveTurn(prev, actions) {
     const cl = P[i].stats.clash;
     if (reason === 'counter') cl.won++; else if (!lands) cl.lost++; else if (reason.includes('tie')) cl.tied++;
     if (!lands) P[i].stats.combo = 0;
-    if (!lands) { say(`${P[i].name}'s ${CARD_NAME[card]} attack fails (${reason}).`, { type: 'whiff', player: i, card, reason }); continue; }
+    if (!lands) {
+      say(`${P[i].name}'s ${CARD_NAME[card]} attack fails (${reason}).`, { type: 'whiff', player: i, card, reason });
+      // Golden Apple: a beaten Quick attack may still loose a second arrow at full damage (Evade/Invincible still stop it)
+      const ds = P[i].buffs.find(b => b.type === 'doubleShot' && b.card === card);
+      if (ds) {
+        const shot = roll(state) * 100 < ds.value;
+        proc(P[i], `${ds.source} (second arrows)`, shot);
+        if (shot) packets.push({ from: i, to: j, kind: 'attack', card, hitAs, reason: 'second arrow', secondArrow: true, nextHit: 0, vsBonus: 0,
+          ...attackPacket(P[i], P[j], hitAs, { counter: false, empowered: false }) });
+      }
+      continue;
+    }
     const nextHit = sumBuff(P[i], 'nextHitUp');
     const vs = P[i].buffs.find(b => b.type === 'bonusVsStatus' && hasStatus(P[j], b.status));
     packets.push({ from: i, to: j, kind: 'attack', card, hitAs, reason, nextHit, vsBonus: vs ? vs.value : 0,
@@ -536,7 +565,7 @@ export function resolveTurn(prev, actions) {
       continue;
     }
     // Terror: a frightened servant may not follow through on a regular attack. Ends once it triggers.
-    const terror = pk.kind === 'attack' ? att.buffs.find(b => b.type === 'terror') : null;
+    const terror = pk.kind === 'attack' && !pk.secondArrow ? att.buffs.find(b => b.type === 'terror') : null;
     const frozen = terror && roll(state) * 100 < terror.value;
     if (terror) proc(def, `${sourceLabel(S[pk.to], terror.source)} (Terror freezes)`, frozen);
     if (frozen) {
@@ -546,7 +575,7 @@ export function resolveTurn(prev, actions) {
       continue;
     }
     // One Hundred Personas: regular attacks on this servant may miss outright (Sure Hit ignores it)
-    const miss = pk.kind === 'attack' && !pk.sureHit ? sumBuff(def, 'missChance') : 0;
+    const miss = pk.kind === 'attack' && !pk.sureHit && !pk.secondArrow ? sumBuff(def, 'missChance') : 0;
     const decoy = miss && roll(state) * 100 < miss;
     if (miss) proc(def, `${def.buffs.find(b => b.type === 'missChance')?.source ?? 'Decoys'} (attacks dodged)`, decoy);
     if (decoy) {
@@ -558,6 +587,8 @@ export function resolveTurn(prev, actions) {
     if (pk.kind === 'np') {
       att.stats.nps.landed++;
       dealt(att, 'np', pk.amount, S[pk.from].np.name);
+    } else if (pk.secondArrow) {
+      dealt(att, 'extra', pk.amount, 'Second arrow (Golden Apple)');
     } else {
       att.stats.landed[pk.card]++;
       att.stats.combo++; att.stats.maxCombo = Math.max(att.stats.maxCombo, att.stats.combo);
@@ -578,7 +609,8 @@ export function resolveTurn(prev, actions) {
     }
     if (pk.nextHit) att.buffs = att.buffs.filter(b => b.type !== 'nextHitUp'); // consumed on a landed attack or NP
     if (pk.vsBonus) att.buffs = att.buffs.filter(b => b.type !== 'bonusVsStatus'); // one hit only
-    say(`${att.name} hits ${def.name} for ${pk.amount}${pk.hitAs && pk.hitAs !== pk.card ? ` (${CARD_NAME[pk.card]} → Buster)` : ''}${pk.reason === 'counter' ? ' (counter!)' : ''}.`, { type: 'hit', ...pk });
+    if (pk.secondArrow) say(`Golden Apple: ${att.name}'s second arrow flies true for ${pk.amount}!`, { type: 'hit', ...pk });
+    else say(`${att.name} hits ${def.name} for ${pk.amount}${pk.hitAs && pk.hitAs !== pk.card ? ` (${CARD_NAME[pk.card]} → Buster)` : ''}${pk.reason === 'counter' ? ' (counter!)' : ''}.`, { type: 'hit', ...pk });
     // Fafnir's Blood: a landed regular attack may mark the enemy with a status (e.g. Dragon) for the next turn
     if (pk.kind === 'attack') for (const b of att.buffs.filter(b => b.type === 'statusOnHit')) {
       const marked = roll(state) * 100 < b.value;
@@ -587,6 +619,16 @@ export function resolveTurn(prev, actions) {
       def.buffs = def.buffs.filter(x => !(x.type === 'statusMark' && x.status === b.status));
       def.buffs.push({ type: 'statusMark', status: b.status, value: 0, turns: b.markTurns ?? 2, debuff: true, source: b.source });
       say(`${def.name} is marked: ${b.status[0].toUpperCase() + b.status.slice(1)}!`, { type: 'status', player: pk.to, status: b.status });
+    }
+    // Golden Apple: a landed Quick attack may loose a second arrow for a share of its damage
+    if (pk.kind === 'attack' && !pk.secondArrow && !pk.instantKill) for (const b of att.buffs.filter(b => b.type === 'doubleShot' && b.card === pk.card)) {
+      const shot = roll(state) * 100 < b.value;
+      proc(att, `${b.source} (second arrows)`, shot);
+      if (!shot) continue;
+      const extra = Math.max(1, Math.round(pk.amount * (b.ratio ?? 50) / 100));
+      def.hp -= extra;
+      dealt(att, 'extra', extra, 'Second arrow (Golden Apple)');
+      say(`A second arrow strikes ${def.name} for ${extra}!`, { type: 'hit', from: pk.from, to: pk.to, kind: 'extra', card: pk.card, amount: extra });
     }
     // Summoning: Sea Demons — a landed Arts attack may bring a follow-up hit for a share of its damage
     if (pk.kind === 'attack' && !pk.instantKill) for (const b of att.buffs.filter(b => b.type === 'extraHitChance' && b.card === pk.hitAs)) {

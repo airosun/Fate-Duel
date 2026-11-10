@@ -97,14 +97,15 @@ export function predictOpponent(state, j) {
  * Choose an action for seat i.
  * @param {object} state  current match state (public information only)
  * @param {number} i      CPU seat
- * @param {object} opts   { strength: 0..1, random: () => number }
+ * @param {object} opts   { strength: 0..1, random: () => number, known: the opponent's action, if
+ *                        Teacher's Wisdom revealed it }
  */
-export function chooseAction(state, i, { strength = 0.7, random = Math.random } = {}) {
+export function chooseAction(state, i, { strength = 0.7, random = Math.random, known = null } = {}) {
   const j = 1 - i;
   // History isn't needed to simulate (and is slow to copy). The RNG is re-seeded
   // so the CPU can't foresee random outcomes (e.g. Breaker Gorgon) it wouldn't know.
   const base = { ...state, history: [], rng: Math.floor(random() * 2 ** 32) };
-  const opp = predictOpponent(state, j);
+  const opp = known ? [{ action: known, p: 1 }] : predictOpponent(state, j);
   const cands = myCandidates(state, i);
 
   // Don't become predictable: discourage repeating the same attack card.
@@ -133,4 +134,13 @@ export function chooseAction(state, i, { strength = 0.7, random = Math.random } 
   let r = random() * weights.reduce((s, w) => s + w, 0);
   for (let k = 0; k < scored.length; k++) if ((r -= weights[k]) <= 0) return scored[k].a;
   return scored[scored.length - 1].a;
+}
+
+// Teacher's Wisdom for the CPU: decide *before* seeing anything whether to spend a use.
+// More likely when the opponent can fire an NP (the most valuable turn to read).
+export function wantsForesight(state, i, { random = Math.random } = {}) {
+  const legal = getLegalActions(state, i);
+  if (!legal.foresight) return false;
+  const foeNpReady = state.players[1 - i].np >= 100;
+  return random() < (foeNpReady ? 0.8 : 0.2);
 }

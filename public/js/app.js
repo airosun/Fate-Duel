@@ -7,7 +7,7 @@ import { createMatch, getLegalActions, resolveTurn, validateAction, deriveStats,
 import { ROSTER } from '/src/data/servants.js';
 import { TUNING as T, CARDS } from '/src/engine/constants.js';
 import { CARD_LABEL, describeSkill, describeNp, describeEffects, buffChip } from './describe.js';
-import { chooseAction } from '/src/engine/ai.js';
+import { chooseAction, wantsForesight } from '/src/engine/ai.js';
 import { statsHtml } from './stats.js';
 import { nextStrength, START_STRENGTH } from '/src/engine/difficulty.js';
 
@@ -587,6 +587,7 @@ function renderSelect() {
 const byId = id => ROSTER.find(s => s.id === id);
 
 function startLocalMatch() {
+  ui.foresight = null; ui.cpuPlanned = null;
   ui.match = createMatch(byId(ui.picks[0]), byId(ui.picks[1]));
   ui.bars = {};
   ui.locked = [null, null];
@@ -594,12 +595,12 @@ function startLocalMatch() {
   beginLocalTurn(0, true);
 }
 
-function beginLocalTurn(i, first = false) {
+function beginLocalTurn(i, first = false, note = null) {
   ui.active = i;
   ui.draft = { main: null, seal: null };
   show('battle');
   if (vsCpu()) return; // no hand-off screens against the CPU
-  const msg = first && i === 0 ? 'The Holy Grail War begins. Choose your first action.' : `Turn ${ui.match.turn}: choose your action.`;
+  const msg = note ?? (first && i === 0 ? 'The Holy Grail War begins. Choose your first action.' : `Turn ${ui.match.turn}: choose your action.`);
   passScreen(i, msg, () => { overlay.hidden = true; });
 }
 
@@ -698,6 +699,49 @@ const SEAL_INFO = {
   grandOrder: { name: 'Grand Order', desc: 'Spend all 3: fill NP gauge', cost: 3 },
 };
 
+// ---------- Teacher's Wisdom (see the opponent's locked action first) ----------
+// { seat, revealed } for this turn: online it comes from the server, locally from ui.foresight.
+function foresightState() {
+  return online() ? ui.net.snap?.duel?.foresight ?? null : ui.foresight ?? null;
+}
+function foresightName(i) {
+  const b = ui.match.players[i].buffs.find(x => x.type === 'foresight');
+  return b?.copiedFrom ? `Trace On: ${b.copiedFrom}` : b?.source ?? "Teacher's Wisdom";
+}
+function foresightHtml(i, legal) {
+  const f = foresightState(), j = 1 - i, foe = ui.match.servants[j].name;
+  if (f?.seat === i && f.revealed) return `
+    <div class="foresight-box revealed"><b>${esc(foresightName(i))}</b>
+      <span>${esc(online() ? ui.net.snap.duel.seats[j].name : masterLabel(j))} locked in <strong>${esc(describeAction(j, f.revealed))}</strong>. It's final for this turn.</span></div>`;
+  if (f?.seat === i) return `
+    <div class="foresight-box"><b>${esc(foresightName(i))}</b>
+      <span>Waiting for ${esc(foe)}'s master to lock in. Their action will appear here, and then you choose.</span></div>`;
+  if (f?.seat === j) return `
+    <div class="foresight-box warn"><b>${esc(foresightName(j))}</b>
+      <span>${esc(foe)} is reading your move. Once you lock in, your action is shown to them and can't be changed this turn.</span></div>`;
+  if (!legal.foresight) return '';
+  return `<button class="btn ghost small foresight-btn" id="foresight" title="See the opponent's locked-in action before choosing. Their action becomes final for the turn.">
+    ${esc(foresightName(i))}: see their move <em>(${legal.foresight} left)</em></button>`;
+}
+
+async function useForesight() {
+  const i = ui.active, j = 1 - i;
+  if (online()) {
+    const res = await emit('battle:foresight');
+    if (!res.ok) { const e = app.querySelector('#err'); if (e) e.textContent = res.error; }
+    return;
+  }
+  if (vsCpu()) { // the CPU decides now; that's what Chiron sees and what it will play
+    ui.cpuPlanned = chooseAction(ui.match, j, { strength: cpuStrength() });
+    ui.foresight = { seat: i, revealed: ui.cpuPlanned };
+    return setDraft({});
+  }
+  if (ui.locked[j]) { ui.foresight = { seat: i, revealed: ui.locked[j] }; return setDraft({}); }
+  // Hot seat, reading master goes first: hand the turn over, then come back with the action revealed.
+  ui.foresight = { seat: i, revealed: null };
+  beginLocalTurn(j, false, `${masterLabel(i)} used ${foresightName(i)}. Lock in your action: it will be shown to them and can't be changed this turn.`);
+}
+
 function controlsHtml() {
   const i = ui.active, m = ui.match, p = m.players[i], s = m.servants[i];
   const legal = getLegalActions(m, i);
@@ -755,10 +799,11 @@ function controlsHtml() {
             </button>`).join('')}
         </div>
       </div>
+      ${foresightHtml(i, legal)}
       <div class="lock-row">
         <span class="draft">${d.main ? `${esc(actionLabel(s, d))}${d.seal ? ` + ${SEAL_INFO[d.seal].name}` : ''}` : 'Choose an action'}</span>
         <span class="error" id="err"></span>
-        <button class="btn gold" id="lock" ${d.main ? '' : 'disabled'}>Lock in ⏎</button>
+        <button class="btn gold" id="lock" ${d.main && !(foresightState()?.seat === i && !foresightState()?.revealed) ? '' : 'disabled'}>Lock in ⏎</button>
       </div>
     </section>`;
 }
@@ -788,6 +833,7 @@ function spectatorHtml() {
   return `
     <section class="controls spectator">
       <div class="controls-head"><h3>Spectating <span>· live selections</span></h3><span class="turn-tag">Turn ${ui.match.turn}</span></div>
+      ${d.foresight ? `<p class="foresight-note">${esc(d.seats[d.foresight.seat].name)} is using ${esc(foresightName(d.foresight.seat))}: they see ${esc(d.seats[1 - d.foresight.seat].name)}'s action before choosing.</p>` : ''}
       <div class="spec-cols">${col(0)}${col(1)}</div>
       ${rosterHtml({ compact: true })}
     </section>`;
@@ -804,8 +850,11 @@ function waitingControlsHtml() {
       <div>
         <p class="locked-line">Locked in: <b>${mine ? esc(actionLabel(s, mine)) : '…'}${mine?.seal ? ` + ${SEAL_INFO[mine.seal].name}` : ''}</b></p>
         <div class="spinner"></div>
+        ${foresightState()?.seat === 1 - mySeat()
+          ? `<p class="foresight-note">${esc(ui.match.servants[1 - mySeat()].name)} used ${esc(foresightName(1 - mySeat()))} and has seen your action. It's final for this turn.</p>`
+          : ''}
         <p class="muted">Waiting for your opponent…</p>
-        <button class="btn ghost small" id="unlock">Change action</button>
+        ${foresightState()?.seat === 1 - mySeat() ? '' : '<button class="btn ghost small" id="unlock">Change action</button>'}
       </div>
     </section>`;
 }
@@ -898,6 +947,8 @@ function bindControls() {
   $('.seal-btn').forEach(b => b.onclick = () => setDraft({ seal: ui.draft.seal === b.dataset.seal ? null : b.dataset.seal }));
   const lock = app.querySelector('#lock');
   if (lock) lock.onclick = lockIn;
+  const fs = app.querySelector('#foresight');
+  if (fs) fs.onclick = useForesight;
   const unlock = app.querySelector('#unlock');
   if (unlock) unlock.onclick = () => emit('battle:unlock');
   const leave = app.querySelector('#leaveBattle');
@@ -911,6 +962,11 @@ function bindControls() {
 async function lockIn() {
   const i = ui.active;
   const action = { main: ui.draft.main, seal: ui.draft.seal };
+  const f = foresightState();
+  if (f?.seat === i) {
+    if (!f.revealed) { app.querySelector('#err').textContent = 'Wait for your opponent to lock in first.'; return; }
+    action.foresight = true;
+  }
   const err = validateAction(ui.match, i, action);
   if (err) { app.querySelector('#err').textContent = err; return; }
   if (online()) {
@@ -923,13 +979,22 @@ async function lockIn() {
     ui.active = -1;
     show('battle'); // shows "CPU is choosing…"
     setTimeout(() => {
-      ui.locked[1] = chooseAction(ui.match, 1, { strength: cpuStrength() });
+      let cpu = ui.cpuPlanned;
+      if (!cpu && ui.foresight?.seat !== i && wantsForesight(ui.match, 1)) { // CPU reads the player's move
+        cpu = { ...chooseAction(ui.match, 1, { strength: cpuStrength(), known: action }), foresight: true };
+      }
+      ui.locked[1] = cpu ?? chooseAction(ui.match, 1, { strength: cpuStrength() });
       resolveLocal();
     }, 450);
     return;
   }
-  if (i === 0) beginLocalTurn(1);
-  else resolveLocal();
+  const j = 1 - i;
+  if (ui.foresight?.seat === j && !ui.foresight.revealed) { // the reader goes last, now with this action shown
+    ui.foresight.revealed = action;
+    return beginLocalTurn(j, false, `${foresightName(j)}: ${masterLabel(i)}'s action is revealed. Choose your response.`);
+  }
+  if (ui.locked[j]) resolveLocal();
+  else beginLocalTurn(j);
 }
 
 // ---------- reveal (shared) ----------
@@ -1000,6 +1065,7 @@ function showReveal({ turn, actions, log }, state, onContinue) {
 function resolveLocal() {
   const actions = ui.locked;
   const turn = ui.match.turn;
+  ui.foresight = null; ui.cpuPlanned = null;
   const { state, log } = resolveTurn(ui.match, actions);
   ui.match = state;
   ui.locked = [null, null];

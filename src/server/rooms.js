@@ -11,7 +11,7 @@
 //    and locked actions as they happen.
 
 import { randomUUID } from 'node:crypto';
-import { createMatch, resolveTurn, validateAction } from '../engine/engine.js';
+import { createMatch, resolveTurn, validateAction, getLegalActions } from '../engine/engine.js';
 import { SERVANTS } from '../data/servants.js';
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // no I / O
@@ -142,7 +142,7 @@ export class RoomManager {
     room.duel = {
       seats: [ready[0], ready[1]],
       picks: [null, null], focus: [null, null],
-      match: null, locked: [null, null], drafts: [null, null],
+      match: null, locked: [null, null], drafts: [null, null], foresight: null,
       lastTurn: null, rematch: [null, null],
     };
     room.phase = 'select';
@@ -173,6 +173,7 @@ export class RoomManager {
     const d = room.duel;
     d.match = createMatch(SERVANTS[d.picks[0]], SERVANTS[d.picks[1]]);
     d.locked = [null, null];
+    d.foresight = null;
     d.drafts = [null, null];
     d.lastTurn = null;
     d.rematch = [null, null];
@@ -187,6 +188,18 @@ export class RoomManager {
     room.duel.drafts[seat] = a && (a.main || a.seal) ? a : null;
   }
 
+  // Teacher's Wisdom: this seat will see the opponent's locked action before locking its own.
+  foresight(room, id) {
+    if (room.phase !== 'battle') throw new RoomError('The battle is not in progress.');
+    const seat = this.#seat(room, id);
+    const d = room.duel;
+    if (d.locked[seat]) throw new RoomError('You have already locked in this turn.');
+    if (d.foresight === seat) return;
+    if (d.foresight != null) throw new RoomError("Your opponent is already using Teacher's Wisdom this turn.");
+    if (!getLegalActions(d.match, seat).foresight) throw new RoomError("No Teacher's Wisdom uses left.");
+    d.foresight = seat;
+  }
+
   lock(room, id, rawAction) {
     if (room.phase !== 'battle') throw new RoomError('The battle is not in progress.');
     const seat = this.#seat(room, id);
@@ -194,6 +207,10 @@ export class RoomManager {
     if (d.locked[seat]) throw new RoomError('Already locked in this turn.');
     const action = cleanAction(rawAction);
     if (!action?.main) throw new RoomError('Choose an action first.');
+    if (d.foresight === seat) {
+      if (!d.locked[1 - seat]) throw new RoomError('Wait for your opponent to lock in first.');
+      action.foresight = true;
+    }
     const err = validateAction(d.match, seat, action);
     if (err) throw new RoomError(err);
     d.locked[seat] = action;
@@ -206,6 +223,7 @@ export class RoomManager {
       d.lastTurn = { turn, actions, log };
       d.locked = [null, null];
       d.drafts = [null, null];
+      d.foresight = null;
       if (state.over) room.phase = 'over';
       return true;
     }
@@ -215,6 +233,8 @@ export class RoomManager {
   unlock(room, id) {
     if (room.phase !== 'battle') return;
     const seat = this.#seat(room, id);
+    // Once Teacher's Wisdom is reading this seat, its locked action is final.
+    if (room.duel.foresight === 1 - seat) throw new RoomError("Your action is being read by Teacher's Wisdom and can't be changed.");
     room.duel.locked[seat] = null;
   }
 
@@ -276,6 +296,11 @@ export class RoomManager {
         myAction: seat >= 0 ? d.locked[seat] : null,
         drafts: omniscient ? d.drafts : null,
         lockedActions: omniscient ? d.locked : null,
+        // Teacher's Wisdom: who is reading this turn, and (for that player only) what they see
+        foresight: d.foresight == null ? null : {
+          seat: d.foresight,
+          revealed: seat === d.foresight || omniscient ? d.locked[1 - d.foresight] : null,
+        },
         lastTurn: d.lastTurn,
         rematch: d.rematch,
       };
