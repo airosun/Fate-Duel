@@ -34,7 +34,7 @@ function cleanAction(a) {
     : m.type === 'skill' ? { type: 'skill', skillId: String(m.skillId), ...(m.option != null ? { option: String(m.option) } : {}) }
     : m.type === 'np' ? { type: 'np' }
     : null;
-  return { main, seal: a.seal == null ? null : String(a.seal) };
+  return { main, seal: a.seal == null ? null : String(a.seal), ...(a.choice != null ? { choice: String(a.choice) } : {}) };
 }
 
 export class RoomManager {
@@ -143,7 +143,7 @@ export class RoomManager {
       seats: [ready[0], ready[1]],
       picks: [null, null], focus: [null, null],
       match: null, locked: [null, null], drafts: [null, null], foresight: null,
-      lastTurn: null, rematch: [null, null],
+      lastTurn: null, rematch: [null, null], continued: [0, 0],
     };
     room.phase = 'select';
   }
@@ -176,6 +176,7 @@ export class RoomManager {
     d.foresight = null; d.foresightShown = null;
     d.drafts = [null, null];
     d.lastTurn = null;
+    d.continued = [0, 0];
     d.rematch = [null, null];
     room.phase = 'battle';
   }
@@ -229,6 +230,14 @@ export class RoomManager {
       return true;
     }
     return false;
+  }
+
+  // A duelist has moved past the turn-result screen. When both have, spectators move on too.
+  continueTurn(room, id) {
+    const d = room.duel;
+    if (!d?.lastTurn) return;
+    const seat = this.#seat(room, id);
+    d.continued[seat] = Math.max(d.continued[seat] ?? 0, d.lastTurn.turn);
   }
 
   unlock(room, id) {
@@ -307,6 +316,7 @@ export class RoomManager {
               : null,
         },
         lastTurn: d.lastTurn,
+        continued: d.continued ?? [0, 0],
         rematch: d.rematch,
       };
     }

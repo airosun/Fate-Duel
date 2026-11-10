@@ -591,3 +591,24 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
 .taunt-note { margin: .2rem 0 .5rem; padding: .45rem .7rem; border: 1px solid var(--buster); border-radius: 8px; background: rgba(226, 70, 58, .08); color: #ffb3aa; font-size: .85rem; }
 .buff.work { border-color: #c9a3ff; color: #e6d4ff; background: rgba(150, 110, 220, .14); }
 .lie-risk { color: #f3c48a; font-style: normal; }
+
+/* Left Hand & Right Hand */
+.hand-choice { margin: .2rem 0 .7rem; padding: .7rem .8rem; border: 1px solid #c9a3ff; border-radius: 8px; background: rgba(150, 110, 220, .08); }
+.hand-choice p { margin: 0 0 .5rem; font-size: .88rem; color: var(--muted); }
+.hand-choice p b { color: #e6d4ff; font-family: var(--title); }
+.hand-opts { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.hand-opt { cursor: pointer; text-align: left; padding: .55rem .7rem; border-radius: 8px; border: 1px solid rgba(201, 163, 255, .4); background: var(--panel); color: inherit; display: grid; gap: .2rem; }
+.hand-opt b { font-size: .9rem; } .hand-opt small { color: var(--muted); font-size: .78rem; }
+.hand-opt.selected { border-color: #e6d4ff; box-shadow: 0 0 12px rgba(201, 163, 255, .45); background: rgba(150, 110, 220, .18); }
+@media (max-width: 480px) { .hand-opts { grid-template-columns: 1fr; } }
+
+/* clickable skill / NP names in logs */
+.log-ref { all: unset; cursor: pointer; color: #f3dc93; text-decoration: underline dotted rgba(243, 220, 147, .6); text-underline-offset: 3px; }
+.log-ref.np { color: #ffd27a; font-weight: 700; }
+.log-ref:hover, .log-ref:focus-visible { color: #fff; text-decoration-style: solid; }
+#refcard { position: fixed; z-index: 200; padding: .7rem .85rem; border-radius: 10px; background: #0c1430; border: 1px solid var(--gold-dim);
+  box-shadow: 0 10px 30px rgba(0,0,0,.55); font-size: .88rem; line-height: 1.4; }
+#refcard b { display: block; font-family: var(--title); color: var(--gold2); font-size: 1rem; }
+#refcard .ref-meta { display: block; color: var(--muted); font-size: .75rem; margin: .15rem 0 .4rem; }
+#refcard p { margin: 0; }
+.auto-note { margin: .5rem 0 0; color: var(--muted); font-size: .8rem; }

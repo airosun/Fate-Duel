@@ -69,6 +69,13 @@ function counterTo(state, i, other) {
   return { main: { type: 'attack', card: state.players[i].favoredCard ?? 'buster' }, seal: null };
 }
 function botTurn(state) {
+  // Left Hand & Right Hand: pick a hand at random on the first action
+  return botTurnRaw(state).map((a, i) => {
+    const c = getLegalActions(state, i).choice;
+    return c ? { ...a, choice: c[Math.floor(rand() * c.length)].id } : a;
+  });
+}
+function botTurnRaw(state) {
   const readers = [0, 1].filter(i => getLegalActions(state, i).foresight > 0
     && rand() < (state.players[1 - i].np >= T.npMax ? 0.8 : 0.2));
   if (readers.length !== 1) return [bot(state, 0), bot(state, 1)];

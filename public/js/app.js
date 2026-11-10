@@ -228,6 +228,11 @@ function onSnapshot(snap) {
   if (!duel?.lastTurn) ui.net.revealedTurn = 0;               // new match: nothing revealed yet
   else if (firstForRoom) ui.net.revealedTurn = duel.lastTurn.turn; // refresh: don't replay old turns
   if (duel?.match) { ui.match = duel.match; ui.locked = duel.locked; }
+  // Spectators: once both duelists have continued past the turn being shown, move on automatically
+  if (ui.revealing && !isDuelist() && duel?.lastTurn && (duel.continued ?? [0, 0]).every(t => t >= ui.net.revealedTurn)) {
+    document.querySelector('#overlay #cont')?.click();
+    return;
+  }
   if (ui.revealing) return; // applied when the reveal closes
 
   if (snap.phase === 'lobby') return show('room');
@@ -245,8 +250,9 @@ function onSnapshot(snap) {
     show('battle');
     return showReveal(duel.lastTurn, duel.match, () => {
       ui.revealing = false;
+      if (isDuelist()) emit('battle:continue');   // lets spectators follow along
       onSnapshot(ui.net.snap); // re-apply whatever arrived during the reveal
-    });
+    }, { autoNote: !isDuelist() });
   }
   if (snap.phase === 'over') return show('end');
   if (ui.draftTurn !== duel.match.turn) { ui.draft = { main: null, seal: null }; ui.draftTurn = duel.match.turn; }
@@ -668,7 +674,7 @@ function panelHtml(i) {
         </div>
         <div class="buffs">
           ${p.empower ? badge('active', 'Empowered', 'Command Seal: Empower', `The next attack or Noble Phantasm deals ${T.seals.empowerBonus * 100}% more damage, whichever comes first. An empowered attack also wins a tie.`, 'Used up by the next attack or NP') : ''}
-          ${p.work ? badge('passive work', `🎭 ${p.work.name}`, `${p.work.from}: ${p.work.name}`, `This battle's work: ${p.work.desc}.`, 'Chosen at random when the battle began; lasts the whole battle') : ''}
+          ${p.work ? badge('passive work', `${p.work.chosen ? '✋' : '🎭'} ${p.work.name}`, `${p.work.from}: ${p.work.name}`, `This battle's work: ${p.work.desc}.`, 'Chosen at random when the battle began; lasts the whole battle') : ''}
           ${(p.neutralized ?? []).map(n => badge('passive blocked', `⊘ ${n}`, `Neutralized: ${n}`, "The opponent's Ea switches off this unique passive for the whole match.", '')).join('')}
           ${(p.copyBlocked ?? []).map(n => badge('passive blocked', `✕ ${n}`, `Trace On: ${n}`, "Trace On couldn't copy this passive, because revives can't be copied.", '')).join('')}
           ${p.buffs.map(b => ({ b, chip: buffChip(b) }))
@@ -777,6 +783,14 @@ function controlsHtml() {
             <small>${legal.np ? esc(describeNp(np)) : legal.taunted && p.np >= T.npMax ? 'Taunted: attacks only' : `Gauge ${p.np}%`}</small>
           </button>
         </div>
+        ${legal.choice ? `
+        <div class="hand-choice">
+          <p><b>${esc(s.passives.find(x => x.kind === 'unique')?.name ?? 'Choose')}</b>: pick one for the whole battle (locked in with your first action)</p>
+          <div class="hand-opts">${legal.choice.map(o => `
+            <button class="hand-opt ${d.choice === o.id ? 'selected' : ''}" data-choice="${o.id}">
+              <b>${esc(o.name)}</b><small>${esc(o.desc)}</small>
+            </button>`).join('')}</div>
+        </div>` : ''}
         ${legal.lastStand ? `<p class="taunt-note">Blaze of Glory: ${esc(s.name)} must fire ${esc(s.np.name)} this turn, and can't fall before it lands.</p>` : ''}
         ${legal.taunted ? `<p class="taunt-note">Taunted: ${esc(ui.match.servants[1 - i].name)} goads you into attacking. Only Quick, Arts or Buster this turn.</p>` : ''}
         <div class="skills">
@@ -806,7 +820,7 @@ function controlsHtml() {
       <div class="lock-row">
         <span class="draft">${d.main ? `${esc(actionLabel(s, d))}${d.seal ? ` + ${SEAL_INFO[d.seal].name}` : ''}` : 'Choose an action'}</span>
         <span class="error" id="err"></span>
-        <button class="btn gold" id="lock" ${d.main && !(foresightState()?.seat === i && !foresightState()?.revealed) ? '' : 'disabled'}>Lock in ⏎</button>
+        <button class="btn gold" id="lock" ${d.main && (!legal.choice || d.choice) && !(foresightState()?.seat === i && !foresightState()?.revealed) ? '' : 'disabled'}>Lock in ⏎</button>
       </div>
     </section>`;
 }
@@ -873,10 +887,58 @@ function endLogHtml(m) {
         <div class="log-turn">
           <h4>Turn ${t.turn}</h4>
           <div class="el-acts">${side(0, t.actions?.[0])}${side(1, t.actions?.[1])}</div>
-          ${t.log.map(l => `<p class="log-${l.type}">${esc(l.msg)}</p>`).join('')}
+          ${t.log.map(l => `<p class="log-${l.type}">${logLine(l.msg, m.servants)}</p>`).join('')}
         </div>`).join('') : '<p class="muted">No turns were played.</p>'}
     </section>`;
 }
+
+// ---------- clickable Skill / NP names in battle logs ----------
+// Every skill and NP name of both servants in a log line becomes a button; tapping it shows what it does.
+function logRefs(servants) {
+  const refs = [];
+  servants.forEach((s, i) => {
+    s.skills.forEach(k => refs.push({ name: k.name, i, kind: 'skill', id: k.id }));
+    refs.push({ name: s.np.name, i, kind: 'np', id: 'np' });
+    for (const m of Object.values(s.np.modes ?? {})) if (m.name && m.name !== s.np.name) refs.push({ name: m.name, i, kind: 'np', id: 'np' });
+  });
+  return refs.sort((a, b) => b.name.length - a.name.length);   // longest first, so names that contain others win
+}
+function logLine(msg, servants) {
+  const refs = logRefs(servants ?? ui.match?.servants ?? []);
+  if (!refs.length) return esc(msg);
+  const rx = new RegExp(refs.map(r => r.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g');
+  let out = '', last = 0;
+  for (const m of msg.matchAll(rx)) {
+    const r = refs.find(x => x.name === m[0]);
+    out += esc(msg.slice(last, m.index))
+      + `<button class="log-ref ${r.kind}" data-ref-i="${r.i}" data-ref-kind="${r.kind}" data-ref-id="${esc(r.id)}">${esc(m[0])}</button>`;
+    last = m.index + m[0].length;
+  }
+  return out + esc(msg.slice(last));
+}
+function refCardHtml(i, kind, id) {
+  const m = ui.match, s = m.servants[i];
+  if (kind === 'np') {
+    const np = npOf(m.players[i], s);
+    return `<b>${esc(np.name)}</b><span class="ref-meta">${esc(s.name)} · Noble Phantasm · ${CARD_LABEL[np.card]}</span><p>${esc(describeNp(np))}</p>`;
+  }
+  const sk = s.skills.find(k => k.id === id);
+  return `<b>${esc(sk.name)}</b><span class="ref-meta">${esc(s.name)} · Skill · ${sk.cost} AP</span><p>${esc(describeSkill(sk))}</p>`;
+}
+document.addEventListener('click', e => {
+  const btn = e.target.closest?.('.log-ref');
+  let card = document.getElementById('refcard');
+  if (!btn) { if (card && !e.target.closest('#refcard')) card.remove(); return; }
+  e.preventDefault(); e.stopPropagation();
+  if (!ui.match) return;
+  if (!card) { card = document.createElement('div'); card.id = 'refcard'; document.body.appendChild(card); }
+  card.innerHTML = refCardHtml(+btn.dataset.refI, btn.dataset.refKind, btn.dataset.refId);
+  const r = btn.getBoundingClientRect(), w = Math.min(320, window.innerWidth - 16);
+  card.style.width = `${w}px`;
+  card.style.left = `${Math.max(8, Math.min(window.innerWidth - w - 8, r.left))}px`;
+  const below = r.bottom + 8, h = card.offsetHeight;
+  card.style.top = `${below + h > window.innerHeight - 8 ? Math.max(8, r.top - h - 8) : below}px`;
+}, true);
 
 function logHtml() {
   const turns = [...(ui.match.history ?? [])].reverse();
@@ -885,7 +947,7 @@ function logHtml() {
       <button class="log-toggle" id="logToggle">Battle log ${ui.logOpen ? '▾' : '▸'}</button>
       <div class="log-body">
         ${turns.length ? turns.map(t => `
-          <div class="log-turn"><h4>Turn ${t.turn}</h4>${t.log.map(l => `<p class="log-${l.type}">${esc(l.msg)}</p>`).join('')}</div>`).join('')
+          <div class="log-turn"><h4>Turn ${t.turn}</h4>${t.log.map(l => `<p class="log-${l.type}">${logLine(l.msg)}</p>`).join('')}</div>`).join('')
           : '<p class="muted">No actions yet.</p>'}
       </div>
     </section>`;
@@ -959,6 +1021,7 @@ function setDraft(patch) {
 function bindControls() {
   const $ = sel => app.querySelectorAll(sel);
   $('.cmd-card').forEach(b => b.onclick = () => setDraft({ main: { type: 'attack', card: b.dataset.card } }));
+  $('.hand-opt').forEach(b => b.onclick = () => setDraft({ choice: b.dataset.choice }));
   $('.skill').forEach(b => b.onclick = () => setDraft({ main: skillMain(b.dataset.skill) }));
   $('.option-btn').forEach(b => b.onclick = () => setDraft({ main: { ...ui.draft.main, option: b.dataset.option } }));
   const np = app.querySelector('#np');
@@ -980,7 +1043,7 @@ function bindControls() {
 
 async function lockIn() {
   const i = ui.active;
-  const action = { main: ui.draft.main, seal: ui.draft.seal };
+  const action = { main: ui.draft.main, seal: ui.draft.seal, ...(ui.draft.choice ? { choice: ui.draft.choice } : {}) };
   const f = foresightState();
   if (f?.seat === i) {
     if (!f.revealed) { app.querySelector('#err').textContent = 'Wait for your opponent to lock in first.'; return; }
@@ -1067,7 +1130,7 @@ function revealHp(state) {
   }).join('')}</div>`;
 }
 
-function showReveal({ turn, actions, log }, state, onContinue) {
+function showReveal({ turn, actions, log }, state, onContinue, { autoNote = false } = {}) {
   ui.revealing = true;
   const banner = clashBanner(actions, state.servants);
   openOverlay(`
@@ -1075,10 +1138,11 @@ function showReveal({ turn, actions, log }, state, onContinue) {
       <h4>Turn ${turn}</h4>
       <div class="reveal-row">${revealSide(0, actions[0], state.servants)}<div class="versus">VS</div>${revealSide(1, actions[1], state.servants)}</div>
       <div class="clash-banner ${banner.cls}">${esc(banner.text)}</div>
-      <div class="reveal-log">${log.map((l, k) => `<p class="log-${l.type}" style="animation-delay:${0.25 + k * 0.35}s">${esc(l.msg)}</p>`).join('')}</div>
+      <div class="reveal-log">${log.map((l, k) => `<p class="log-${l.type}" style="animation-delay:${0.25 + k * 0.35}s">${logLine(l.msg, state.servants)}</p>`).join('')}</div>
       ${revealHp(state)}
       <button class="btn gold" id="cont">${state.over ? 'See result' : 'Continue'}</button>
-    </div>`, o => o.querySelector('#cont').onclick = () => { ui.revealing = false; onContinue(); });
+      ${autoNote ? '<p class="auto-note">Moves on automatically once both masters continue.</p>' : ''}
+    </div>`, o => o.querySelector('#cont').onclick = () => { if (!ui.revealing) return; ui.revealing = false; onContinue(); });
 }
 
 function resolveLocal() {

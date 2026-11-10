@@ -202,3 +202,16 @@ test('Othello online: the reader gets one fixed reveal per turn (maybe a lie); s
   }
   assert.ok(lies > 10 && lies < 40, `lies ${lies}/60`);
 });
+
+test('continue tracking: spectators see which turn each duelist has moved past', () => {
+  const { rm, room, H, B, C } = room3();
+  rm.setRole(room, C, 'spectator');
+  startBattle(rm, room, H, B, ['artoria', 'medea']);
+  rm.lock(room, H, atk('arts')); rm.lock(room, B, atk('quick'));
+  assert.deepEqual(rm.snapshot(room, C).duel.continued, [0, 0]);
+  rm.continueTurn(room, H);
+  assert.deepEqual(rm.snapshot(room, C).duel.continued, [1, 0]);
+  rm.continueTurn(room, B);
+  assert.deepEqual(rm.snapshot(room, C).duel.continued, [1, 1]);
+  assert.throws(() => rm.continueTurn(room, C));                    // spectators don't count
+});

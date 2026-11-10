@@ -104,6 +104,7 @@ io.on('connection', socket => {
   action('battle:lock', (room, id, { action: a }) => rooms.lock(room, id, a));
   action('battle:unlock', (room, id) => rooms.unlock(room, id));
   action('battle:foresight', (room, id) => rooms.foresight(room, id));
+  action('battle:continue', (room, id) => rooms.continueTurn(room, id));
   action('match:rematch', (room, id, { choice }) => rooms.rematch(room, id, choice));
   action('match:return', (room, id) => rooms.returnToRoom(room, id));
 

@@ -33,6 +33,8 @@ The game tries `.png`, then `.jpg`, then `.webp`, and falls back to a class-colo
 | Avicebron | `avicebron.png` |
 | Frankenstein | `frankenstein.png` |
 | Spartacus | `spartacus.png` |
+| Jeanne d'Arc | `jeanne.png` |
+| Amakusa Shirou | `amakusa.png` |
 
 Tips
 - Portrait-oriented full art works best (e.g. Final Ascension stage art). Images are cropped with

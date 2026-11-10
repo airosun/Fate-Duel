@@ -71,10 +71,10 @@ footer { color: var(--muted); font-size: .8rem; }
 <div class="wrap">
   <header>
     <h1>Fate<span>/</span>Duel Roster</h1>
-    <p class="intro">28 servants and their complete kits, generated from the game's own data. HP and ATK are the in-game values; NP gain is relative to an average servant (1.00×).</p>
+    <p class="intro">30 servants and their complete kits, generated from the game's own data. HP and ATK are the in-game values; NP gain is relative to an average servant (1.00×).</p>
   </header>
   <nav class="filters" aria-label="Filter by class">
-    <button type="button" data-filter="all" aria-pressed="true">All (28)</button>
+    <button type="button" data-filter="all" aria-pressed="true">All (30)</button>
     <button type="button" data-filter="Saber" aria-pressed="false">Saber (3)</button>
     <button type="button" data-filter="Archer" aria-pressed="false">Archer (4)</button>
     <button type="button" data-filter="Lancer" aria-pressed="false">Lancer (4)</button>
@@ -1036,6 +1036,72 @@ footer { color: var(--muted); font-size: .8rem; }
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Crying Warmonger</h4><span class="card buster">Buster</span><span class="mult">3.15×</span></div>
     <p>Heavy Buster damage that ignores damage cut</p></div>
     <p class="fgo">FGO stats: 7,722 HP · 5,073 ATK · NP 1.01% / 5%</p>
+  </article>
+
+  <article class="servant" id="jeanne" data-class="Ruler">
+    <header>
+      <div class="badge" aria-hidden="true">Jd</div>
+      <div class="title"><span class="cls">Ruler</span><h3>Jeanne d&#39;Arc</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>998<small>×0.77</small></dd></div>
+      <div><dt>ATK</dt><dd>121</dd></div>
+      <div><dt>Max AP</dt><dd>10</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>0.97× <small>atk</small> · 1.00× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card arts">Arts</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Magic Resistance EX</span><span>Enemy debuffs on self 25% weaker</span></li>
+        <li><span class="name">Revelation from Heaven<span class="tag">Unique</span></span><span>Heal 3% HP at the end of each turn</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">At the End of the Pure and Clear Players EX<span class="ap">5 AP</span></span><span>Arts +30% for 3 turns; NP +20% now</span></li>
+        <li><span class="name">Restoration of the Brilliant Holy Light A<span class="ap">5 AP</span></span><span>Enemy NP damage -20% and DEF -15% for 3 turns, plus a further DEF -15% next turn only</span></li>
+        <li><span class="name">God&#39;s Resolution A<span class="ap">6 AP</span></span><span>Damage cut 40% for 2 turns; 80% chance the enemy is Blinded by Holy Light and can&#39;t act next turn (if it misses, AP +3)</span></li>
+      </ul>
+    </section>
+    <div class="np">
+    <div class="np-head"><span class="label">Noble Phantasm</span><h4>Luminosité Eternelle</h4><span class="card arts">Arts</span><span class="mult">2.6×</span></div>
+    <p>Arts damage, then Divine Intervention: the next damaging hit on her is negated (not damage over time; one at a time; can be stripped)</p></div>
+    <p class="fgo">FGO stats: 16,500 HP · 9,593 ATK · NP 0.76% / 3%</p>
+  </article>
+
+  <article class="servant" id="amakusa" data-class="Ruler">
+    <header>
+      <div class="badge" aria-hidden="true">AS</div>
+      <div class="title"><span class="cls">Ruler</span><h3>Amakusa Shirou</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>1,276</dd></div>
+      <div><dt>ATK</dt><dd>122</dd></div>
+      <div><dt>Max AP</dt><dd>10</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>1.04× <small>atk</small> · 1.00× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card buster">Buster</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Magic Resistance A</span><span>Enemy debuffs on self 20% weaker</span></li>
+        <li><span class="name">Left Hand &amp; Right Hand<span class="tag">Unique</span></span><span>With his first action, his master chooses Left Hand (his buffs last 1 turn longer) or Right Hand (his debuffs on the enemy last 1 turn longer)</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">Prayer for the Long Journey A<span class="ap">4 AP</span></span><span>AP +3 now; NP gain +30% for 3 turns</span></li>
+        <li><span class="name">Grail of Fiery Heavens EX<span class="ap">6 AP</span></span><span>Drain 20% enemy NP; enemy takes +20% Buster damage for 3 turns; NP +20% now and +5% at the end of each turn for 3 turns</span></li>
+        <li><span class="name">God&#39;s Resolution (False) C++<span class="ap">5 AP</span></span><span>Buster +25% for 3 turns; 60% chance the enemy is Blinded by Holy Light and can&#39;t act next turn</span></li>
+      </ul>
+    </section>
+    <div class="np">
+    <div class="np-head"><span class="label">Noble Phantasm</span><h4>Twin Arm: Big Crunch</h4><span class="card buster">Buster</span><span class="mult">3.75×</span></div>
+    <p>Strip all the enemy&#39;s buffs (passives stay), then heavy Buster damage</p></div>
+    <p class="fgo">FGO stats: 14,107 HP · 10,972 ATK · NP 0.86% / 3%</p>
   </article>
   </main>
   <footer>Generated from src/data/servants.js on 2026-11-10. Kits are rebuilt whenever a servant is added or rebalanced.</footer>

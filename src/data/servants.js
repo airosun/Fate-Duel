@@ -832,6 +832,64 @@ export const SERVANTS = {
     np: { name: 'Crying Warmonger', card: 'buster', mult: 3.15, ignoreCut: true,
           desc: 'Heavy Buster damage that ignores damage cut' },
   },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
+  jeanne: {
+    id: 'jeanne', name: "Jeanne d'Arc", class: 'Ruler',
+    fgoHp: 16500, fgoAtk: 9593, fgoNpAtk: 0.76, fgoNpDef: 3,
+    favoredCard: 'arts', maxAp: 10, hpMult: 0.77, // 23% below FGO-derived HP: regen, Divine Intervention and Magic Resistance EX
+    passives: [
+      classPassive('magicResistance', 'EX'),
+      unique('Revelation from Heaven', 'Heal 3% HP at the end of each turn', [{ type: 'hpRegen', value: 3 }]),
+    ],
+    skills: [
+      { id: 'pure_and_clear', name: 'At the End of the Pure and Clear Players EX', cost: 5,
+        desc: 'Arts +30% for 3 turns; NP +20% now',
+        effects: [{ type: 'cardUp', card: 'arts', value: 30, turns: 3 }, { type: 'npCharge', value: 20 }] },
+      { id: 'brilliant_holy_light', name: 'Restoration of the Brilliant Holy Light A', cost: 5,
+        desc: 'Enemy NP damage -20% and DEF -15% for 3 turns, plus a further DEF -15% next turn only',
+        effects: [{ type: 'npDown', value: 20, turns: 3, target: 'enemy' }, { type: 'defDown', value: 15, turns: 3, target: 'enemy' },
+                  { type: 'defDown', value: 15, turns: 2, target: 'enemy' }] },
+      { id: 'gods_resolution', name: "God's Resolution A", cost: 6,
+        desc: "Damage cut 40% for 2 turns; 80% chance the enemy is Blinded by Holy Light and can't act next turn (if it misses, AP +3)",
+        effects: [{ type: 'damageCut', value: 40, turns: 2 },
+                  { type: 'stun', value: 100, turns: 2, chance: 80, target: 'enemy', onMiss: [{ type: 'apGain', value: 3 }] }] },
+    ],
+    np: { name: 'Luminosité Eternelle', card: 'arts', mult: 2.6,
+          desc: 'Arts damage, then Divine Intervention: the next damaging hit on her is negated (not damage over time; one at a time; can be stripped)',
+          postEffects: [{ type: 'divineIntervention', value: 1, turns: 99 }] },
+  },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
+  amakusa: {
+    id: 'amakusa', name: 'Amakusa Shirou', class: 'Ruler',
+    fgoHp: 14107, fgoAtk: 10972, fgoNpAtk: 0.86, fgoNpDef: 3,
+    favoredCard: 'buster', maxAp: 10,
+    passives: [
+      classPassive('magicResistance', 'A'),
+      unique('Left Hand & Right Hand', 'With his first action, his master chooses Left Hand (his buffs last 1 turn longer) or Right Hand (his debuffs on the enemy last 1 turn longer)', [{
+        type: 'battleChoice', options: [
+          { id: 'left', name: 'Left Hand: Xanadu Matrix', desc: 'Buffs he gives himself last 1 turn longer', effects: [{ type: 'buffDurationUp', value: 1 }] },
+          { id: 'right', name: 'Right Hand: Evil Eater', desc: 'Debuffs he puts on the enemy last 1 turn longer', effects: [{ type: 'debuffDurationUp', value: 1 }] },
+        ],
+      }]),
+    ],
+    skills: [
+      { id: 'prayer_long_journey', name: 'Prayer for the Long Journey A', cost: 4,
+        desc: 'AP +3 now; NP gain +30% for 3 turns',
+        effects: [{ type: 'apGain', value: 3 }, { type: 'npGainUp', value: 30, turns: 3 }] },
+      { id: 'grail_fiery_heavens', name: 'Grail of Fiery Heavens EX', cost: 6,
+        desc: 'Drain 20% enemy NP; enemy takes +20% Buster damage for 3 turns; NP +20% now and +5% at the end of each turn for 3 turns',
+        effects: [{ type: 'npDrain', value: 20, target: 'enemy' }, { type: 'cardVuln', card: 'buster', value: 20, turns: 3, target: 'enemy' },
+                  { type: 'npCharge', value: 20 }, { type: 'npRegen', value: 5, turns: 3 }] },
+      { id: 'gods_resolution_false', name: "God's Resolution (False) C++", cost: 5,
+        desc: "Buster +25% for 3 turns; 60% chance the enemy is Blinded by Holy Light and can't act next turn",
+        effects: [{ type: 'cardUp', card: 'buster', value: 25, turns: 3 }, { type: 'stun', value: 100, turns: 2, chance: 60, target: 'enemy' }] },
+    ],
+    np: { name: 'Twin Arm: Big Crunch', card: 'buster', mult: 3.75,
+          desc: "Strip all the enemy's buffs (passives stay), then heavy Buster damage",
+          preEffects: [{ type: 'removeBuffs', target: 'enemy' }] },
+  },
 };
 
 export const ROSTER = Object.values(SERVANTS);

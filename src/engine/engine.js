@@ -193,11 +193,14 @@ export function getLegalActions(state, idx) {
   if (p.seals >= 1) seals.push('heal', 'recharge');
   if (p.seals >= 1 && !p.empower) seals.push('empower');
   if (p.seals >= 3 && p.np < T.npMax) seals.push('grandOrder');
+  // Left Hand & Right Hand: a choice the master makes with their first action
+  const pending = p.buffs.find(b => b.type === 'battleChoice');
+  const choice = pending ? pending.options.map(o => ({ id: o.id, name: o.name, desc: o.desc })) : null;
   // Unyielding Will: the turn after his last stand he can only fire his Noble Phantasm
   if (p.buffs.some(b => b.type === 'lastStandActive')) return { attacks: [], skills: [], np: true, seals, foresight: 0, taunted: false, lastStand: true };
   // Teacher's Wisdom: uses left of "see the opponent's locked action first"
   const foresight = p.buffs.filter(b => b.type === 'foresight').reduce((a, b) => a + (b.charges ?? 0), 0);
-  return { attacks: [...CARDS], skills, np: !taunted && p.np >= T.npMax, seals, foresight, taunted };
+  return { attacks: [...CARDS], skills, np: !taunted && p.np >= T.npMax, seals, foresight, taunted, choice };
 }
 
 export function validateAction(state, idx, action) {
@@ -214,6 +217,7 @@ export function validateAction(state, idx, action) {
   if (m.type === 'np' && !legal.np) return 'NP gauge not full';
   if (!['attack', 'skill', 'np'].includes(m.type)) return `Unknown action: ${m.type}`;
   if (action.foresight && !legal.foresight) return "No Teacher's Wisdom uses left";
+  if (legal.choice && !legal.choice.some(o => o.id === action.choice)) return `Choose: ${legal.choice.map(o => o.name).join(' or ')}`;
   if (action.seal != null) {
     if (!SEALS.includes(action.seal)) return `Unknown seal: ${action.seal}`;
     if (!legal.seals.includes(action.seal)) return `Seal not available: ${action.seal}`;
@@ -223,12 +227,12 @@ export function validateAction(state, idx, action) {
 
 // ---------- effects ----------
 
-const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', 'curse', 'debuffResistDown', 'npSeal', 'taunt', 'confusion', 'stun', 'poison', 'nullifyBoosts', 'madness', 'charm', 'shock', 'burn'];
+const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', 'curse', 'debuffResistDown', 'npSeal', 'taunt', 'confusion', 'stun', 'poison', 'nullifyBoosts', 'madness', 'charm', 'shock', 'burn', 'npDown'];
 
 // Lasting positive effects a servant puts on itself (what Breaker Gorgon can make fail).
 const BUFF_TYPES = new Set(['ignoreDamageCut', 'buffSuccessUp', 'apRecoveryUp', 'atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
   'cardNpGainUp', 'debuffResist', 'guts', 'apRegen', 'busterConvert', 'flatDamage', 'sureHit', 'pierceEvade',
-  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight', 'npOnlyKo', 'debuffOnHit', 'apChance', 'rpsOverride', 'randomWork', 'starCrossed', 'lastStand', 'hpRegen']);
+  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight', 'npOnlyKo', 'debuffOnHit', 'apChance', 'rpsOverride', 'randomWork', 'starCrossed', 'lastStand', 'hpRegen', 'divineIntervention', 'battleChoice', 'buffDurationUp', 'debuffDurationUp', 'npRegen']);
 const hasStatus = (p, status) => p.buffs.some(b => b.status === status);
 
 function resistScale(target, e, user) {
@@ -303,6 +307,13 @@ function applyEffectRaw(target, e, source, user) {
       // turns: null = permanent (passives); undefined = use the default for this effect
       let turns = e.turns === undefined ? (T.defaultTurns[e.type] ?? null) : e.turns;
       if (e.type === 'invincible') turns = 1;
+      // Left Hand (Xanadu Matrix): own buffs last longer. Right Hand (Evil Eater): debuffs on the enemy last longer.
+      else if (turns != null && turns < 50 && user) {
+        if (target === user && !DEBUFFS.includes(e.type)) turns += sumBuff(user, 'buffDurationUp');
+        if (target !== user && DEBUFFS.includes(e.type)) turns += sumBuff(user, 'debuffDurationUp');
+      }
+      // Divine Intervention can't stack: a new one replaces the old
+      if (e.type === 'divineIntervention') target.buffs = target.buffs.filter(b => b.type !== 'divineIntervention');
       // scaleMissingHp: bonus that grows with the target's missing HP at the moment it's applied
       const base = (e.value ?? 0) + (e.scaleMissingHp ? e.scaleMissingHp * (1 - target.hp / target.maxHp) : 0);
       const value = Math.round(base * (DEBUFFS.includes(e.type) && target !== user ? resistScale(target, e, user) : 1) * 10) / 10;
@@ -325,6 +336,7 @@ function applyEffectRaw(target, e, source, user) {
         inflict: e.inflict,
         vs: e.vs,
         works: e.works,
+        options: e.options,
         deceive: e.deceive,
         amount: e.amount,
         debuff: DEBUFFS.includes(e.type),
@@ -460,7 +472,8 @@ function npPacket(att, def, np, { empowered = false, nextHit = 0, vsBonus = 0 } 
   if (np.vsStatus && hasStatus(def, np.vsStatus.status)) mult *= 1 + np.vsStatus.value / 100; // Balmung vs Dragon
   const b = boosted(att);
   const raw = att.atk * mult * atkMultiplier(att, np.card, nextHit)
-    * (b ? (1 + vsBonus / 100) * (1 + vsStatusPct(att, def) / 100) * (1 + sumBuff(att, 'npUp') / 100) : 1)
+    * (b ? (1 + vsBonus / 100) * (1 + vsStatusPct(att, def) / 100) : 1)
+    * Math.max(0.1, 1 + ((b ? sumBuff(att, 'npUp') : 0) - sumBuff(att, 'npDown')) / 100)
     + (b ? sumBuff(att, 'flatDamage') : 0);
   return defend(def, raw, { isNp: true, ignoreDefense: !!np.ignoreDefense, ignoreCut: !!np.ignoreCut || hasBuff(att, 'ignoreDamageCut'), card: np.card });
 }
@@ -485,6 +498,17 @@ export function resolveTurn(prev, actions) {
   const say = (msg, data = {}) => log.push({ msg, ...data });
   const mains = actions.map(a => a.main);
 
+  // Left Hand & Right Hand: apply the chosen hand before anything else on the first turn
+  for (const i of [0, 1]) {
+    const pend = P[i].buffs.find(b => b.type === 'battleChoice');
+    if (!pend) continue;
+    const opt = pend.options.find(o => o.id === actions[i].choice) ?? pend.options[0];
+    P[i].buffs.splice(P[i].buffs.indexOf(pend), 1);
+    P[i].work = { name: opt.name, desc: opt.desc, from: pend.source, chosen: true };
+    for (const e of opt.effects) applyEffect(P[i], { ...e, turns: null }, `${pend.source}: ${opt.name}`, P[i]);
+    say(`${P[i].name} chooses ${opt.name}.`, { type: 'status', player: i });
+  }
+
   // Unyielding Will: his final turn begins
   for (const p of P) for (const b of p.buffs) if (b.type === 'lastStandActive') b.stage++;
 
@@ -506,7 +530,7 @@ export function resolveTurn(prev, actions) {
     proc(P[1 - i], `${sourceLabel(S[1 - i], stun.source)} (turns skipped)`, down);
     if (down) {
       mains[i] = { type: 'stunned' };
-      say(`${P[i].name} is tripped up and loses this turn!`, { type: 'blocked', player: i, blocked: 'stun' });
+      say(String(stun.source).startsWith('gods_resolution') ? `${P[i].name} is Blinded by Holy Light and can't act!` : `${P[i].name} is tripped up and loses this turn!`, { type: 'blocked', player: i, blocked: 'stun' });
     } else say(`${P[i].name} keeps their footing.`, { type: 'info', player: i });
   }
 
@@ -579,7 +603,10 @@ export function resolveTurn(prev, actions) {
       // chance-based debuffs (Lament of the Falsely Living): roll once per cast
       const ok = roll(state) * 100 < e.chance;
       proc(P[i], `${skill.name} (${e.type[0].toUpperCase() + e.type.slice(1)} landed)`, ok);
-      if (!ok) say(`${skill.name}: the ${e.type} doesn't take hold.`, { type: 'buffFail', player: i });
+      if (!ok) {
+        say(`${skill.name}: the ${e.type === 'stun' ? 'Holy Light' : e.type} misses.`, { type: 'buffFail', player: i });
+        if (e.onMiss) applyEffects(P[i], P[1 - i], e.onMiss, skill.id);   // God's Resolution: AP back on a miss
+      }
       return ok;
     }), skill.id);
   }
@@ -610,6 +637,8 @@ export function resolveTurn(prev, actions) {
     const vs = att.buffs.find(b => b.type === 'bonusVsStatus' && hasStatus(def, b.status));
     const vsBonus = vs ? vs.value : 0;
     const pk = { from: i, to: 1 - i, kind: 'np', card: nps[i].card, empowered: P[i].empower, nextHit, vsBonus,
+      // a buff-stripping pre-effect (Twin Arm, Rule Breaker) removed Divine Intervention before the hit
+      divineStripped: !def.buffs.some(b => b.type === 'divineIntervention'),
       ...npPacket(att, def, nps[i], { empowered: P[i].empower, nextHit, vsBonus }) };
     // Instant kill (Shaytan's Arm): rolled only when the NP connects; ignores revives.
     // npName ties the chance to one NP (Shaytan's Arm only works with Zabaniya).
@@ -728,6 +757,15 @@ export function resolveTurn(prev, actions) {
     if (decoy) {
       att.stats.combo = 0;
       say(`${att.name}'s ${CARD_NAME[pk.card]} attack strikes a decoy and misses! (${def.name})`, { type: 'blocked', ...pk });
+      continue;
+    }
+    // Divine Intervention (Jeanne): negates one instance of damage (not damage over time), then it's spent
+    const di = (pk.amount > 0 || pk.instantKill) && !pk.divineStripped ? def.buffs.find(b => b.type === 'divineIntervention') : null;
+    if (di) {
+      def.buffs.splice(def.buffs.indexOf(di), 1);
+      def.stats.negated++;
+      proc(def, `${di.source === 'np' ? S[pk.to].np.name : di.source} (Divine Intervention)`, true);
+      say(`Divine Intervention! ${def.name} is untouched by ${pk.kind === 'np' ? S[pk.from].np.name : `${att.name}'s ${CARD_NAME[pk.card]} attack`}.`, { type: 'blocked', ...pk, blocked: 'divine' });
       continue;
     }
     def.hp -= pk.amount;
@@ -875,6 +913,9 @@ export function resolveTurn(prev, actions) {
   for (const p of P) {
     const regen = sumBuff(p, 'apRegen');
     if (regen) p.ap = Math.min(p.maxAp, p.ap + regen);
+    // Grail of Fiery Heavens: a little NP at the end of each turn
+    const nr = sumBuff(p, 'npRegen');
+    if (nr && p.hp > 0) p.np = Math.min(T.npMax, p.np + Math.round(nr));
     // Honor of the Battered: heal X% max HP at the end of each turn it's active
     const hr = sumBuff(p, 'hpRegen');
     if (hr && p.hp > 0) {

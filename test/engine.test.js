@@ -1155,3 +1155,84 @@ test('Spartacus: Honor of the Battered heals 8% at the end of each turn', () => 
   s = resolveTurn(s, [skill('honor_of_battered'), skill('shield')]).state;
   assert.equal(s.players[0].hp, 300 + Math.round(s.players[0].maxHp * 0.08));
 });
+
+test("Jeanne: Divine Intervention negates one damaging hit (not DoT), can't stack, is stripped by Rule Breaker", () => {
+  let s = createMatch(SERVANTS.jeanne, dummy('B'), { seed: 1 });
+  s.players[0].np = 100;
+  s = resolveTurn(s, [np(), atk('quick')]).state;
+  assert.equal(s.players[0].buffs.filter(b => b.type === 'divineIntervention').length, 1);
+  s.players[0].hp = 500;
+  const hp = s.players[0].hp;
+  let r = resolveTurn(s, [atk('buster'), atk('arts')]);                  // dummy's Arts beats Buster: negated
+  assert.ok(r.log.some(l => l.blocked === 'divine'));
+  assert.equal(r.state.players[0].hp, hp + Math.round(r.state.players[0].maxHp * 0.03));   // only the passive heal
+  assert.ok(!r.state.players[0].buffs.some(b => b.type === 'divineIntervention'));
+  // DoT goes through
+  let d = structuredClone(s);
+  d.players[0].buffs.push({ type: 'poison', value: 40, turns: 3, debuff: true });
+  d.players[1].ap = 10; d.players[0].ap = 10;
+  const t = resolveTurn(d, [skill('pure_and_clear'), skill('shield')]).state;
+  assert.ok(t.players[0].buffs.some(b => b.type === 'divineIntervention'));
+  assert.ok(t.players[0].hp < d.players[0].hp + Math.round(d.players[0].maxHp * 0.03));
+  // Rule Breaker strips it
+  let m = createMatch(SERVANTS.medea, SERVANTS.jeanne, { seed: 3 });
+  m.players[1].buffs.push({ type: 'divineIntervention', value: 1, turns: 99, source: 'np' });
+  m.players[0].np = 100;
+  const mr = resolveTurn(m, [np(), atk('quick')]);
+  assert.ok(!mr.log.some(l => l.blocked === 'divine'));
+});
+
+test("Jeanne: God's Resolution blinds ~80% (AP back on a miss); Holy Light lowers NP damage and DEF", () => {
+  let blinded = 0, apBack = 0, n = 300;
+  for (let seed = 1; seed <= n; seed++) {
+    let s = createMatch(SERVANTS.jeanne, dummy('B'), { seed });
+    s.players[0].ap = 6;
+    s = resolveTurn(s, [skill('gods_resolution'), atk('quick')]).state;
+    if (s.players[1].buffs.some(b => b.type === 'stun')) {
+      blinded++;
+      const r = resolveTurn(s, [atk('quick'), atk('buster')]);
+      assert.ok(r.log.some(l => /Blinded by Holy Light/.test(l.msg)));
+    } else if (s.players[0].ap >= 3) apBack++;
+  }
+  assert.ok(blinded / n > 0.72 && blinded / n < 0.88, `blind ${blinded / n}`);
+  assert.equal(blinded + apBack, n);
+  let h = createMatch(SERVANTS.jeanne, SERVANTS.artoria, { seed: 2 });
+  h.players[0].ap = 10;
+  h = resolveTurn(h, [skill('brilliant_holy_light'), atk('quick')]).state;
+  const defs = h.players[1].buffs.filter(b => b.type === 'defDown');
+  assert.equal(defs.length, 2);
+  assert.ok(defs.some(b => b.turns === 1) && defs.some(b => b.turns === 2));
+  assert.ok(h.players[1].buffs.some(b => b.type === 'npDown'));
+});
+
+test('Amakusa: the master picks a hand with the first action; Left = own buffs +1 turn, Right = debuffs on the enemy +1 turn', () => {
+  const s = createMatch(SERVANTS.amakusa, dummy('B'), { seed: 1 });
+  assert.equal(getLegalActions(s, 0).choice.length, 2);
+  assert.match(validateAction(s, 0, atk('quick')), /Choose/);
+  const turnsOf = (hand, id, pick) => {
+    let x = createMatch(SERVANTS.amakusa, dummy('B'), { seed: 1 });
+    x.players[0].ap = 10;
+    x = resolveTurn(x, [{ ...skill(id), choice: hand }, atk('quick')]).state;
+    assert.equal(getLegalActions(x, 0).choice, null);
+    return pick(x);
+  };
+  const buffT = p => p.players[0].buffs.find(b => b.type === 'cardUp' && b.card === 'buster' && b.turns !== null).turns;
+  const vulnT = p => p.players[1].buffs.find(b => b.type === 'cardVuln').turns;
+  assert.equal(turnsOf('left', 'gods_resolution_false', buffT), turnsOf('right', 'gods_resolution_false', buffT) + 1);
+  assert.equal(turnsOf('right', 'grail_fiery_heavens', vulnT), turnsOf('left', 'grail_fiery_heavens', vulnT) + 1);
+});
+
+test("Amakusa: Twin Arm strips buffs before it hits; Grail of Fiery Heavens drains and regenerates NP", () => {
+  const npDmg = buffs => {
+    const x = createMatch(SERVANTS.amakusa, dummy('B'), { seed: 5 });
+    x.players[0].np = 100; x.players[1].buffs.push(...buffs);
+    const r = resolveTurn(x, [{ ...np(), choice: 'left' }, atk('quick')]).state;
+    return { dmg: 1000 - r.players[1].hp, left: r.players[1].buffs.length };
+  };
+  assert.equal(npDmg([{ type: 'damageCut', value: 50, turns: 2 }, { type: 'divineIntervention', value: 1, turns: 99 }]).dmg, npDmg([]).dmg);
+  let g = createMatch(SERVANTS.amakusa, dummy('B'), { seed: 2 });
+  g.players[0].ap = 10; g.players[1].np = 50; g.players[1].ap = 10;
+  g = resolveTurn(g, [{ ...skill('grail_fiery_heavens'), choice: 'left' }, skill('shield')]).state;
+  assert.equal(g.players[1].np, 30);
+  assert.equal(g.players[0].np, 20 + 5);
+});

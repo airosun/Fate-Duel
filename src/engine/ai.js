@@ -70,6 +70,8 @@ function myCandidates(state, i) {
   if (legal.seals.includes('recharge') && p.ap <= 2) for (const main of mains) if (main.type === 'attack') out.push({ main, seal: 'recharge' });
   if (legal.seals.includes('empower')) for (const main of mains) if (main.type === 'attack') out.push({ main, seal: 'empower' });
   if (legal.seals.includes('grandOrder') && p.np <= 40) for (const main of mains) if (main.type !== 'np') out.push({ main, seal: 'grandOrder' });
+  // Left Hand & Right Hand: simulate with the first option; the final pick is randomized in chooseAction
+  if (legal.choice) for (const a of out) a.choice = legal.choice[0].id;
   return out;
 }
 
@@ -91,6 +93,7 @@ export function predictOpponent(state, j) {
   const dist = CARDS.map(card => ({ action: { main: { type: 'attack', card }, seal: null }, p: pAttack * counts[card] / total }));
   if (pNp) dist.push({ action: { main: { type: 'np' }, seal: null }, p: pNp });
   for (const main of skills) dist.push({ action: { main, seal: null }, p: pSkill / skills.length });
+  if (legal.choice) for (const d of dist) d.action.choice = legal.choice[0].id;
   return dist.filter(d => d.p > 0);
 }
 
@@ -101,7 +104,14 @@ export function predictOpponent(state, j) {
  * @param {object} opts   { strength: 0..1, random: () => number, known: the opponent's action, if
  *                        Teacher's Wisdom revealed it }
  */
-export function chooseAction(state, i, { strength = 0.7, random = Math.random, known = null } = {}) {
+export function chooseAction(state, i, opts = {}) {
+  const a = chooseActionInner(state, i, opts);
+  const legal = getLegalActions(state, i);
+  // Left Hand & Right Hand: the CPU picks a hand at random
+  return legal.choice ? { ...a, choice: legal.choice[Math.floor((opts.random ?? Math.random)() * legal.choice.length)].id } : a;
+}
+
+function chooseActionInner(state, i, { strength = 0.7, random = Math.random, known = null } = {}) {
   const j = 1 - i;
   // History isn't needed to simulate (and is slow to copy). The RNG is re-seeded
   // so the CPU can't foresee random outcomes (e.g. Breaker Gorgon) it wouldn't know.
