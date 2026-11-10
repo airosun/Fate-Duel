@@ -214,12 +214,14 @@ export function buffChip(b) {
   if (b.type === 'apRecoveryDown' && b.status === 'petrified') label = 'Petrified';
   if (b.type === 'cardVuln') label = `${CARD_LABEL[b.card]} Resist↓`;
   if (b.type === 'terror') label = 'Terror';
-  if (b.type === 'extraHitChance') label = `${b.source === "Golem's Support" ? 'Golem' : 'Sea Demons'} ${Math.round(b.value)}%`;
+  if (b.type === 'extraHitChance') label = b.source === "Golem's Support" ? 'Golem' : 'Sea Demons';  // value is appended below
   if (b.type === 'foresight') label = `Foresight ×${b.charges ?? 0}`;
-  if (b.type === 'doubleShot') label = `2nd Arrow ${Math.round(b.value)}%`;
+  if (b.type === 'doubleShot') label = '2nd Arrow';
   if (b.type === 'statusMark') label = b.status[0].toUpperCase() + b.status.slice(1);
-  if (b.type === 'curse') label = `Curse ${Math.round(b.value)}`;
+  if (b.type === 'curse') label = 'Curse';
+  // Labels never include the value; it's appended once here.
   const val = b.type === 'apRecoveryDown' ? ` −${Math.round(b.value)} AP` : b.type === 'apRecoveryUp' ? ` +${Math.round(b.value)} AP`
+    : ['curse', 'poison'].includes(b.type) ? ` ${Math.round(b.value)}/turn`
     : b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage', 'sureHit', 'copyEnemyUnique', 'guts', 'ignoreDamageCut', 'nullifyBoosts', 'madness', 'charm', 'taunt', 'npOnlyKo', 'pierceEvade', 'statusMark'].includes(b.type)
       ? ` ${Math.round(b.value)}%` : (['apRegen', 'flatDamage'].includes(b.type) ? ` +${b.value}` : '');
   const kind = b.debuff ? 'debuff' : b.turns === null ? 'passive' : 'active';
