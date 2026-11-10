@@ -34,7 +34,7 @@ export function describeEffect(e) {
     case 'flatDamage': return `+${v} flat damage per hit`;
     case 'maxApUp': return `Max AP +${v}`;
     case 'cleanse': return `Cleanse own debuffs`;
-    case 'sureHit': return `${c ? c + ' attacks' : 'Attacks'} pierce Evade${turnsText(e)}`;
+    case 'sureHit': return `${c ? c + ' attacks' : 'Attacks'} always hit (pierce Evade and decoys)${turnsText(e)}`;
     case 'debuffPotency': return `Debuffs ignore ${v}% resistance`;
     case 'debuffUp': return `Debuff effectiveness +${v}%${turnsText(e)}`;
     case 'nextHitUp': return `Next landed attack ${v}% more effective`;
@@ -135,7 +135,7 @@ export function explainBuff(b) {
     case 'apRegen': return `Gains ${v} AP at the end of every turn.`;
     case 'busterConvert': return 'The next attack deals damage and gains NP as a Buster card, but still clashes as the card picked.';
     case 'flatDamage': return `Adds ${v} damage to every hit.`;
-    case 'sureHit': return c ? `${c} attacks can't be evaded.` : "Attacks can't be evaded.";
+    case 'sureHit': return `${c ? `${c} attacks` : 'Attacks'} always hit: they pierce Evade and can't be dodged by decoys (One Hundred Personas). Invincible still blocks them.`;
     case 'nextHitUp': return `The next attack or Noble Phantasm that lands is ${v}% more effective.`;
     case 'affinityAll': return 'Gets the favored-card bonus on Quick, Arts and Buster.';
     case 'debuffPotency': return `This servant's debuffs ignore up to ${v}% of the enemy's debuff resistance.`;

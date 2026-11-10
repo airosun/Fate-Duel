@@ -821,3 +821,20 @@ test("Karna: NP Seal makes a same-turn NP fizzle and costs 20% gauge; debuff res
   const k = createMatch(SERVANTS.karna, dummy('B'));
   assert.ok(k.players[0].buffs.some(b => b.type === 'npUp' && b.turns === null && b.value === 10));
 });
+
+test('Sure Hit (e.g. Chiron\'s Wisdom of Divine) always hits through One Hundred Personas decoys and Evade', () => {
+  let missesWithout = 0;
+  for (let seed = 1; seed <= 300; seed++) {
+    let s = createMatch(SERVANTS.chiron, SERVANTS.hundred_faces, { seed });
+    s.players[0].ap = 10; s.players[1].ap = 10;
+    s = resolveTurn(s, [skill('wisdom_of_divine'), skill('expert')]).state;     // Sure Hit vs Evade + decoys
+    assert.ok(s.players[0].buffs.some(b => b.type === 'sureHit'));
+    const hp = s.players[1].hp;
+    const r = resolveTurn(s, [atk('arts'), skill('battle_retreat')]);          // Hundred Faces doesn't attack
+    assert.ok(r.state.players[1].hp < hp + Math.round(r.state.players[1].maxHp * 0.3), `seed ${seed}: Sure Hit attack missed`);
+    assert.ok(!r.log.some(l => /decoy/.test(l.msg)), `seed ${seed}: decoy triggered`);
+    const plain = resolveTurn(createMatch(dummy('A'), SERVANTS.hundred_faces, { seed }), [atk('arts'), atk('buster')]);
+    if (plain.log.some(l => /decoy/.test(l.msg))) missesWithout++;
+  }
+  assert.ok(missesWithout > 10, 'without Sure Hit, decoys do trigger');
+});
