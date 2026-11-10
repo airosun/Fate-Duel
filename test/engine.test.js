@@ -583,3 +583,25 @@ test('Lancelot: Eternal Arms Mastery copies half of an enemy ATK buff; Arondight
   s = resolveTurn(s, [atk('buster'), atk('arts')]).state;   // Lancelot's Arts wins: +2 +1 land +2 Arondight
   assert.equal(s.players[1].ap, Math.min(s.players[1].maxAp, ap + 2 + 1 + 2));
 });
+
+test('NPs use ATK up, card effectiveness of their card, next-hit boosts and bonus vs status', () => {
+  const npDmg = (buffs, defBuffs = []) => {
+    const s = createMatch(dummy('A'), dummy('B'), { seed: 1 });
+    s.players[0].np = 100; s.players[0].buffs.push(...buffs); s.players[1].buffs.push(...defBuffs);
+    const r = resolveTurn(s, [np(), atk('quick')]).state;
+    return { dmg: s.players[1].hp - r.players[1].hp, buffs: r.players[0].buffs };
+  };
+  const base = npDmg([]).dmg;
+  const b = (type, value, extra = {}) => ({ type, value, turns: 3, source: 't', ...extra });
+  assert.equal(npDmg([b('atkUp', 20)]).dmg, Math.round(base * 1.2));
+  assert.equal(npDmg([b('cardUp', 20, { card: 'buster' })]).dmg, Math.round(base * 1.2));   // Beam is Buster
+  assert.equal(npDmg([b('cardUp', 20, { card: 'quick' })]).dmg, base);                      // wrong card: no effect
+  const nh = npDmg([b('nextHitUp', 50)]);
+  assert.equal(nh.dmg, Math.round(base * 1.5));
+  assert.ok(!nh.buffs.some(x => x.type === 'nextHitUp'), 'next-hit boost is used up by the NP');
+  const petrified = b('apRecoveryDown', 2, { status: 'petrified', debuff: true });
+  const vs = npDmg([b('bonusVsStatus', 50, { status: 'petrified' })], [petrified]);
+  assert.equal(vs.dmg, Math.round(base * 1.5));
+  assert.ok(!vs.buffs.some(x => x.type === 'bonusVsStatus'));
+  assert.equal(npDmg([b('bonusVsStatus', 50, { status: 'petrified' })]).dmg, base);         // not petrified: no bonus
+});

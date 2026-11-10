@@ -120,13 +120,13 @@ export function explainBuff(b) {
     case 'busterConvert': return 'The next attack deals damage and gains NP as a Buster card, but still clashes as the card picked.';
     case 'flatDamage': return `Adds ${v} damage to every hit.`;
     case 'sureHit': return c ? `${c} attacks can't be evaded.` : "Attacks can't be evaded.";
-    case 'nextHitUp': return `The next attack that lands is ${v}% more effective.`;
+    case 'nextHitUp': return `The next attack or Noble Phantasm that lands is ${v}% more effective.`;
     case 'affinityAll': return 'Gets the favored-card bonus on Quick, Arts and Buster.';
     case 'debuffPotency': return `This servant's debuffs ignore up to ${v}% of the enemy's debuff resistance.`;
     case 'buffFailChance': return `Each buff the opponent gives themselves has a ${v}% chance to fail.`;
     case 'copyEnemyUnique': return "Copies the opponent's unique passive for the match. Revives can't be copied.";
     case 'apRecoveryDown': return `${b.status === 'petrified' ? 'Petrified: g' : 'G'}ains ${Math.round(b.value)} less AP from each attack.`;
-    case 'bonusVsStatus': return `The next attack against a ${b.status} enemy deals ${v}% more damage.`;
+    case 'bonusVsStatus': return `The next attack or Noble Phantasm against a ${b.status} enemy deals ${v}% more damage.`;
     case 'missChance': return `Regular attacks against this servant have a ${v}% chance to miss. Sure Hit ignores this.`;
     case 'buffSuccessUp': return `Chance-based buffs are ${v}% more likely to land, and enemy buff-failure effects are ${v}% weaker.`;
     case 'cardVuln': return `Takes ${v}% more damage from ${c} attacks and ${c} Noble Phantasms. ${c === 'Arts' ? `Arts hits on this servant also give the attacker +${T.artsEffectNpGain}% NP gain.` : ''}`;
@@ -157,6 +157,7 @@ export function buffChip(b) {
   else if (b.turns === null) duration = b.charges != null ? `Passive · ${b.charges} use${b.charges === 1 ? '' : 's'} left` : 'Passive · lasts the whole match';
   else if (b.turns === 1) duration = 'Ends after this turn';
   else duration = `${b.turns} turns left, including this one`;
-  if (b.type === 'busterConvert' || b.type === 'nextHitUp' || b.type === 'bonusVsStatus') duration += ' · used up by one attack';
+  if (b.type === 'busterConvert') duration += ' · used up by one attack';
+  if (b.type === 'nextHitUp' || b.type === 'bonusVsStatus') duration += ' · used up by the next attack or NP';
   return { label: label + val, kind, duration, explain: explainBuff(b) };
 }

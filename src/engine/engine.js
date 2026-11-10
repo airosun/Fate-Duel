@@ -322,10 +322,12 @@ function attackPacket(att, def, card, { counter, empowered, nextHit = 0, vsBonus
   return { ...out, sureHit };
 }
 
-function npPacket(att, def, np, { empowered = false } = {}) {
+// NPs use the same ATK modifiers as regular attacks: atkUp/atkDown, card effectiveness
+// (cardUp for the NP's card, incl. class passives), next-hit boosts, bonus vs status and flat damage.
+function npPacket(att, def, np, { empowered = false, nextHit = 0, vsBonus = 0 } = {}) {
   let mult = np.mult * (empowered ? 1 + T.seals.empowerBonus : 1);
   if (np.missingHpBonus) mult *= 1 + np.missingHpBonus * (1 - def.hp / def.maxHp);
-  const raw = att.atk * mult * atkMultiplier(att, np.card) * (1 + sumBuff(att, 'npUp') / 100)
+  const raw = att.atk * mult * atkMultiplier(att, np.card, nextHit) * (1 + vsBonus / 100) * (1 + sumBuff(att, 'npUp') / 100)
     + sumBuff(att, 'flatDamage');
   return defend(def, raw, { isNp: true, ignoreDefense: !!np.ignoreDefense, ignoreCut: hasBuff(att, 'ignoreDamageCut'), card: np.card });
 }
@@ -398,8 +400,12 @@ export function resolveTurn(prev, actions) {
     const att = structuredClone(P[i]), def = structuredClone(P[1 - i]);
     applyEffects(att, def, npPre[i], 'np');
     // Empower boosts whichever comes first: the next regular attack or the next NP.
-    const pk = { from: i, to: 1 - i, kind: 'np', card: nps[i].card, empowered: P[i].empower,
-      ...npPacket(att, def, nps[i], { empowered: P[i].empower }) };
+    // Next-hit boosts and bonus-vs-status work like Empower: used by whichever lands first, attack or NP.
+    const nextHit = sumBuff(att, 'nextHitUp');
+    const vs = att.buffs.find(b => b.type === 'bonusVsStatus' && hasStatus(def, b.status));
+    const vsBonus = vs ? vs.value : 0;
+    const pk = { from: i, to: 1 - i, kind: 'np', card: nps[i].card, empowered: P[i].empower, nextHit, vsBonus,
+      ...npPacket(att, def, nps[i], { empowered: P[i].empower, nextHit, vsBonus }) };
     // Instant kill (Shaytan's Arm): rolled only when the NP connects; ignores revives.
     // npName ties the chance to one NP (Shaytan's Arm only works with Zabaniya).
     const ik = P[i].buffs.filter(b => b.type === 'instantKillChance' && (!b.npName || b.npName === nps[i].name))
@@ -474,9 +480,9 @@ export function resolveTurn(prev, actions) {
       gainNp(att, T.cards[pk.hitAs].npGain, { card: pk.hitAs, artsEffect });
       const nextHitAp = pk.nextHit && pk.card === 'quick' ? 1 : 0;
       att.ap = Math.min(att.maxAp, att.ap + T.apOnLand + nextHitAp);
-      if (pk.nextHit) att.buffs = att.buffs.filter(b => b.type !== 'nextHitUp'); // consumed on a landed hit
-      if (pk.vsBonus) att.buffs = att.buffs.filter(b => b.type !== 'bonusVsStatus'); // one attack only
     }
+    if (pk.nextHit) att.buffs = att.buffs.filter(b => b.type !== 'nextHitUp'); // consumed on a landed attack or NP
+    if (pk.vsBonus) att.buffs = att.buffs.filter(b => b.type !== 'bonusVsStatus'); // one hit only
     say(`${att.name} hits ${def.name} for ${pk.amount}${pk.hitAs && pk.hitAs !== pk.card ? ` (${CARD_NAME[pk.card]} → Buster)` : ''}${pk.reason === 'counter' ? ' (counter!)' : ''}.`, { type: 'hit', ...pk });
   }
   for (const i of npUsers) applyEffects(P[i], P[1 - i], npPre[i], 'np');
