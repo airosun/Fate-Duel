@@ -26,6 +26,7 @@ const weighted = w => { // {key: weight}
 function bot(state, i) {
   const me = state.players[i], foe = state.players[1 - i];
   const legal = getLegalActions(state, i);
+  if (legal.lastStand) return { main: { type: 'np' }, seal: null };   // Unyielding Will: forced NP
   const servant = state.servants[i];
   let seal = null;
   if (legal.seals.includes('heal') && me.hp / me.maxHp < 0.3 && rand() < 0.7) seal = 'heal';

@@ -31,7 +31,7 @@ export function deriveStats(servant, { uniquesOff = false } = {}) {
 // ---------- match stats (shown on the post-battle stats screen) ----------
 export function newStats() {
   return {
-    dmg: { attack: 0, np: 0, extra: 0, curse: 0, poison: 0 }, biggest: { amount: 0, what: '' },
+    dmg: { attack: 0, np: 0, extra: 0, curse: 0, poison: 0, shock: 0 }, biggest: { amount: 0, what: '' },
     attempted: { quick: 0, arts: 0, buster: 0 }, landed: { quick: 0, arts: 0, buster: 0 },
     clash: { won: 0, lost: 0, tied: 0 }, nps: { fired: 0, landed: 0, blocked: 0 },
     negated: 0, healed: 0, skills: 0, seals: 0, revives: 0, maxCombo: 0, combo: 0,
@@ -100,7 +100,7 @@ function applyCopiedUniques(p, servant, foe) {
   p.copyBlocked = [];
   for (const pa of foe.passives ?? []) {
     if (pa.kind !== 'unique' || pa.effects.some(e => e.type === 'copyEnemyUnique')) continue;
-    if (pa.effects.some(e => e.type === 'guts')) { p.copyBlocked.push(pa.name); continue; }
+    if (pa.effects.some(e => ['guts', 'lastStand'].includes(e.type))) { p.copyBlocked.push(pa.name); continue; }
     for (const e of pa.effects) applyEffect(p, { ...e, turns: null, copiedFrom: pa.name }, 'Trace On');
     p.copied.push(pa.name);
   }
@@ -193,6 +193,8 @@ export function getLegalActions(state, idx) {
   if (p.seals >= 1) seals.push('heal', 'recharge');
   if (p.seals >= 1 && !p.empower) seals.push('empower');
   if (p.seals >= 3 && p.np < T.npMax) seals.push('grandOrder');
+  // Unyielding Will: the turn after his last stand he can only fire his Noble Phantasm
+  if (p.buffs.some(b => b.type === 'lastStandActive')) return { attacks: [], skills: [], np: true, seals, foresight: 0, taunted: false, lastStand: true };
   // Teacher's Wisdom: uses left of "see the opponent's locked action first"
   const foresight = p.buffs.filter(b => b.type === 'foresight').reduce((a, b) => a + (b.charges ?? 0), 0);
   return { attacks: [...CARDS], skills, np: !taunted && p.np >= T.npMax, seals, foresight, taunted };
@@ -221,12 +223,12 @@ export function validateAction(state, idx, action) {
 
 // ---------- effects ----------
 
-const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', 'curse', 'debuffResistDown', 'npSeal', 'taunt', 'confusion', 'stun', 'poison', 'nullifyBoosts', 'madness', 'charm'];
+const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', 'curse', 'debuffResistDown', 'npSeal', 'taunt', 'confusion', 'stun', 'poison', 'nullifyBoosts', 'madness', 'charm', 'shock', 'burn'];
 
 // Lasting positive effects a servant puts on itself (what Breaker Gorgon can make fail).
 const BUFF_TYPES = new Set(['ignoreDamageCut', 'buffSuccessUp', 'apRecoveryUp', 'atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
   'cardNpGainUp', 'debuffResist', 'guts', 'apRegen', 'busterConvert', 'flatDamage', 'sureHit', 'pierceEvade',
-  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight', 'npOnlyKo', 'debuffOnHit', 'apChance', 'rpsOverride', 'randomWork', 'starCrossed']);
+  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight', 'npOnlyKo', 'debuffOnHit', 'apChance', 'rpsOverride', 'randomWork', 'starCrossed', 'lastStand', 'hpRegen']);
 const hasStatus = (p, status) => p.buffs.some(b => b.status === status);
 
 function resistScale(target, e, user) {
@@ -303,7 +305,9 @@ function applyEffectRaw(target, e, source, user) {
       if (e.type === 'invincible') turns = 1;
       // scaleMissingHp: bonus that grows with the target's missing HP at the moment it's applied
       const base = (e.value ?? 0) + (e.scaleMissingHp ? e.scaleMissingHp * (1 - target.hp / target.maxHp) : 0);
-      const value = Math.round(base * (DEBUFFS.includes(e.type) ? resistScale(target, e, user) : 1) * 10) / 10;
+      const value = Math.round(base * (DEBUFFS.includes(e.type) && target !== user ? resistScale(target, e, user) : 1) * 10) / 10;
+      // refresh (Overload's Burn): recasting replaces the old instance instead of stacking
+      if (e.refresh) target.buffs = target.buffs.filter(b => !(b.type === e.type && b.source === source));
       target.buffs.push({
         type: e.type,
         value,
@@ -481,6 +485,9 @@ export function resolveTurn(prev, actions) {
   const say = (msg, data = {}) => log.push({ msg, ...data });
   const mains = actions.map(a => a.main);
 
+  // Unyielding Will: his final turn begins
+  for (const p of P) for (const b of p.buffs) if (b.type === 'lastStandActive') b.stage++;
+
   // 0. Teacher's Wisdom: spend a charge for seeing the opponent's action first (the UI/server did the showing)
   for (const i of [0, 1]) {
     if (!actions[i].foresight) continue;
@@ -566,7 +573,15 @@ export function resolveTurn(prev, actions) {
   }
   for (const i of [0, 1]) {
     const skill = skillUses[i];
-    if (skill) applyEffects(P[i], P[1 - i], skill.effects.filter(e => e.target === 'enemy'), skill.id);
+    if (skill) applyEffects(P[i], P[1 - i], skill.effects.filter(e => {
+      if (e.target !== 'enemy') return false;
+      if (e.chance == null) return true;
+      // chance-based debuffs (Lament of the Falsely Living): roll once per cast
+      const ok = roll(state) * 100 < e.chance;
+      proc(P[i], `${skill.name} (${e.type[0].toUpperCase() + e.type.slice(1)} landed)`, ok);
+      if (!ok) say(`${skill.name}: the ${e.type} doesn't take hold.`, { type: 'buffFail', player: i });
+      return ok;
+    }), skill.id);
   }
 
   // 3. Noble Phantasms — they hit simultaneously. Each NP's damage is worked
@@ -804,23 +819,39 @@ export function resolveTurn(prev, actions) {
       dealt(P[1 - P.indexOf(p)], 'curse', dot, 'Curse');
       say(`The curse eats at ${p.name} for ${dot}.`, { type: 'curse', player: P.indexOf(p), amount: dot });
     }
-    // Poison: every instance is its own debuff, so stacks add up
-    const stacks = p.buffs.filter(b => b.type === 'poison');
-    const pdot = Math.round(stacks.reduce((a, b) => a + b.value, 0));
-    if (pdot && p.hp > 0) {
-      p.hp -= pdot;
-      dealt(P[1 - P.indexOf(p)], 'poison', pdot, 'Poison');
-      say(`Poison eats at ${p.name} for ${pdot}${stacks.length > 1 ? ` (${stacks.length} stacks)` : ''}.`, { type: 'curse', player: P.indexOf(p), amount: pdot });
+    // Stacking damage over time: every instance is its own debuff, so stacks add up.
+    // Poison (Semiramis), Shock (Frankenstein) and Burn (self-inflicted by Overload; refreshes, doesn't stack).
+    for (const [type, name] of [['poison', 'Poison'], ['shock', 'Shock'], ['burn', 'Burn']]) {
+      const stacks = p.buffs.filter(b => b.type === type);
+      const d = Math.round(stacks.reduce((a, b) => a + b.value, 0));
+      if (!d || p.hp <= 0) continue;
+      p.hp -= d;
+      if (type !== 'burn') dealt(P[1 - P.indexOf(p)], type, d, name);   // Burn is self-inflicted, not the enemy's damage
+      say(`${name} ${type === 'shock' ? 'jolts' : type === 'burn' ? 'scorches' : 'eats at'} ${p.name} for ${d}${stacks.length > 1 ? ` (${stacks.length} stacks)` : ''}.`, { type: 'curse', player: P.indexOf(p), amount: d });
     }
   }
 
-  // Akhilleus Kosmos: only a Noble Phantasm can down him; anything else leaves him at 1 HP
+  // Akhilleus Kosmos: only a Noble Phantasm can down him; anything else leaves him at 1 HP.
+  // Unyielding Will: on his final turn nothing can down him before his NP has had its chance.
   for (const p of P) {
+    if (p.hp <= 0 && p.buffs.some(b => b.type === 'lastStandActive' && b.stage >= 1)) p.hp = 1;
     if (p.hp <= 0 && !p.hitByNp && !p.instantKilled && p.buffs.some(b => b.type === 'npOnlyKo')) {
       p.hp = 1;
       say(`${p.name} can only be downed by a Noble Phantasm! (1 HP)`, { type: 'guts', player: P.indexOf(p) });
     }
     delete p.hitByNp;
+  }
+
+  // Unyielding Will: a lethal blow leaves him at 1 HP with a full gauge for one last Noble Phantasm
+  for (const p of P) {
+    if (p.hp > 0 || p.instantKilled) continue;
+    const ls = p.buffs.find(b => b.type === 'lastStand');
+    if (!ls) continue;
+    p.buffs.splice(p.buffs.indexOf(ls), 1);
+    p.hp = 1; p.np = T.npMax;
+    p.buffs.push({ type: 'lastStandActive', value: 0, turns: null, stage: 0, source: ls.source });
+    proc(p, `${ls.source} (blazes of glory)`, true);
+    say(`${p.name} refuses to fall yet! ${ls.source}: 1 HP and a full gauge for one last Noble Phantasm.`, { type: 'guts', player: P.indexOf(p) });
   }
 
   // Guts
@@ -844,6 +875,14 @@ export function resolveTurn(prev, actions) {
   for (const p of P) {
     const regen = sumBuff(p, 'apRegen');
     if (regen) p.ap = Math.min(p.maxAp, p.ap + regen);
+    // Honor of the Battered: heal X% max HP at the end of each turn it's active
+    const hr = sumBuff(p, 'hpRegen');
+    if (hr && p.hp > 0) {
+      const before = p.hp;
+      p.hp = Math.min(p.maxHp, p.hp + Math.round(p.maxHp * hr / 100));
+      p.stats.healed += p.hp - before;
+      if (p.hp > before) say(`${p.name} recovers ${p.hp - before} HP.`, { type: 'info', player: P.indexOf(p) });
+    }
     // Evaporation of Sanity: each turn it's active, a fresh chance at bonus AP
     for (const b of p.buffs.filter(b => b.type === 'apChance')) {
       const got = roll(state) * 100 < b.value;
@@ -857,6 +896,14 @@ export function resolveTurn(prev, actions) {
     p.hp = Math.max(0, p.hp);
   }
 
+  // Unyielding Will: after his last Noble Phantasm, he falls, unless he took the enemy down with him
+  for (const p of P) {
+    const ls = p.buffs.find(b => b.type === 'lastStandActive' && b.stage >= 1);
+    if (!ls) continue;
+    p.buffs.splice(p.buffs.indexOf(ls), 1);
+    if (P[1 - P.indexOf(p)].hp > 0) { p.hp = 0; say(`${p.name} goes out in a blaze of glory.`, { type: 'guts', player: P.indexOf(p) }); }
+    else say(`${p.name} stands alone on the battlefield!`, { type: 'guts', player: P.indexOf(p) });
+  }
   let dead = P.map(p => p.hp <= 0);
   // Romeo and Juliet: when one servant falls, a chance the other falls with them (a draw)
   if (dead[0] !== dead[1]) for (const p of P) {

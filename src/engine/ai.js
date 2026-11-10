@@ -76,6 +76,7 @@ function myCandidates(state, i) {
 // Predicted opponent actions with probabilities.
 export function predictOpponent(state, j) {
   const legal = getLegalActions(state, j);
+  if (legal.lastStand) return [{ action: { main: { type: 'np' }, seal: null }, p: 1 }];   // Unyielding Will: forced NP
   const counts = { quick: 1.5, arts: 1.5, buster: 1.5 };
   const hist = state.history ?? [];
   hist.forEach((h, k) => {
@@ -125,7 +126,7 @@ export function chooseAction(state, i, { strength = 0.7, random = Math.random, k
   // Deliberate mistakes at low strength: a random legal attack.
   if (random() < (1 - strength) * 0.3) {
     const attacks = scored.filter(x => x.a.main.type === 'attack' && !x.a.seal);
-    return attacks[Math.floor(random() * attacks.length)].a;
+    if (attacks.length) return attacks[Math.floor(random() * attacks.length)].a;   // none during a forced NP
   }
   // Softmax: low strength = flatter (more random), high = sharper.
   const temp = 0.2 + (1 - strength) * 1.6;

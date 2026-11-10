@@ -71,17 +71,17 @@ footer { color: var(--muted); font-size: .8rem; }
 <div class="wrap">
   <header>
     <h1>Fate<span>/</span>Duel Roster</h1>
-    <p class="intro">26 servants and their complete kits, generated from the game's own data. HP and ATK are the in-game values; NP gain is relative to an average servant (1.00×).</p>
+    <p class="intro">28 servants and their complete kits, generated from the game's own data. HP and ATK are the in-game values; NP gain is relative to an average servant (1.00×).</p>
   </header>
   <nav class="filters" aria-label="Filter by class">
-    <button type="button" data-filter="all" aria-pressed="true">All (26)</button>
+    <button type="button" data-filter="all" aria-pressed="true">All (28)</button>
     <button type="button" data-filter="Saber" aria-pressed="false">Saber (3)</button>
     <button type="button" data-filter="Archer" aria-pressed="false">Archer (4)</button>
     <button type="button" data-filter="Lancer" aria-pressed="false">Lancer (4)</button>
     <button type="button" data-filter="Rider" aria-pressed="false">Rider (4)</button>
     <button type="button" data-filter="Caster" aria-pressed="false">Caster (4)</button>
     <button type="button" data-filter="Assassin" aria-pressed="false">Assassin (5)</button>
-    <button type="button" data-filter="Berserker" aria-pressed="false">Berserker (2)</button>
+    <button type="button" data-filter="Berserker" aria-pressed="false">Berserker (4)</button>
   </nav>
   <main class="grid">
 
@@ -970,6 +970,72 @@ footer { color: var(--muted); font-size: .8rem; }
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Golem Keter Malkuth</h4><span class="card buster">Buster</span><span class="mult">2.7×</span></div>
     <p>NP damage +30% for this NP, heavy Buster damage, then NP gain +30% for 3 turns</p></div>
     <p class="fgo">FGO stats: 9,981 HP · 6,376 ATK · NP 0.61% / 3%</p>
+  </article>
+
+  <article class="servant" id="frankenstein" data-class="Berserker">
+    <header>
+      <div class="badge" aria-hidden="true">F</div>
+      <div class="title"><span class="cls">Berserker</span><h3>Frankenstein</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>1,241</dd></div>
+      <div><dt>ATK</dt><dd>121</dd></div>
+      <div><dt>Max AP</dt><dd>10</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>1.02× <small>atk</small> · 1.29× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card buster">Buster</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Mad Enhancement D</span><span>Buster attacks +6% damage</span></li>
+        <li><span class="name">Procedure to Humanity<span class="tag">Unique</span></span><span>A landed regular attack has a 20% chance to Shock the enemy (20 damage per turn for 3 turns; stacks)</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">Galvanism B<span class="ap">3 AP</span></span><span>NP gain +40% for 3 turns</span></li>
+        <li><span class="name">Lament of the Falsely Living C<span class="ap">5 AP</span></span><span>60% chance to Shock the enemy (30 per turn for 3 turns); enemy DEF -20% for 3 turns</span></li>
+        <li><span class="name">Overload C<span class="ap">4 AP</span></span><span>NP damage +30% for 3 turns; Burn herself (20 per turn for 3 turns; recasting refreshes it rather than stacking)</span></li>
+      </ul>
+    </section>
+    <div class="np">
+    <div class="np-head"><span class="label">Noble Phantasm</span><h4>Blasted Tree</h4><span class="card quick">Quick</span><span class="mult">3.95×</span></div>
+    <p>Heavy Quick damage, then Shock the enemy (30 per turn for 3 turns)</p></div>
+    <p class="fgo">FGO stats: 10,687 HP · 9,441 ATK · NP 0.83% / 5%</p>
+  </article>
+
+  <article class="servant" id="spartacus" data-class="Berserker">
+    <header>
+      <div class="badge" aria-hidden="true">S</div>
+      <div class="title"><span class="cls">Berserker</span><h3>Spartacus</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>1,021<small>×0.85</small></dd></div>
+      <div><dt>ATK</dt><dd>113</dd></div>
+      <div><dt>Max AP</dt><dd>10</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>1.12× <small>atk</small> · 1.29× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card buster">Buster</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Mad Enhancement EX</span><span>Buster attacks +15% damage</span></li>
+        <li><span class="name">Unyielding Will<span class="tag">Unique</span></span><span>Once, a lethal blow leaves him at 1 HP with a full NP gauge. Next turn he must fire his NP and can&#39;t fall before it lands; then he falls unless it took the enemy down</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">Honor of the Battered B+<span class="ap">5 AP</span></span><span>Heal 8% HP at the end of each turn for 3 turns</span></li>
+        <li><span class="name">Insurrection A<span class="ap">4 AP</span></span><span>NP +30% now; NP gain +30% for 3 turns</span></li>
+        <li><span class="name">Triumphant Return of the Sword B<span class="ap">5 AP</span></span><span>Buster +30% for 3 turns; heal 25% HP</span></li>
+      </ul>
+    </section>
+    <div class="np">
+    <div class="np-head"><span class="label">Noble Phantasm</span><h4>Crying Warmonger</h4><span class="card buster">Buster</span><span class="mult">3.15×</span></div>
+    <p>Heavy Buster damage that ignores damage cut</p></div>
+    <p class="fgo">FGO stats: 7,722 HP · 5,073 ATK · NP 1.01% / 5%</p>
   </article>
   </main>
   <footer>Generated from src/data/servants.js on 2026-11-10. Kits are rebuilt whenever a servant is added or rebalanced.</footer>

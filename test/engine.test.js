@@ -714,7 +714,7 @@ test('match stats: damage dealt matches HP lost; hits, NPs and chance effects ar
       if (s.over) continue;
       for (const i of [0, 1]) {
         const me = s.players[i].stats, foe = s.players[1 - i];
-        const dealtTotal = me.dmg.attack + me.dmg.np + me.dmg.extra + me.dmg.curse + me.dmg.poison;
+        const dealtTotal = me.dmg.attack + me.dmg.np + me.dmg.extra + me.dmg.curse + me.dmg.poison + me.dmg.shock;
         assert.equal(dealtTotal, foe.maxHp - foe.hp + foe.stats.healed, `${a} vs ${b} seed ${seed}`);
         const landed = me.landed.quick + me.landed.arts + me.landed.buster;
         assert.ok(landed <= me.attempted.quick + me.attempted.arts + me.attempted.buster);
@@ -1093,4 +1093,65 @@ test("Avicebron: Golem's Support ~40% on landed Buster; Fig Tree heals above 30%
   r = resolveTurn(s, [skill('fig_tree'), atk('arts')]);
   assert.equal(r.state.players[0].hp, 100);                            // no heal, and the attack is blocked
   assert.ok(r.log.some(l => l.type === 'blocked' && l.from === 1));
+});
+
+test('Frankenstein: Shock stacks; Lament lands ~60%; Overload Burn hurts her, refreshes instead of stacking', () => {
+  let s = createMatch(SERVANTS.frankenstein, dummy('B'), { seed: 1 });
+  s.players[1].buffs.push({ type: 'shock', value: 20, turns: 3, debuff: true }, { type: 'shock', value: 30, turns: 3, debuff: true });
+  s.players[1].ap = 10;
+  const hp = s.players[1].hp;
+  let r = resolveTurn(s, [skill('galvanism'), skill('shield')]);
+  assert.equal(r.state.players[1].hp, hp - 50);
+  assert.equal(r.state.players[0].stats.dmg.shock, 50);
+  let landed = 0;
+  for (let seed = 1; seed <= 300; seed++) {
+    const x = createMatch(SERVANTS.frankenstein, dummy('B'), { seed });
+    x.players[0].ap = 10;
+    const y = resolveTurn(x, [skill('lament'), atk('quick')]).state;
+    if (y.players[1].buffs.some(b => b.type === 'shock' && b.source === 'lament')) landed++;
+    assert.ok(y.players[1].buffs.some(b => b.type === 'defDown'));   // DEF down always lands
+  }
+  assert.ok(landed / 300 > 0.5 && landed / 300 < 0.7, `lament ${landed / 300}`);
+  let o = createMatch(SERVANTS.frankenstein, dummy('B'), { seed: 2 });
+  o.players[0].ap = 10; o.players[1].ap = 10;
+  const fhp = o.players[0].hp;
+  o = resolveTurn(o, [skill('overload'), skill('shield')]).state;
+  assert.equal(o.players[0].hp, fhp - 20);
+  o.players[0].ap = 10; o.players[0].lastSkillId = null; o.players[1].ap = 10;
+  o = resolveTurn(o, [skill('galvanism'), skill('charge')]).state;
+  o.players[0].ap = 10; o.players[0].lastSkillId = null;
+  o = resolveTurn(o, [skill('overload'), skill('shield')]).state;
+  assert.equal(o.players[0].buffs.filter(b => b.type === 'burn').length, 1);
+});
+
+test('Spartacus: Unyielding Will — 1 HP + full NP, forced NP next turn, falls after unless the enemy went down', () => {
+  let s = createMatch(dummy('A'), SERVANTS.spartacus, { seed: 1 });
+  s.players[1].hp = 5;
+  s = resolveTurn(s, [atk('arts'), atk('buster')]).state;            // lethal
+  assert.equal(s.over, false);
+  assert.equal(s.players[1].hp, 1);
+  assert.equal(s.players[1].np, 100);
+  const legal = getLegalActions(s, 1);
+  assert.ok(legal.lastStand && legal.attacks.length === 0 && legal.skills.length === 0 && legal.np);
+  assert.match(validateAction(s, 1, atk('buster')), /./);
+  // Enemy survives his NP: he falls at the end of the turn, even though their attack can't KO him first
+  let a = structuredClone(s);
+  a.players[0].hp = 5000; a.players[0].maxHp = 5000;
+  a = resolveTurn(a, [atk('quick'), np()]).state;
+  assert.ok(a.over && a.result.winner === 0);
+  // His NP takes the enemy down: he wins, standing at 1 HP
+  let b = structuredClone(s);
+  b.players[0].hp = 10;
+  b = resolveTurn(b, [atk('quick'), np()]).state;
+  assert.ok(b.over && b.result.winner === 1);
+  // Gilgamesh's Ea switches it off; Trace On can't copy it
+  assert.ok(!createMatch(SERVANTS.gilgamesh, SERVANTS.spartacus).players[1].buffs.some(x => x.type === 'lastStand'));
+  assert.ok(createMatch(SERVANTS.emiya, SERVANTS.spartacus).players[0].copyBlocked.includes('Unyielding Will'));
+});
+
+test('Spartacus: Honor of the Battered heals 8% at the end of each turn', () => {
+  let s = createMatch(SERVANTS.spartacus, dummy('B'), { seed: 1 });
+  s.players[0].ap = 10; s.players[1].ap = 10; s.players[0].hp = 300;
+  s = resolveTurn(s, [skill('honor_of_battered'), skill('shield')]).state;
+  assert.equal(s.players[0].hp, 300 + Math.round(s.players[0].maxHp * 0.08));
 });

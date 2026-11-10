@@ -763,7 +763,7 @@ function controlsHtml() {
       <div class="action-rows">
         <div class="cards">
           ${CARDS.map(c => `
-            <button class="cmd-card ${c} ${sel('attack', c) ? 'selected' : ''}" data-card="${c}" title="Key: ${c[0].toUpperCase()}">
+            <button class="cmd-card ${c} ${sel('attack', c) ? 'selected' : ''}" data-card="${c}" title="Key: ${c[0].toUpperCase()}" ${legal.attacks.includes(c) ? '' : 'disabled'}>
               ${art(s, 'card-art')}
               <div class="cmd-frame">
                 <span class="cmd-name">${CARD_LABEL[c]}${isFavored(s, c) ? '<span class="cmd-fav" title="Favored card: bonus damage">★</span>' : ''}</span>
@@ -777,6 +777,7 @@ function controlsHtml() {
             <small>${legal.np ? esc(describeNp(np)) : legal.taunted && p.np >= T.npMax ? 'Taunted: attacks only' : `Gauge ${p.np}%`}</small>
           </button>
         </div>
+        ${legal.lastStand ? `<p class="taunt-note">Blaze of Glory: ${esc(s.name)} must fire ${esc(s.np.name)} this turn, and can't fall before it lands.</p>` : ''}
         ${legal.taunted ? `<p class="taunt-note">Taunted: ${esc(ui.match.servants[1 - i].name)} goads you into attacking. Only Quick, Arts or Buster this turn.</p>` : ''}
         <div class="skills">
           ${s.skills.map((sk, k) => {
@@ -1214,9 +1215,8 @@ document.addEventListener('keydown', e => {
   const s = ui.match.servants[ui.active];
   const legal = getLegalActions(ui.match, ui.active);
   const k = e.key.toLowerCase();
-  if (k === 'q') setDraft({ main: { type: 'attack', card: 'quick' } });
-  else if (k === 'a') setDraft({ main: { type: 'attack', card: 'arts' } });
-  else if (k === 'b') setDraft({ main: { type: 'attack', card: 'buster' } });
+  const keyCard = { q: 'quick', a: 'arts', b: 'buster' }[k];
+  if (keyCard) { if (legal.attacks.includes(keyCard)) setDraft({ main: { type: 'attack', card: keyCard } }); }
   else if (k === 'n' && legal.np) setDraft({ main: { type: 'np' } });
   else if (['1', '2', '3'].includes(k)) {
     const sk = s.skills[Number(k) - 1];

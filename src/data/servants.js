@@ -781,6 +781,57 @@ export const SERVANTS = {
           preEffects: [{ type: 'npUp', value: 30, turns: 1 }],
           postEffects: [{ type: 'npGainUp', value: 30, turns: 4 }] },
   },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
+  frankenstein: {
+    id: 'frankenstein', name: 'Frankenstein', class: 'Berserker',
+    fgoHp: 10687, fgoAtk: 9441, fgoNpAtk: 0.83, fgoNpDef: 5,
+    favoredCard: 'buster', maxAp: 10,
+    passives: [
+      classPassive('madness', 'D'),
+      unique('Procedure to Humanity', 'A landed regular attack has a 20% chance to Shock the enemy (20 damage per turn for 3 turns; stacks)',
+        [{ type: 'debuffOnHit', value: 20, inflict: { type: 'shock', value: 20, turns: 3 } }]),
+    ],
+    skills: [
+      { id: 'galvanism', name: 'Galvanism B', cost: 3,
+        desc: 'NP gain +40% for 3 turns',
+        effects: [{ type: 'npGainUp', value: 40, turns: 3 }] },
+      { id: 'lament', name: 'Lament of the Falsely Living C', cost: 5,
+        desc: '60% chance to Shock the enemy (30 per turn for 3 turns); enemy DEF -20% for 3 turns',
+        effects: [{ type: 'shock', value: 30, turns: 3, chance: 60, target: 'enemy' }, { type: 'defDown', value: 20, turns: 3, target: 'enemy' }] },
+      { id: 'overload', name: 'Overload C', cost: 4,
+        desc: 'NP damage +30% for 3 turns; Burn herself (20 per turn for 3 turns; recasting refreshes it rather than stacking)',
+        effects: [{ type: 'npUp', value: 30, turns: 3 }, { type: 'burn', value: 20, turns: 3, refresh: true }] },
+    ],
+    np: { name: 'Blasted Tree', card: 'quick', mult: 3.95,
+          desc: 'Heavy Quick damage, then Shock the enemy (30 per turn for 3 turns)',
+          postEffects: [{ type: 'shock', value: 30, turns: 3, target: 'enemy' }] },
+  },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
+  spartacus: {
+    id: 'spartacus', name: 'Spartacus', class: 'Berserker',
+    fgoHp: 7722, fgoAtk: 5073, fgoNpAtk: 1.01, fgoNpDef: 5,
+    favoredCard: 'buster', maxAp: 10, hpMult: 0.85, // 15% below FGO-derived HP: Unyielding Will is a guaranteed last NP
+    passives: [
+      classPassive('madness', 'EX'),
+      unique('Unyielding Will', "Once, a lethal blow leaves him at 1 HP with a full NP gauge. Next turn he must fire his NP and can't fall before it lands; then he falls unless it took the enemy down",
+        [{ type: 'lastStand' }]),
+    ],
+    skills: [
+      { id: 'honor_of_battered', name: 'Honor of the Battered B+', cost: 5,
+        desc: 'Heal 8% HP at the end of each turn for 3 turns',
+        effects: [{ type: 'hpRegen', value: 8, turns: 3 }] },
+      { id: 'insurrection', name: 'Insurrection A', cost: 4,
+        desc: 'NP +30% now; NP gain +30% for 3 turns',
+        effects: [{ type: 'npCharge', value: 30 }, { type: 'npGainUp', value: 30, turns: 3 }] },
+      { id: 'triumphant_return', name: 'Triumphant Return of the Sword B', cost: 5,
+        desc: 'Buster +30% for 3 turns; heal 25% HP',
+        effects: [{ type: 'cardUp', card: 'buster', value: 30, turns: 3 }, { type: 'heal', value: 25 }] },
+    ],
+    np: { name: 'Crying Warmonger', card: 'buster', mult: 3.15, ignoreCut: true,
+          desc: 'Heavy Buster damage that ignores damage cut' },
+  },
 };
 
 export const ROSTER = Object.values(SERVANTS);

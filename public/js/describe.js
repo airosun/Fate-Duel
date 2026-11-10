@@ -60,6 +60,10 @@ function describeEffectCore(e) {
     case 'npSteal': return `${who}NP -${v}%, gained by self`;
     case 'npOnlyKo': return 'Only an NP can down him; Sure Hit breaks this';
     case 'rpsOverride': return `${v}% chance ${c} beats ${e.vs}`;
+    case 'shock': return `${who}Shock (${v} per turn)${turnsText(e)}${e.chance != null ? ` at ${e.chance}% chance` : ''}`;
+    case 'burn': return `Burn self (${v} per turn)${turnsText(e)}`;
+    case 'lastStand': return 'Survive one lethal blow for a final NP';
+    case 'hpRegen': return `heal ${v}% HP each turn${turnsText(e)}`;
     case 'poison': return `${who}Poison (${v} per turn)${turnsText(e)}`;
     case 'nullifyBoosts': return `${who}deals base damage (boosts ignored)${turnsText(e)}`;
     case 'taunt': return `${who}Taunt next turn (attacks only)`;
@@ -126,7 +130,7 @@ const BUFF_LABEL = {
   defDown: 'DEF↓', flatDamage: 'Flat Dmg', sureHit: 'Sure Hit', pierceEvade: 'Pierce Evade', debuffPotency: 'Debuff Potency', debuffUp: 'Debuff↑',
   nextHitUp: 'Next Hit↑', affinityAll: 'All Cards Favored', apRecoveryDown: 'AP Recovery↓',
   bonusVsStatus: 'vs Petrified↑', buffFailChance: 'Breaker Gorgon', copyEnemyUnique: 'Trace On',
-  instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF', terror: 'Terror', curse: 'Curse', madness: 'Madness', charm: 'Charm', starCrossed: 'Star-Crossed', rpsOverride: 'Misty Night', poison: 'Poison', nullifyBoosts: 'No Boosts', npOnlyKo: 'Kosmos', taunt: 'Taunted', confusion: 'Confusion', stun: 'Trap', debuffOnHit: 'Black Luna', apChance: 'AP Chance', npSeal: 'NP Seal', debuffResistDown: 'Debuff Res↓', doubleShot: 'Golden Apple', foresight: 'Foresight', maxApUp: 'Max AP↑', statusOnHit: "Fafnir's Blood", dmgVsStatus: 'vs Dragon↑', extraHitChance: 'Sea Demons', missChance: 'Decoys', buffSuccessUp: 'Buff Success↑', cardVuln: '↓ Resist',
+  instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF', terror: 'Terror', curse: 'Curse', shock: 'Shock', burn: 'Burn', lastStand: 'Unyielding Will', lastStandActive: 'Blaze of Glory', hpRegen: 'HP Regen', madness: 'Madness', charm: 'Charm', starCrossed: 'Star-Crossed', rpsOverride: 'Misty Night', poison: 'Poison', nullifyBoosts: 'No Boosts', npOnlyKo: 'Kosmos', taunt: 'Taunted', confusion: 'Confusion', stun: 'Trap', debuffOnHit: 'Black Luna', apChance: 'AP Chance', npSeal: 'NP Seal', debuffResistDown: 'Debuff Res↓', doubleShot: 'Golden Apple', foresight: 'Foresight', maxApUp: 'Max AP↑', statusOnHit: "Fafnir's Blood", dmgVsStatus: 'vs Dragon↑', extraHitChance: 'Sea Demons', missChance: 'Decoys', buffSuccessUp: 'Buff Success↑', cardVuln: '↓ Resist',
   mirrorAtkUp: 'Arms Mastery', apRecoveryUp: 'AP Recovery↑',
 };
 
@@ -169,6 +173,11 @@ export function explainBuff(b) {
     case 'copyEnemyUnique': return "Copies the opponent's unique passive for the match. Revives can't be copied.";
     case 'apRecoveryDown': return `${b.status === 'petrified' ? 'Petrified: g' : 'G'}ains ${Math.round(b.value)} less AP from each attack.`;
     case 'bonusVsStatus': return `The next attack or Noble Phantasm against a ${b.status} enemy deals ${v}% more damage.`;
+    case 'shock': return `Shocked: takes ${Math.round(b.value)} damage at the end of each turn. Each Shock is a separate stack; stacks add up.`;
+    case 'burn': return `Burning: takes ${Math.round(b.value)} damage at the end of each turn. Recasting the skill refreshes the Burn instead of stacking it.`;
+    case 'lastStand': return "Unyielding Will: once, a lethal blow leaves him at 1 HP with a full NP gauge. Next turn he must fire his NP and can't fall before it lands. Then he falls, unless it took the enemy down.";
+    case 'lastStandActive': return "Blaze of Glory: he must fire his Noble Phantasm this turn and can't fall before it lands. At the end of the turn he falls, unless the enemy is down.";
+    case 'hpRegen': return `Heals ${v}% of max HP at the end of each turn.`;
     case 'rpsOverride': return `When a ${c} attack meets ${b.vs === 'buster' ? 'Buster' : b.vs}, a ${v}% chance the ${c} attack wins the clash instead.`;
     case 'poison': return `Poisoned: takes ${Math.round(b.value)} damage at the end of each turn. Each Poison is a separate stack; stacks add up.`;
     case 'nullifyBoosts': return "Double Summon: this servant deals base damage. Its ATK up, card effectiveness, NP damage up, flat damage and other boosts (passives too) are ignored. Debuffs still apply.";
@@ -221,8 +230,8 @@ export function buffChip(b) {
   if (b.type === 'curse') label = 'Curse';
   // Labels never include the value; it's appended once here.
   const val = b.type === 'apRecoveryDown' ? ` −${Math.round(b.value)} AP` : b.type === 'apRecoveryUp' ? ` +${Math.round(b.value)} AP`
-    : ['curse', 'poison'].includes(b.type) ? ` ${Math.round(b.value)}/turn`
-    : b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage', 'sureHit', 'copyEnemyUnique', 'guts', 'ignoreDamageCut', 'nullifyBoosts', 'madness', 'charm', 'taunt', 'npOnlyKo', 'pierceEvade', 'statusMark'].includes(b.type)
+    : ['curse', 'poison', 'shock', 'burn'].includes(b.type) ? ` ${Math.round(b.value)}/turn` : b.type === 'hpRegen' ? ` ${b.value}%/turn`
+    : b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage', 'sureHit', 'copyEnemyUnique', 'guts', 'ignoreDamageCut', 'nullifyBoosts', 'madness', 'charm', 'lastStand', 'lastStandActive', 'taunt', 'npOnlyKo', 'pierceEvade', 'statusMark'].includes(b.type)
       ? ` ${Math.round(b.value)}%` : (['apRegen', 'flatDamage'].includes(b.type) ? ` +${b.value}` : '');
   const kind = b.debuff ? 'debuff' : b.turns === null ? 'passive' : 'active';
   let duration;
