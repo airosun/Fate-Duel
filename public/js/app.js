@@ -147,13 +147,13 @@ function renderTitle() {
     </div>`;
   app.querySelector('#local').onclick = () => {
     ui.mode = 'local';
-    ui.picks = [null, null]; ui.selecting = 0; ui.focus = ROSTER[0].id;
+    ui.picks = [null, null]; ui.selecting = 0; ui.focus = SORTED[0].id; ui.search = ''; ui.classFilter = null;
     show('select');
   };
   app.querySelector('#online').onclick = () => { ui.mode = 'online'; ui.net.error = ''; connect(); show('lobby'); };
   app.querySelector('#cpu').onclick = () => {
     ui.mode = 'cpu';
-    ui.picks = [null, null]; ui.selecting = 0; ui.focus = ROSTER[0].id;
+    ui.picks = [null, null]; ui.selecting = 0; ui.focus = SORTED[0].id; ui.search = ''; ui.classFilter = null;
     show('select');
   };
 }
@@ -226,7 +226,7 @@ function onSnapshot(snap) {
   if (snap.phase === 'lobby') return show('room');
   if (snap.phase === 'select') {
     if (!isDuelist()) return show('spectate');
-    if (ui.screen !== 'select') { ui.focus = duel.picks[snap.seat] ?? ROSTER[0].id; ui.bars = {}; }
+    if (ui.screen !== 'select') { ui.focus = duel.picks[snap.seat] ?? SORTED[0].id; ui.bars = {}; }
     show('select');
     if (duel.picks[snap.seat]) waitingOverlay('Servant summoned', 'Waiting for your opponent to choose…');
     return;
@@ -458,6 +458,29 @@ function kitHtml(s) {
     </div>`;
 }
 
+const CLASS_ORDER = ['Saber', 'Archer', 'Lancer', 'Rider', 'Caster', 'Assassin', 'Berserker'];
+const SORTED = [...ROSTER].sort((a, b) => a.name.localeCompare(b.name));
+const CLASSES = CLASS_ORDER.filter(c => ROSTER.some(s => s.class === c))
+  .concat([...new Set(ROSTER.map(s => s.class))].filter(c => !CLASS_ORDER.includes(c)));
+const norm = t => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+function matchesFilter(s) {
+  if (ui.classFilter && s.class !== ui.classFilter) return false;
+  const q = norm((ui.search ?? '').trim());
+  if (!q) return true;
+  return [s.name, s.class, s.np.name].some(t => norm(t).includes(q));
+}
+// Hide/show cards in place so the search box keeps focus while typing.
+function applyRosterFilter() {
+  let shown = 0;
+  app.querySelectorAll('.roster-card').forEach(b => {
+    const ok = matchesFilter(byId(b.dataset.id));
+    b.hidden = !ok; if (ok) shown++;
+  });
+  app.querySelectorAll('.class-filter button').forEach(b => b.classList.toggle('on', (b.dataset.cls || null) === (ui.classFilter ?? null)));
+  const empty = app.querySelector('.roster-empty');
+  if (empty) empty.hidden = shown > 0;
+}
+
 function renderSelect() {
   const focus = ROSTER.find(s => s.id === ui.focus) ?? ROSTER[0];
   const snap = ui.net.snap;
@@ -478,12 +501,22 @@ function renderSelect() {
         ${status}
       </header>
       <div class="select-body">
+        <div class="roster-col">
+        <div class="roster-tools">
+          <input type="search" id="rosterSearch" placeholder="Search servants…" autocomplete="off" value="${esc(ui.search ?? '')}">
+          <div class="class-filter">
+            <button data-cls="">All</button>
+            ${CLASSES.map(c => `<button data-cls="${esc(c)}" class="class-badge" data-class="${esc(c)}">${esc(c)}</button>`).join('')}
+          </div>
+        </div>
+        <div class="roster-empty" hidden>No servants match.</div>
         <div class="roster">
-          ${ROSTER.map(s => `
+          ${SORTED.map(s => `
             <button class="roster-card ${s.id === focus.id ? 'focused' : ''}" data-id="${s.id}">
               ${art(s, 'portrait')}
               <div class="roster-name">${esc(s.name)}</div>
             </button>`).join('')}
+        </div>
         </div>
         <aside class="detail">
           ${art(focus, 'detail-art')}
@@ -493,6 +526,15 @@ function renderSelect() {
         </aside>
       </div>
     </div>`;
+  const search = app.querySelector('#rosterSearch');
+  search.oninput = () => { ui.search = search.value; applyRosterFilter(); };
+  search.onfocus = () => { ui.searchFocused = true; };
+  search.onblur = () => { ui.searchFocused = false; };
+  if (ui.searchFocused) { search.focus(); search.setSelectionRange(search.value.length, search.value.length); }
+  app.querySelectorAll('.class-filter button').forEach(b => b.onclick = () => {
+    ui.classFilter = b.dataset.cls || null; applyRosterFilter();
+  });
+  applyRosterFilter();
   app.querySelectorAll('.roster-card').forEach(b => b.onclick = () => {
     ui.focus = b.dataset.id;
     const picked = online() && ui.net.snap.duel.picks[ui.net.snap.seat];
@@ -502,7 +544,7 @@ function renderSelect() {
   });
   app.querySelector('#back').onclick = () => {
     if (online()) return leaveRoom();
-    if (ui.selecting === 1) { ui.selecting = 0; ui.focus = ui.picks[0] ?? ROSTER[0].id; return show('select'); }
+    if (ui.selecting === 1) { ui.selecting = 0; ui.focus = ui.picks[0] ?? SORTED[0].id; return show('select'); }
     show('title');
   };
   app.querySelector('#confirm').onclick = async () => {
@@ -513,7 +555,7 @@ function renderSelect() {
     }
     ui.picks[ui.selecting] = focus.id;
     if (ui.selecting === 0) {
-      ui.selecting = 1; ui.focus = ROSTER[0].id;
+      ui.selecting = 1; ui.focus = SORTED[0].id; ui.search = ''; ui.classFilter = null;
       show('select');
       if (!vsCpu()) passScreen(1, 'Choose your Servant. Your opponent\'s pick stays hidden until the duel begins.', () => render());
     } else startLocalMatch();
@@ -968,7 +1010,7 @@ function renderEnd() {
     if ($('#toRoom')) $('#toRoom').onclick = () => emit('match:return');
   } else {
     app.querySelector('#rematch').onclick = startLocalMatch;
-    app.querySelector('#newpick').onclick = () => { ui.picks = [null, null]; ui.selecting = 0; ui.focus = ROSTER[0].id; show('select'); };
+    app.querySelector('#newpick').onclick = () => { ui.picks = [null, null]; ui.selecting = 0; ui.focus = SORTED[0].id; ui.search = ''; ui.classFilter = null; show('select'); };
     app.querySelector('#title').onclick = () => show('title');
   }
 }

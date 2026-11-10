@@ -402,3 +402,15 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
 #tipbox small { display: block; margin-top: .3rem; color: var(--muted); }
 .buff:focus-visible { outline: 2px solid var(--gold2); outline-offset: 1px; }
 .log-instantKill { color: #ff8a8a !important; font-weight: 800; }
+
+/* servant select: search + class filter */
+.roster-col { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+.roster-tools { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+#rosterSearch { flex: 1 1 220px; background: var(--panel); color: inherit; border: 1px solid var(--gold-dim); border-radius: var(--radius); padding: .55rem .8rem; font: inherit; }
+#rosterSearch:focus { outline: none; border-color: var(--gold); }
+.class-filter { display: flex; flex-wrap: wrap; gap: .4rem; }
+.class-filter button { cursor: pointer; border: 1px solid var(--gold-dim); background: var(--panel); color: inherit; border-radius: 999px; padding: .3rem .8rem; font-size: .8rem; opacity: .65; transition: .15s; }
+.class-filter button:hover { opacity: 1; }
+.class-filter button.on { opacity: 1; border-color: var(--gold2); box-shadow: 0 0 10px rgba(243, 220, 147, .35); }
+.roster-card[hidden] { display: none; }
+.roster-empty { color: var(--muted); text-align: center; padding: 2rem 0; }
