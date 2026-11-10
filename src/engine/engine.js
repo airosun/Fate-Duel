@@ -486,7 +486,23 @@ function gainNp(p, base, { defending = false, card, artsEffect = 0 } = {}) {
 
 // ---------- turn resolution ----------
 
-export function resolveTurn(prev, actions) {
+// ---------- Divine Intervention decisions ----------
+// The holder's master decides, hit by hit, whether to spend Divine Intervention. Pass
+// opts.interactive = [bool, bool] to have resolveTurn stop at an undecided hit and return
+// { needsDecision }. The caller asks the master, appends the answer to that player's
+// action.divine array and resolves again (same RNG, so the turn replays identically).
+// Players who aren't interactive (CPU, simulator, AI lookahead) use defaultDivine.
+class DivineDecisionNeeded { constructor(info) { this.info = info; } }
+export function defaultDivine(info, maxHp) {
+  return info.lethal || info.isNp || info.amount >= maxHp * 0.15;
+}
+
+export function resolveTurn(prev, actions, opts = {}) {
+  try { return resolveTurnInner(prev, actions, opts); }
+  catch (e) { if (e instanceof DivineDecisionNeeded) return { needsDecision: e.info }; throw e; }
+}
+
+function resolveTurnInner(prev, actions, opts) {
   for (const i of [0, 1]) {
     const err = validateAction(prev, i, actions[i]);
     if (err) throw new Error(`Player ${i + 1}: ${err}`);
@@ -497,6 +513,25 @@ export function resolveTurn(prev, actions) {
   const log = [];
   const say = (msg, data = {}) => log.push({ msg, ...data });
   const mains = actions.map(a => a.main);
+  const diSeen = [0, 0];
+  // Divine Intervention: returns true if this damage instance is negated
+  const useDivine = (to, amount, from, what, isNp = false) => {
+    const di = P[to].buffs.find(b => b.type === 'divineIntervention');
+    if (!di) return false;
+    const k = diSeen[to]++;
+    let use = actions[to].divine?.[k];
+    if (use === undefined) {
+      const info = { player: to, index: k, amount, isNp, attacker: P[from].name, what, hp: P[to].hp, lethal: P[to].hp - amount <= 0 };
+      if (opts.interactive?.[to]) throw new DivineDecisionNeeded(info);
+      use = defaultDivine(info, P[to].maxHp);
+    }
+    if (!use) { say(`${P[to].name} holds Divine Intervention in reserve.`, { type: 'info', player: to }); return false; }
+    P[to].buffs.splice(P[to].buffs.indexOf(di), 1);
+    P[to].stats.negated++;
+    proc(P[to], `${di.source === 'np' ? S[to].np.name : di.source} (Divine Intervention)`, true);
+    say(`Divine Intervention! ${P[to].name} is untouched by ${what}.`, { type: 'blocked', from, to, blocked: 'divine' });
+    return true;
+  };
 
   // Left Hand & Right Hand: apply the chosen hand before anything else on the first turn
   for (const i of [0, 1]) {
@@ -759,15 +794,10 @@ export function resolveTurn(prev, actions) {
       say(`${att.name}'s ${CARD_NAME[pk.card]} attack strikes a decoy and misses! (${def.name})`, { type: 'blocked', ...pk });
       continue;
     }
-    // Divine Intervention (Jeanne): negates one instance of damage (not damage over time), then it's spent
-    const di = (pk.amount > 0 || pk.instantKill) && !pk.divineStripped ? def.buffs.find(b => b.type === 'divineIntervention') : null;
-    if (di) {
-      def.buffs.splice(def.buffs.indexOf(di), 1);
-      def.stats.negated++;
-      proc(def, `${di.source === 'np' ? S[pk.to].np.name : di.source} (Divine Intervention)`, true);
-      say(`Divine Intervention! ${def.name} is untouched by ${pk.kind === 'np' ? S[pk.from].np.name : `${att.name}'s ${CARD_NAME[pk.card]} attack`}.`, { type: 'blocked', ...pk, blocked: 'divine' });
-      continue;
-    }
+    // Divine Intervention (Jeanne): her master may negate this hit (not damage over time); then it's spent
+    if ((pk.amount > 0 || pk.instantKill) && !pk.divineStripped
+      && useDivine(pk.to, pk.instantKill ? def.hp : pk.amount, pk.from,
+        pk.kind === 'np' ? S[pk.from].np.name : `${att.name}'s ${pk.secondArrow ? 'second arrow' : `${CARD_NAME[pk.card]} attack`}`, pk.kind === 'np')) continue;
     def.hp -= pk.amount;
     if (pk.kind === 'np') def.hitByNp = true;
     // Akhilleus Kosmos: a landed true Sure Hit attack strikes his heel and removes the passive
@@ -831,6 +861,7 @@ export function resolveTurn(prev, actions) {
       proc(att, `${b.source} (second arrows)`, shot);
       if (!shot) continue;
       const extra = Math.max(1, Math.round(pk.amount * (b.ratio ?? 50) / 100));
+      if (useDivine(pk.to, extra, pk.from, `${att.name}'s second arrow`)) continue;
       def.hp -= extra;
       dealt(att, 'extra', extra, 'Second arrow (Golden Apple)');
       say(`A second arrow strikes ${def.name} for ${extra}!`, { type: 'hit', from: pk.from, to: pk.to, kind: 'extra', card: pk.card, amount: extra });
@@ -841,6 +872,7 @@ export function resolveTurn(prev, actions) {
       proc(att, `${b.source} (follow-up hits)`, summoned);
       if (!summoned) continue;
       const extra = Math.max(1, Math.round(pk.amount * (b.ratio ?? 30) / 100));
+      if (useDivine(pk.to, extra, pk.from, b.source === 'Summoning: Sea Demons' ? 'a Sea Demon' : `${b.source}'s strike`)) continue;
       def.hp -= extra;
       dealt(att, 'extra', extra, b.source === 'Summoning: Sea Demons' ? 'Sea Demon' : b.source);
       say(`${b.source === 'Summoning: Sea Demons' ? 'A Sea Demon lashes' : `${b.source}: a strike hits`} ${def.name} for ${extra}!`, { type: 'hit', from: pk.from, to: pk.to, kind: 'extra', card: pk.hitAs, amount: extra });

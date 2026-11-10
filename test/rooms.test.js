@@ -215,3 +215,22 @@ test('continue tracking: spectators see which turn each duelist has moved past',
   assert.deepEqual(rm.snapshot(room, C).duel.continued, [1, 1]);
   assert.throws(() => rm.continueTurn(room, C));                    // spectators don't count
 });
+
+test('Divine Intervention online: the turn pauses for the holder; the opponent only sees that they are deciding', () => {
+  const { rm, room, H, B, C } = room3();
+  rm.setRole(room, C, 'spectator');
+  startBattle(rm, room, H, B, ['jeanne', 'artoria']);
+  const j = room.duel.match.players[0];
+  j.buffs.push({ type: 'divineIntervention', value: 1, turns: 99, source: 'np' });
+  rm.lock(room, H, atk('buster'));
+  assert.equal(rm.lock(room, B, atk('arts')), false);                    // paused, not resolved
+  const mine = rm.snapshot(room, H).duel.pendingDivine;
+  assert.ok(mine.amount > 0 && mine.player === 0);
+  assert.deepEqual(rm.snapshot(room, B).duel.pendingDivine, { player: 0 });
+  assert.ok(rm.snapshot(room, C).duel.pendingDivine.amount > 0);
+  assert.throws(() => rm.divineDecision(room, B, true), /Nothing to decide/);
+  assert.throws(() => rm.unlock(room, B), /resolving/);
+  assert.equal(rm.divineDecision(room, H, true), true);                  // resolves
+  assert.ok(room.duel.lastTurn.log.some(l => l.blocked === 'divine'));
+  assert.equal(room.duel.pendingDivine, null);
+});

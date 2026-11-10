@@ -1163,7 +1163,7 @@ test("Jeanne: Divine Intervention negates one damaging hit (not DoT), can't stac
   assert.equal(s.players[0].buffs.filter(b => b.type === 'divineIntervention').length, 1);
   s.players[0].hp = 500;
   const hp = s.players[0].hp;
-  let r = resolveTurn(s, [atk('buster'), atk('arts')]);                  // dummy's Arts beats Buster: negated
+  let r = resolveTurn(s, [{ ...atk('buster'), divine: [true] }, atk('arts')]);   // dummy's Arts beats Buster: she uses it
   assert.ok(r.log.some(l => l.blocked === 'divine'));
   assert.equal(r.state.players[0].hp, hp + Math.round(r.state.players[0].maxHp * 0.03));   // only the passive heal
   assert.ok(!r.state.players[0].buffs.some(b => b.type === 'divineIntervention'));
@@ -1235,4 +1235,30 @@ test("Amakusa: Twin Arm strips buffs before it hits; Grail of Fiery Heavens drai
   g = resolveTurn(g, [{ ...skill('grail_fiery_heavens'), choice: 'left' }, skill('shield')]).state;
   assert.equal(g.players[1].np, 30);
   assert.equal(g.players[0].np, 20 + 5);
+});
+
+
+test('Divine Intervention is the master\'s choice: the turn pauses at each hit, and declining keeps it', () => {
+  let s = createMatch(SERVANTS.jeanne, dummy('B'), { seed: 1 });
+  s.players[0].buffs.push({ type: 'divineIntervention', value: 1, turns: 99, source: 'np' });
+  s.players[0].hp = 500;
+  const acts = [atk('buster'), atk('arts')];
+  const ask = resolveTurn(s, acts, { interactive: [true, false] });
+  assert.ok(ask.needsDecision);
+  assert.equal(ask.needsDecision.player, 0);
+  assert.ok(ask.needsDecision.amount > 0 && /Arts attack/.test(ask.needsDecision.what));
+  // decline: damage taken, Divine Intervention kept
+  const no = resolveTurn(s, [{ ...acts[0], divine: [false] }, acts[1]], { interactive: [true, false] });
+  assert.ok(no.state.players[0].hp < 500);
+  assert.ok(no.state.players[0].buffs.some(b => b.type === 'divineIntervention'));
+  assert.ok(no.log.some(l => /in reserve/.test(l.msg)));
+  // use: negated, spent; the replay is otherwise identical (same RNG)
+  const yes = resolveTurn(s, [{ ...acts[0], divine: [true] }, acts[1]], { interactive: [true, false] });
+  assert.equal(yes.state.players[0].hp, 500 + Math.round(yes.state.players[0].maxHp * 0.03));
+  assert.ok(!yes.state.players[0].buffs.some(b => b.type === 'divineIntervention'));
+  assert.equal(yes.state.rng, no.state.rng);
+  // non-interactive (CPU/simulator): uses it on a lethal hit
+  s.players[0].hp = 5;
+  const cpu = resolveTurn(s, acts);
+  assert.ok(cpu.log.some(l => l.blocked === 'divine'));
 });

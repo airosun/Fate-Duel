@@ -244,6 +244,22 @@ function onSnapshot(snap) {
     return;
   }
   // battle / over
+  // Divine Intervention: the turn is paused while the holder's master decides
+  if (duel.pendingDivine && snap.phase === 'battle') {
+    const pd = duel.pendingDivine, holder = duel.seats[pd.player]?.name ?? 'Their master';
+    ui.active = -1;
+    show('battle');
+    if (mySeat() === pd.player) {
+      const key = `${duel.match.turn}:${pd.index}`;
+      if (ui.divineAsked !== key) {
+        ui.divineAsked = key;
+        askDivine(pd, null, use => { waitingOverlay('Resolving…', 'The turn continues.'); emit('battle:divine', { use }); });
+      }
+    } else waitingOverlay('Divine Intervention', pd.amount != null
+      ? `${holder} is deciding whether to use Divine Intervention against ${pd.what} (${pd.amount} damage).`
+      : `${holder} is deciding whether to use Divine Intervention.`);
+    return;
+  }
   if (duel.lastTurn && duel.lastTurn.turn > ui.net.revealedTurn) {
     ui.net.revealedTurn = duel.lastTurn.turn;
     ui.active = -1;
@@ -777,11 +793,13 @@ function controlsHtml() {
                 ${conv && c !== 'buster' ? '<span class="cmd-conv">hits as Buster</span>' : ''}
               </div>
             </button>`).join('')}
+          <span class="np-wrap" tabindex="0" data-tip-title="${esc(np.name)}${np.modeName ? ` (${esc(np.modeName)})` : ''}" data-tip="${esc(describeNp(np))}"
+            data-tip-meta="${esc(`Noble Phantasm · ${CARD_LABEL[np.card]} · Gauge ${p.np}%${s.np.modes ? ' · Mode set by its skill' : ''}`)}">
           <button class="np-card ${legal.np ? 'ready' : ''} ${sel('np') ? 'selected' : ''}" id="np" ${legal.np ? '' : 'disabled'}>
             <span class="np-label">Noble Phantasm${np.modeName ? ` · ${esc(np.modeName)}` : ''}</span>
             <b>${esc(np.name)}</b>
             <small>${legal.np ? esc(describeNp(np)) : legal.taunted && p.np >= T.npMax ? 'Taunted: attacks only' : `Gauge ${p.np}%`}</small>
-          </button>
+          </button></span>
         </div>
         ${legal.choice ? `
         <div class="hand-choice">
@@ -919,8 +937,9 @@ function logLine(msg, servants) {
 function refCardHtml(i, kind, id) {
   const m = ui.match, s = m.servants[i];
   if (kind === 'np') {
-    const np = npOf(m.players[i], s);
-    return `<b>${esc(np.name)}</b><span class="ref-meta">${esc(s.name)} · Noble Phantasm · ${CARD_LABEL[np.card]}</span><p>${esc(describeNp(np))}</p>`;
+    const np = npOf(s, m.players[i]);
+    const modes = s.np.modes ? `<p class="ref-modes">All modes: ${esc(describeNp(s.np))}</p>` : '';
+    return `<b>${esc(np.name)}${np.modeName ? ` (${esc(np.modeName)})` : ''}</b><span class="ref-meta">${esc(s.name)} · Noble Phantasm · ${CARD_LABEL[np.card]}</span><p>${esc(describeNp(np))}</p>${modes}`;
   }
   const sk = s.skills.find(k => k.id === id);
   return `<b>${esc(sk.name)}</b><span class="ref-meta">${esc(s.name)} · Skill · ${sk.cost} AP</span><p>${esc(describeSkill(sk))}</p>`;
@@ -1101,12 +1120,15 @@ function revealSide(i, action, servants) {
   const s = servants[i];
   const m = action.main;
   const kind = m.type === 'attack' ? m.card : m.type;
+  const label = actionLabel(s, action);
+  // long skill/NP names get a smaller type size so they always fit on the card
+  const len = label.length > 36 ? 'len-xl' : label.length > 26 ? 'len-l' : label.length > 16 ? 'len-m' : '';
   return `
     <div class="reveal-side">
       <span class="master-tag">${masterLabel(i)}</span>
-      <div class="reveal-card ${kind}">
+      <div class="reveal-card ${kind} ${len}">
         ${art(s, 'card-art')}
-        <div class="cmd-frame"><span class="cmd-name">${esc(actionLabel(s, action))}</span>
+        <div class="cmd-frame"><span class="cmd-name">${esc(label)}</span>
           <span class="cmd-perk">${m.type === 'skill' ? 'Skill' : m.type === 'np' ? 'Noble Phantasm' : 'Attack'}</span></div>
       </div>
       ${action.seal ? `<div class="reveal-seal"><i class="seal-mark"></i> ${SEAL_INFO[action.seal].name}</div>` : '<div class="reveal-seal none">No seal</div>'}
@@ -1145,11 +1167,43 @@ function showReveal({ turn, actions, log }, state, onContinue, { autoNote = fals
     </div>`, o => o.querySelector('#cont').onclick = () => { if (!ui.revealing) return; ui.revealing = false; onContinue(); });
 }
 
+// Divine Intervention: ask the holder's master whether to spend it on the hit that's about to land.
+function divinePromptHtml(info, who) {
+  const name = ui.match.servants[info.player].name;
+  return `
+    <div class="divine-prompt">
+      <h2>Divine Intervention</h2>
+      ${who ? `<p class="who">${esc(who)}</p>` : ''}
+      <p>${esc(info.what)} is about to hit ${esc(name)} for <b>${info.amount}</b> damage.
+        ${info.lethal ? '<b class="lethal">This hit would down her.</b>' : `<span class="muted">(${info.hp} HP now)</span>`}</p>
+      <p class="muted">Divine Intervention negates this hit and is then spent. If you take the hit, you keep it for later.</p>
+      <div class="divine-btns">
+        <button class="btn gold" id="diUse">Use Divine Intervention</button>
+        <button class="btn ghost" id="diSkip">Take the hit</button>
+      </div>
+    </div>`;
+}
+function askDivine(info, who, answer) {
+  openOverlay(divinePromptHtml(info, who), o => {
+    o.querySelector('#diUse').onclick = () => answer(true);
+    o.querySelector('#diSkip').onclick = () => answer(false);
+  });
+}
+
 function resolveLocal() {
   const actions = ui.locked;
   const turn = ui.match.turn;
   ui.foresight = null; ui.cpuPlanned = null;
-  const { state, log } = resolveTurn(ui.match, actions);
+  // the CPU decides Divine Intervention for itself; people are asked
+  const res = resolveTurn(ui.match, actions, { interactive: vsCpu() ? [true, false] : [true, true] });
+  if (res.needsDecision) {
+    const k = res.needsDecision.player;
+    return askDivine(res.needsDecision, vsCpu() ? null : masterLabel(k), use => {
+      actions[k] = { ...actions[k], divine: [...(actions[k].divine ?? []), use] };
+      resolveLocal();
+    });
+  }
+  const { state, log } = res;
   ui.match = state;
   ui.locked = [null, null];
   ui.active = -1;

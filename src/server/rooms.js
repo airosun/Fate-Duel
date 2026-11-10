@@ -173,7 +173,7 @@ export class RoomManager {
     const d = room.duel;
     d.match = createMatch(SERVANTS[d.picks[0]], SERVANTS[d.picks[1]]);
     d.locked = [null, null];
-    d.foresight = null; d.foresightShown = null;
+    d.foresight = null; d.foresightShown = null; d.pendingDivine = null; d.divine = [[], []];
     d.drafts = [null, null];
     d.lastTurn = null;
     d.continued = [0, 0];
@@ -217,19 +217,37 @@ export class RoomManager {
     if (err) throw new RoomError(err);
     d.locked[seat] = action;
     d.drafts[seat] = action;
-    if (d.locked.every(Boolean)) {
-      const actions = d.locked;
-      const turn = d.match.turn;
-      const { state, log } = resolveTurn(d.match, actions);
-      d.match = state;
-      d.lastTurn = { turn, actions, log };
-      d.locked = [null, null];
-      d.drafts = [null, null];
-      d.foresight = null; d.foresightShown = null;
-      if (state.over) room.phase = 'over';
-      return true;
-    }
-    return false;
+    d.divine = [[], []];
+    return d.locked.every(Boolean) ? this.#resolve(room) : false;
+  }
+
+  // Resolve the locked turn. If a Divine Intervention holder is about to take damage, pause and
+  // wait for their master's decision (see divineDecision); returns true once the turn resolved.
+  #resolve(room) {
+    const d = room.duel;
+    const actions = d.locked.map((a, i) => ({ ...a, divine: d.divine?.[i] ?? [] }));
+    const turn = d.match.turn;
+    const res = resolveTurn(d.match, actions, { interactive: [true, true] });
+    if (res.needsDecision) { d.pendingDivine = res.needsDecision; return false; }
+    const { state, log } = res;
+    d.match = state;
+    d.lastTurn = { turn, actions, log };
+    d.locked = [null, null];
+    d.drafts = [null, null];
+    d.foresight = null; d.foresightShown = null;
+    d.pendingDivine = null; d.divine = [[], []];
+    if (state.over) room.phase = 'over';
+    return true;
+  }
+
+  // The holder's master answers "use Divine Intervention on this hit?"
+  divineDecision(room, id, use) {
+    const d = room.duel;
+    const seat = this.#seat(room, id);
+    if (!d?.pendingDivine || d.pendingDivine.player !== seat) throw new RoomError('Nothing to decide right now.');
+    d.divine[seat] = [...(d.divine[seat] ?? []), !!use];
+    d.pendingDivine = null;
+    return this.#resolve(room);
   }
 
   // A duelist has moved past the turn-result screen. When both have, spectators move on too.
@@ -243,6 +261,7 @@ export class RoomManager {
   unlock(room, id) {
     if (room.phase !== 'battle') return;
     const seat = this.#seat(room, id);
+    if (room.duel.pendingDivine) throw new RoomError('The turn is already resolving.');
     // Once Teacher's Wisdom is reading this seat, its locked action is final.
     if (room.duel.foresight === 1 - seat) throw new RoomError("Your action is being read by Teacher's Wisdom and can't be changed.");
     room.duel.locked[seat] = null;
@@ -317,6 +336,10 @@ export class RoomManager {
         },
         lastTurn: d.lastTurn,
         continued: d.continued ?? [0, 0],
+        // Divine Intervention pending: the holder and spectators see the incoming hit; the opponent only that they're deciding
+        pendingDivine: d.pendingDivine
+          ? (seat === d.pendingDivine.player || omniscient ? d.pendingDivine : { player: d.pendingDivine.player })
+          : null,
         rematch: d.rematch,
       };
     }

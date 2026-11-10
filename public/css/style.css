@@ -258,6 +258,19 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
 .reveal-side:last-child .reveal-card { animation-delay: .15s; }
 @keyframes flip { from { transform: rotateY(90deg); opacity: 0; } }
 .reveal-card .card-art { position: absolute; inset: 0; font-size: 12px; }
+/* name sizes scale with the card's own width, so long skill/NP names fit at every screen size */
+.reveal-card { container-type: inline-size; }
+/* the skill-button style shares the .skill class; keep it off skill reveal cards */
+.reveal-card.skill { padding: 0; border: 3px solid var(--c); border-radius: 8px; display: block; text-align: center; background: var(--bg2); }
+.reveal-card .cmd-frame { padding: 7cqi 4cqi 5cqi; gap: 1.5cqi; max-height: 82%; }
+.reveal-card .cmd-name {
+  display: block; font-size: clamp(.6rem, 11.5cqi, 1.15rem); line-height: 1.12;
+  overflow-wrap: anywhere; hyphens: auto; text-wrap: balance;
+}
+.reveal-card.len-m .cmd-name { font-size: clamp(.6rem, 10.5cqi, 1.05rem); }
+.reveal-card.len-l .cmd-name { font-size: clamp(.55rem, 9.4cqi, 1rem); }
+.reveal-card.len-xl .cmd-name { font-size: clamp(.5rem, 8.6cqi, .95rem); }
+.reveal-card .cmd-perk { font-size: clamp(.45rem, 6.5cqi, .72rem); }
 .reveal-seal { font-size: .8rem; color: #ffb3bd; }
 .reveal-seal.none { color: var(--muted); }
 .clash-banner {
@@ -293,7 +306,9 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
   .cards { grid-template-columns: repeat(3, 1fr); }
   .np-card { grid-column: 1 / -1; }
   .skills { grid-template-columns: 1fr; }
-  .reveal-card { width: 120px; }
+  .reveal-card { width: min(140px, 100%); }
+  .reveal-row { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: .6rem; }
+  .reveal-side { min-width: 0; width: 100%; }
 }
 
 /* ---------- online ---------- */
@@ -612,3 +627,14 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
 #refcard .ref-meta { display: block; color: var(--muted); font-size: .75rem; margin: .15rem 0 .4rem; }
 #refcard p { margin: 0; }
 .auto-note { margin: .5rem 0 0; color: var(--muted); font-size: .8rem; }
+
+/* NP tooltip: a disabled button swallows hover, so the tooltip lives on a wrapper */
+.np-wrap { display: contents; }
+#refcard .ref-modes { margin-top: .4rem; color: var(--muted); font-size: .8rem; }
+
+/* Divine Intervention prompt */
+.divine-prompt { text-align: center; max-width: 30rem; }
+.divine-prompt h2 { color: #fff3c4; text-shadow: 0 0 18px rgba(255, 236, 170, .55); margin: 0 0 .3rem; }
+.divine-prompt .who { color: var(--gold2); font-family: var(--title); margin: 0 0 .6rem; }
+.divine-prompt .lethal { color: #ff8a7a; display: block; margin-top: .3rem; }
+.divine-btns { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; margin-top: 1rem; }
