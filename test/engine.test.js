@@ -124,7 +124,7 @@ test('Rule Breaker strips buffs before damage', () => {
   let s = createMatch(SERVANTS.medea, dummy('B'));
   s.players[0].np = 100;
   const r = resolveTurn(s, [np(), skill('shield')]).state;
-  const expected = Math.round(s.players[0].atk * 2.4 * 1.12); // Territory Creation A = Arts +12%
+  const expected = Math.round(s.players[0].atk * SERVANTS.medea.np.mult * 1.12); // Territory Creation A = Arts +12%
   assert.equal(r.players[1].hp, 1000 - expected);
 });
 
@@ -259,7 +259,7 @@ test('Kojirou: Tsubame Gaeshi buffs Quick before dealing damage', () => {
   const k = s.players[0];
   s.players[0].np = 100;
   s = resolveTurn(s, [np(), skill('charge')]).state;
-  assert.equal(1000 - s.players[1].hp, Math.round(k.atk * 3.6 * 1.2));
+  assert.equal(1000 - s.players[1].hp, Math.round(k.atk * SERVANTS.kojirou.np.mult * 1.2));
   assert.ok(s.players[0].buffs.some(b => b.type === 'cardUp' && b.card === 'quick' && b.turns === 2));
 });
 
@@ -291,7 +291,7 @@ test('NP clash: Rule Breaker does not strip Heracles\' buffs before Nine Lives l
   const medeaHp = m.hp;
   const r = resolveTurn(s, [np(), np()]).state;
   // Nine Lives keeps Bravery (+20%) and Mad Enhancement (Buster +10%): 3.6 × (1 + .2 + .1) + 10 flat
-  assert.equal(medeaHp - r.players[0].hp, Math.round(h.atk * 3.6 * 1.3 + 10));
+  assert.equal(medeaHp - r.players[0].hp, Math.round(h.atk * SERVANTS.heracles.np.mult * 1.3 + 10));
   // Heracles' Bravery is removed afterwards, and Rule Breaker's ATK down lands afterwards
   assert.equal(r.players[1].buffs.some(b => b.source === 'bravery'), false);
   assert.ok(r.players[1].buffs.some(b => b.type === 'atkDown'));
@@ -303,7 +303,7 @@ test('NP clash: ATK down from one NP does not weaken the other NP', () => {
   const k = s.players[1];
   const before = s.players[0].hp;
   const r = resolveTurn(s, [np(), np()]).state;
-  assert.equal(before - r.players[0].hp, Math.round(k.atk * 3.6 * 1.2)); // Tsubame's own Quick +20% only
+  assert.equal(before - r.players[0].hp, Math.round(k.atk * SERVANTS.kojirou.np.mult * 1.2)); // Tsubame's own Quick +20% only
 });
 
 test('Arts effectiveness adds a flat NP gain bonus once, however many Arts buffs', () => {
@@ -533,7 +533,7 @@ test('Iskandar: Ionioi Hetairoi also ignores damage cut while Towards the Beyond
   s.players[0].np = 100;
   const hp = s.players[1].hp;
   s = resolveTurn(s, [np(), atk('arts')]).state;
-  assert.equal(hp - s.players[1].hp, Math.round(k.atk * 3.5 * (1 + 0.25 + 0.10) + 6));   // ATK +25%, Bucephalus Buster +10%
+  assert.equal(hp - s.players[1].hp, Math.round(k.atk * SERVANTS.iskandar.np.mult * (1 + 0.25 + 0.10) + 6));   // ATK +25%, Bucephalus Buster +10%
 });
 
 test('Hundred Faces: attacks on him miss about 10% of the time; Sure Hit ignores it', () => {
