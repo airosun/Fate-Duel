@@ -455,7 +455,7 @@ export const SERVANTS = {
         desc: 'Max AP +2 for 3 turns, AP +2 now, and +1 AP at the end of each turn for 3 turns',
         effects: [{ type: 'maxApUp', value: 2, turns: 3 }, { type: 'apGain', value: 2 }, { type: 'apRegen', value: 1, turns: 3 }] },
       { id: 'secret_of_pedigree', name: 'Secret of Pedigree EX', cost: 5,
-        desc: 'Remove her debuffs; damage cut 20% for 2 turns; NP +20%',
+        desc: 'Remove his debuffs; damage cut 20% for 2 turns; NP +20%',
         effects: [{ type: 'cleanse' }, { type: 'damageCut', value: 20, turns: 2 }, { type: 'npCharge', value: 20 }] },
     ],
     np: { name: 'Clarent Blood Arthur', card: 'buster', mult: 3.6,
