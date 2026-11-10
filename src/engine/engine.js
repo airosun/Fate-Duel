@@ -164,7 +164,7 @@ const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', '
 // Lasting positive effects a servant puts on itself (what Breaker Gorgon can make fail).
 const BUFF_TYPES = new Set(['ignoreDamageCut', 'buffSuccessUp', 'apRecoveryUp', 'atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
   'cardNpGainUp', 'debuffResist', 'guts', 'apRegen', 'busterConvert', 'flatDamage', 'sureHit',
-  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'extraHitChance']);
+  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance']);
 const hasStatus = (p, status) => p.buffs.some(b => b.status === status);
 
 function resistScale(target, e, user) {
@@ -173,7 +173,9 @@ function resistScale(target, e, user) {
   // cancels resistance point-for-point (it can't push debuffs above 100%).
   if (e.target !== 'enemy') return 1;
   const resist = sumBuff(target, 'debuffResist') - (user ? sumBuff(user, 'debuffPotency') : 0);
-  return Math.min(1, Math.max(0, 1 - resist / 100));
+  // debuffUp (Mental Pollution): the caster's debuffs are X% stronger, applied after resistance
+  const up = user ? sumBuff(user, 'debuffUp') : 0;
+  return Math.min(1, Math.max(0, 1 - resist / 100)) * (1 + up / 100);
 }
 
 function applyEffect(target, e, source, user) {

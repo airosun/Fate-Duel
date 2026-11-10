@@ -650,3 +650,14 @@ test('Diarmuid: Knight\'s Oath boosts Quick and Arts; his NP curses the enemy', 
   r = resolveTurn(r, [skill('love_spot'), skill('charge')]).state;
   assert.equal(r.players[1].hp, hpAfterNp - 30);   // first tick already happened at the end of the NP turn
 });
+
+test('Gilles: Mental Pollution makes his debuffs 30% stronger', () => {
+  let s = createMatch(SERVANTS.gilles, dummy('B'), { seed: 4 });
+  s.players[0].ap = 10; s.players[1].ap = 10;
+  s = resolveTurn(s, [skill('mental_pollution'), skill('charge')]).state;
+  s.players[0].ap = 10; s.players[1].ap = 10; s.players[1].np = 50;
+  s = resolveTurn(s, [skill('blasphemy'), skill('shield')]).state;
+  const v = s.players[1].buffs.find(b => b.type === 'cardVuln' && b.card === 'arts');
+  assert.equal(v.value, 19.5);                 // 15 × 1.3
+  assert.equal(s.players[1].np, 50 - Math.round(15 * 1.3)); // drains 20 instead of 15
+});

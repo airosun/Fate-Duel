@@ -35,6 +35,7 @@ export function describeEffect(e) {
     case 'cleanse': return `Cleanse own debuffs`;
     case 'sureHit': return `${c ? c + ' attacks' : 'Attacks'} pierce Evade${turnsText(e)}`;
     case 'debuffPotency': return `Debuffs ignore ${v}% resistance`;
+    case 'debuffUp': return `Debuff effectiveness +${v}%${turnsText(e)}`;
     case 'nextHitUp': return `Next landed attack ${v}% more effective`;
     case 'apDrain': return `${who}AP −${v}`;
     case 'apRecoveryDown': return `${who}${e.status === 'petrified' ? 'Petrified: ' : ''}−${v} AP from attacks${turnsText(e)}`;
@@ -87,7 +88,7 @@ const BUFF_LABEL = {
   atkUp: 'ATK↑', cardUp: '↑', npUp: 'NP Dmg↑', damageCut: 'DEF↑', evade: 'Evade',
   invincible: 'Invincible', npGainUp: 'NP Gain↑', cardNpGainUp: 'NP Gain↑', debuffResist: 'Debuff Res',
   guts: 'Guts', atkDown: 'ATK↓', apRegen: 'AP Regen', busterConvert: 'Buster Strike',
-  defDown: 'DEF↓', flatDamage: 'Flat Dmg', sureHit: 'Sure Hit', debuffPotency: 'Debuff Potency',
+  defDown: 'DEF↓', flatDamage: 'Flat Dmg', sureHit: 'Sure Hit', debuffPotency: 'Debuff Potency', debuffUp: 'Debuff↑',
   nextHitUp: 'Next Hit↑', affinityAll: 'All Cards Favored', apRecoveryDown: 'AP Recovery↓',
   bonusVsStatus: 'vs Petrified↑', buffFailChance: 'Breaker Gorgon', copyEnemyUnique: 'Trace On',
   instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF', terror: 'Terror', curse: 'Curse', extraHitChance: 'Sea Demons', missChance: 'Decoys', buffSuccessUp: 'Buff Success↑', cardVuln: '↓ Resist',
@@ -126,6 +127,7 @@ export function explainBuff(b) {
     case 'nextHitUp': return `The next attack or Noble Phantasm that lands is ${v}% more effective.`;
     case 'affinityAll': return 'Gets the favored-card bonus on Quick, Arts and Buster.';
     case 'debuffPotency': return `This servant's debuffs ignore up to ${v}% of the enemy's debuff resistance.`;
+    case 'debuffUp': return `Debuffs this servant inflicts are ${v}% stronger: bigger stat drops, NP and AP drains, Curse damage and Terror chance.`;
     case 'buffFailChance': return `Each buff the opponent gives themselves has a ${v}% chance to fail.`;
     case 'copyEnemyUnique': return "Copies the opponent's unique passive for the match. Revives can't be copied.";
     case 'apRecoveryDown': return `${b.status === 'petrified' ? 'Petrified: g' : 'G'}ains ${Math.round(b.value)} less AP from each attack.`;

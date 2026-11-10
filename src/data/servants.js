@@ -391,8 +391,8 @@ export const SERVANTS = {
     ],
     skills: [
       { id: 'mental_pollution', name: 'Mental Pollution A', cost: 4,
-        desc: 'Debuff success +30% and debuff resist +30% for 3 turns',
-        effects: [{ type: 'debuffPotency', value: 30, turns: 3 }, { type: 'debuffResist', value: 30, turns: 3 }] },
+        desc: 'Debuff effectiveness +30% and debuff resist +30% for 3 turns',
+        effects: [{ type: 'debuffUp', value: 30, turns: 3 }, { type: 'debuffResist', value: 30, turns: 3 }] },
       { id: 'blasphemy', name: 'Blasphemy Aesthetic C+++', cost: 5,
         desc: 'Drain 15% enemy NP; enemy takes +15% Arts and +15% Buster damage for 3 turns',
         effects: [{ type: 'npDrain', value: 15, target: 'enemy' },
