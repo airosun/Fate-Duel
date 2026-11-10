@@ -29,9 +29,13 @@ const TABLES = {
 export function classPassive(key, rank) {
   const t = TABLES[key];
   if (!t) throw new Error(`Unknown class passive: ${key}`);
-  const idx = RANKS.indexOf(rank);
-  if (idx < 0) throw new Error(`Unknown rank: ${rank}`);
-  const v = t.values[idx];
+  let idx = RANKS.indexOf(rank), v;
+  if (idx >= 0) v = t.values[idx];
+  else if (rank.endsWith('+') && RANKS.includes(rank.slice(0, -1)) && RANKS.indexOf(rank.slice(0, -1)) > 0) {
+    // Off-ladder "+" ranks (e.g. C+): halfway between the base rank and the one above it
+    idx = RANKS.indexOf(rank.slice(0, -1));
+    v = Math.round((t.values[idx] + t.values[idx - 1]) / 2);
+  } else throw new Error(`Unknown rank: ${rank}`);
   return { name: `${t.name} ${rank}`, kind: 'class', desc: t.desc(v), effects: t.make(v) };
 }
 

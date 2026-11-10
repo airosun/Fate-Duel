@@ -660,6 +660,63 @@ export const SERVANTS = {
           desc: 'Heavy Quick damage that ignores damage cut, then Evade for 2 turns',
           postEffects: [{ type: 'evade', turns: 3 }] },
   },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
+  jack: {
+    id: 'jack', name: 'Jack the Ripper', class: 'Assassin',
+    fgoHp: 12696, fgoAtk: 11557, fgoNpAtk: 1.07, fgoNpDef: 4,
+    favoredCard: 'quick', maxAp: 10,
+    passives: [
+      classPassive('presenceConcealment', 'A+'),
+      unique('The Misty Night of London', 'When her Quick attack meets a Buster attack, a 10% chance her Quick wins the clash instead',
+        [{ type: 'rpsOverride', card: 'quick', vs: 'buster', value: 10 }]),
+    ],
+    skills: [
+      { id: 'murderer_misty_night', name: 'Murderer of the Misty Night EX', cost: 6,
+        desc: 'Evade for 2 turns; NP +20% now; Quick +25% and NP damage +20% for 3 turns',
+        effects: [{ type: 'evade', turns: 2 }, { type: 'npCharge', value: 20 },
+                  { type: 'cardUp', card: 'quick', value: 25, turns: 3 }, { type: 'npUp', value: 20, turns: 3 }] },
+      { id: 'information_erasure', name: 'Information Erasure B', cost: 5,
+        desc: "Remove the enemy's buffs (passives stay); drain 2 AP",
+        effects: [{ type: 'removeBuffs', target: 'enemy' }, { type: 'apDrain', value: 2, target: 'enemy' }] },
+      { id: 'surgery', name: 'Surgery E', cost: 4,
+        desc: 'Heal 20% HP; AP +2',
+        effects: [{ type: 'heal', value: 20 }, { type: 'apGain', value: 2 }] },
+    ],
+    np: { name: 'Maria the Ripper', card: 'quick', mult: 3.3, ignoreCut: true,
+          desc: 'Heavy Quick damage that ignores damage cut' },
+  },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
+  semiramis: {
+    id: 'semiramis', name: 'Semiramis', class: 'Assassin',
+    fgoHp: 13266, fgoAtk: 11309, fgoNpAtk: 0.39, fgoNpDef: 4,
+    favoredCard: 'arts', maxAp: 10,
+    passives: [
+      classPassive('presenceConcealment', 'C+'),
+      classPassive('territoryCreation', 'EX'),
+      classPassive('divinity', 'C'),
+      unique('Ambiguous Chalice', 'A landed regular attack has a 30% chance to Poison the enemy (20 damage per turn for 3 turns; stacks)',
+        [{ type: 'debuffOnHit', value: 30, inflict: { type: 'poison', value: 20, turns: 3, status: 'poisoned' } }]),
+    ],
+    skills: [
+      { id: 'familiar_pigeon', name: 'Familiar (Pigeon) D', cost: 4,
+        desc: 'NP +20% now; enemy debuff resist -20% for 3 turns',
+        effects: [{ type: 'npCharge', value: 20 }, { type: 'debuffResistDown', value: 20, turns: 3, target: 'enemy' }] },
+      { id: 'double_summon', name: 'Double Summon B', cost: 4,
+        desc: "NP gain +30% for 3 turns; for 3 turns the enemy deals base damage: all its damage boosts (passives too) are ignored",
+        effects: [{ type: 'npGainUp', value: 30, turns: 3 }, { type: 'nullifyBoosts', value: 1, turns: 3, target: 'enemy' }] },
+      { id: 'sikera_usum', name: 'Sikera Ušum A', cost: 5,
+        desc: 'Poison the enemy (30 per turn for 3 turns) and it takes +20% Buster damage for 3 turns; +30% damage vs Poisoned for 3 turns',
+        effects: [{ type: 'poison', value: 30, turns: 3, status: 'poisoned', target: 'enemy' },
+                  { type: 'cardVuln', card: 'buster', value: 20, turns: 3, target: 'enemy' },
+                  { type: 'dmgVsStatus', status: 'poisoned', value: 30, turns: 3 }] },
+    ],
+    np: { name: 'Hanging Gardens of Babylon', card: 'buster', mult: 2.65,
+          desc: 'NP damage +30% for this NP, heavy Buster damage, then damage cut 20% for 2 turns',
+          preEffects: [{ type: 'npUp', value: 30, turns: 1 }],
+          postEffects: [{ type: 'damageCut', value: 20, turns: 3 }] },
+  },
 };
 
 export const ROSTER = Object.values(SERVANTS);

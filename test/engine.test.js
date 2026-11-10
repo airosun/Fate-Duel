@@ -714,7 +714,7 @@ test('match stats: damage dealt matches HP lost; hits, NPs and chance effects ar
       if (s.over) continue;
       for (const i of [0, 1]) {
         const me = s.players[i].stats, foe = s.players[1 - i];
-        const dealtTotal = me.dmg.attack + me.dmg.np + me.dmg.extra + me.dmg.curse;
+        const dealtTotal = me.dmg.attack + me.dmg.np + me.dmg.extra + me.dmg.curse + me.dmg.poison;
         assert.equal(dealtTotal, foe.maxHp - foe.hp + foe.stats.healed, `${a} vs ${b} seed ${seed}`);
         const landed = me.landed.quick + me.landed.arts + me.landed.buster;
         assert.ok(landed <= me.attempted.quick + me.attempted.arts + me.attempted.buster);
@@ -938,4 +938,75 @@ test('Astolfo: Black Luna Terror on ~10% of hits; Trap of Argalia ~50% skip next
   };
   assert.equal(npDmg(true).dmg, npDmg(false).dmg);
   assert.ok(npDmg(false).evade);
+});
+
+test('Jack: Misty Night flips ~10% of Quick-vs-Buster clashes; Information Erasure strips buffs and drains AP; Maria ignores cut', () => {
+  let flips = 0, n = 600;
+  for (let seed = 1; seed <= n; seed++) {
+    const r = resolveTurn(createMatch(SERVANTS.jack, dummy('B'), { seed }), [atk('quick'), atk('buster')]);
+    const jackHit = r.log.some(l => l.type === 'hit' && l.from === 0 && l.reason === 'counter');
+    const foeHit = r.log.some(l => l.type === 'hit' && l.from === 1);
+    if (jackHit) { flips++; assert.ok(!foeHit, 'the Buster attack is countered'); }
+    else assert.ok(foeHit);
+  }
+  assert.ok(flips / n > 0.06 && flips / n < 0.14, `flip rate ${flips / n}`);
+  // Never triggers in other matchups
+  const r = resolveTurn(createMatch(SERVANTS.jack, dummy('B'), { seed: 1 }), [atk('quick'), atk('arts')]);
+  assert.ok(!r.state.players[0].stats.procs['The Misty Night of London (clashes overturned)']);
+
+  let s = createMatch(SERVANTS.jack, SERVANTS.artoria, { seed: 2 });
+  s.players[0].ap = 10; s.players[1].ap = 8;
+  s.players[1].buffs.push({ type: 'atkUp', value: 20, turns: 3, source: 'x' });
+  s = resolveTurn(s, [skill('information_erasure'), atk('quick')]).state;
+  assert.ok(!s.players[1].buffs.some(b => b.source === 'x'));
+  assert.ok(s.players[1].buffs.some(b => b.turns === null), 'passives stay');
+  const npDmg = cut => {
+    const x = createMatch(SERVANTS.jack, dummy('B'), { seed: 5 });
+    x.players[0].np = 100;
+    if (cut) x.players[1].buffs.push({ type: 'damageCut', value: 50, turns: 2 });
+    return 1000 - resolveTurn(x, [np(), atk('quick')]).state.players[1].hp;
+  };
+  assert.equal(npDmg(true), npDmg(false));
+});
+
+test('Semiramis: Poison stacks and ticks; Ambiguous Chalice ~30%; Double Summon makes the enemy deal base damage', () => {
+  let s = createMatch(SERVANTS.semiramis, dummy('B'), { seed: 1 });
+  s.players[0].ap = 20; s.players[0].maxAp = 20;
+  s = resolveTurn(s, [skill('sikera_usum'), skill('charge')]).state;
+  assert.equal(s.players[1].buffs.filter(b => b.type === 'poison').length, 1);
+  s.players[1].buffs.push({ type: 'poison', value: 20, turns: 3, debuff: true, status: 'poisoned' });
+  const hp = s.players[1].hp;
+  s.players[1].ap = 10;
+  const r = resolveTurn(s, [skill('familiar_pigeon'), skill('shield')]);
+  assert.equal(r.state.players[1].hp, hp - 50);                       // 30 + 20 stacked
+  assert.ok(r.log.some(l => /2 stacks/.test(l.msg)));
+  assert.equal(r.state.players[0].stats.dmg.poison, 30 + 50);
+
+  let pois = 0, n = 500;
+  for (let seed = 1; seed <= n; seed++) {
+    const x = resolveTurn(createMatch(SERVANTS.semiramis, dummy('B'), { seed }), [atk('arts'), atk('buster')]).state;
+    if (x.players[1].buffs.some(b => b.type === 'poison')) pois++;
+  }
+  assert.ok(pois / n > 0.24 && pois / n < 0.36, `poison rate ${pois / n}`);
+
+  // Double Summon: a heavily buffed Artoria hits for exactly what an unbuffed one would
+  const hitFor = (summoned, buffed) => {
+    const x = createMatch(SERVANTS.semiramis, SERVANTS.artoria, { seed: 3 });
+    x.players[0].ap = 10;
+    if (buffed) x.players[1].buffs.push({ type: 'atkUp', value: 40, turns: 3 }, { type: 'flatDamage', value: 30, turns: 3 });
+    const y = summoned ? resolveTurn(x, [skill('double_summon'), atk('arts')]).state : x;
+    if (!summoned) y.players[0].ap = 10;
+    const z = resolveTurn(y, [skill('familiar_pigeon'), atk('buster')]);
+    return z.log.find(l => l.type === 'hit' && l.from === 1).amount;
+  };
+  assert.ok(hitFor(false, true) > hitFor(false, false));
+  // Artoria's own passives are ignored too, so summoned < plain unbuffed
+  assert.ok(hitFor(true, true) <= hitFor(false, false));
+  assert.equal(hitFor(true, true), hitFor(true, false));
+});
+
+test('Off-ladder ranks: Presence Concealment C+ sits between B and C', () => {
+  const d = SERVANTS.semiramis.passives[0];
+  assert.match(d.name, /C\+/);
+  assert.equal(d.effects[0].value, 7);
 });

@@ -27,6 +27,8 @@ The game tries `.png`, then `.jpg`, then `.webp`, and falls back to a class-colo
 | Karna | `karna.png` |
 | Achilles | `achilles.png` |
 | Astolfo | `astolfo.png` |
+| Jack the Ripper | `jack.png` |
+| Semiramis | `semiramis.png` |
 
 Tips
 - Portrait-oriented full art works best (e.g. Final Ascension stage art). Images are cropped with

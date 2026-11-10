@@ -31,7 +31,7 @@ export function deriveStats(servant, { uniquesOff = false } = {}) {
 // ---------- match stats (shown on the post-battle stats screen) ----------
 export function newStats() {
   return {
-    dmg: { attack: 0, np: 0, extra: 0, curse: 0 }, biggest: { amount: 0, what: '' },
+    dmg: { attack: 0, np: 0, extra: 0, curse: 0, poison: 0 }, biggest: { amount: 0, what: '' },
     attempted: { quick: 0, arts: 0, buster: 0 }, landed: { quick: 0, arts: 0, buster: 0 },
     clash: { won: 0, lost: 0, tied: 0 }, nps: { fired: 0, landed: 0, blocked: 0 },
     negated: 0, healed: 0, skills: 0, seals: 0, revives: 0, maxCombo: 0, combo: 0,
@@ -192,12 +192,12 @@ export function validateAction(state, idx, action) {
 
 // ---------- effects ----------
 
-const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', 'curse', 'debuffResistDown', 'npSeal', 'taunt', 'confusion', 'stun'];
+const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', 'curse', 'debuffResistDown', 'npSeal', 'taunt', 'confusion', 'stun', 'poison', 'nullifyBoosts'];
 
 // Lasting positive effects a servant puts on itself (what Breaker Gorgon can make fail).
 const BUFF_TYPES = new Set(['ignoreDamageCut', 'buffSuccessUp', 'apRecoveryUp', 'atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
   'cardNpGainUp', 'debuffResist', 'guts', 'apRegen', 'busterConvert', 'flatDamage', 'sureHit', 'pierceEvade',
-  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight', 'npOnlyKo', 'debuffOnHit', 'apChance']);
+  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight', 'npOnlyKo', 'debuffOnHit', 'apChance', 'rpsOverride']);
 const hasStatus = (p, status) => p.buffs.some(b => b.status === status);
 
 function resistScale(target, e, user) {
@@ -290,6 +290,7 @@ function applyEffectRaw(target, e, source, user) {
         markTurns: e.markTurns,
         onRevive: e.onRevive,
         inflict: e.inflict,
+        vs: e.vs,
         amount: e.amount,
         debuff: DEBUFFS.includes(e.type),
         source,
@@ -370,8 +371,14 @@ function applyEffects(user, enemy, effects, source) {
 // +quickEffectAp AP when used, once, no matter how many buffs are active.
 const effectiveness = (p, card) => (card ? sumBuff(p, 'cardUp', card) : 0);
 
+// Double Summon (Semiramis): a servant under nullifyBoosts deals base damage. Its ATK up, card
+// effectiveness, NP damage up, flat damage, next-hit and vs-status boosts are all ignored
+// (passives included). Debuffs like ATK down still apply.
+const boosted = p => !hasBuff(p, 'nullifyBoosts');
+
 function atkMultiplier(p, card, extraPct = 0) {
-  const pct = sumBuff(p, 'atkUp') + effectiveness(p, card) + extraPct - sumBuff(p, 'atkDown');
+  const up = boosted(p) ? sumBuff(p, 'atkUp') + effectiveness(p, card) + extraPct : 0;
+  const pct = up - sumBuff(p, 'atkDown');
   return Math.max(0.1, 1 + pct / 100);
 }
 
@@ -391,11 +398,12 @@ const vsStatusPct = (att, def) => att.buffs.filter(b => b.type === 'dmgVsStatus'
   .reduce((a, b) => a + b.value, 0);
 
 function attackPacket(att, def, card, { counter, empowered, nextHit = 0, vsBonus = 0 }) {
-  let raw = att.atk * T.cards[card].mult * atkMultiplier(att, card, nextHit) * (1 + vsBonus / 100) * (1 + vsStatusPct(att, def) / 100);
+  const b = boosted(att);
+  let raw = att.atk * T.cards[card].mult * atkMultiplier(att, card, nextHit) * (b ? (1 + vsBonus / 100) * (1 + vsStatusPct(att, def) / 100) : 1);
   if (hasAffinity(att, card)) raw *= 1 + T.affinityBonus[card];
   if (counter) raw *= 1 + T.counterBonus;
   if (empowered) raw *= 1 + T.seals.empowerBonus;
-  raw += sumBuff(att, 'flatDamage');
+  if (b) raw += sumBuff(att, 'flatDamage');
   // True Sure Hit (skills like Knowledge of the Souwa, Wisdom of Divine) vs. passives that only share
   // its evade-piercing property (Heaven Among the Mountains: pierceEvade). Future Sure Hit-only
   // functions should check pk.sureHit, never pk.pierce.
@@ -412,9 +420,10 @@ function npPacket(att, def, np, { empowered = false, nextHit = 0, vsBonus = 0 } 
   let mult = np.mult * (empowered ? 1 + T.seals.empowerBonus : 1);
   if (np.missingHpBonus) mult *= 1 + np.missingHpBonus * (1 - def.hp / def.maxHp);
   if (np.vsStatus && hasStatus(def, np.vsStatus.status)) mult *= 1 + np.vsStatus.value / 100; // Balmung vs Dragon
-  const raw = att.atk * mult * atkMultiplier(att, np.card, nextHit) * (1 + vsBonus / 100) * (1 + vsStatusPct(att, def) / 100)
-    * (1 + sumBuff(att, 'npUp') / 100)
-    + sumBuff(att, 'flatDamage');
+  const b = boosted(att);
+  const raw = att.atk * mult * atkMultiplier(att, np.card, nextHit)
+    * (b ? (1 + vsBonus / 100) * (1 + vsStatusPct(att, def) / 100) * (1 + sumBuff(att, 'npUp') / 100) : 1)
+    + (b ? sumBuff(att, 'flatDamage') : 0);
   return defend(def, raw, { isNp: true, ignoreDefense: !!np.ignoreDefense, ignoreCut: !!np.ignoreCut || hasBuff(att, 'ignoreDamageCut'), card: np.card });
 }
 
@@ -556,6 +565,15 @@ export function resolveTurn(prev, actions) {
 
   // 4. Regular attacks — RPS clash
   const clash = { cards: [null, null], outcome: null };
+  // The Misty Night of London: a Quick attack that would lose to Buster may win instead (rolled once per clash)
+  let misty = null;
+  if (mains[0].type === 'attack' && mains[1].type === 'attack') for (const i of [0, 1]) {
+    const o = P[i].buffs.find(b => b.type === 'rpsOverride' && b.card === mains[i].card && b.vs === mains[1 - i].card);
+    if (!o) continue;
+    const flip = roll(state) * 100 < o.value;
+    proc(P[i], `${o.source} (clashes overturned)`, flip);
+    if (flip) { misty = i; say(`${o.source}: ${P[i].name} vanishes into the fog and strikes first!`, { type: 'status', player: i }); }
+  }
   for (const i of [0, 1]) {
     if (mains[i].type !== 'attack') continue;
     const j = 1 - i;
@@ -580,7 +598,9 @@ export function resolveTurn(prev, actions) {
         const otherEmp = actions[j].seal === 'empower' || prev.players[j].empower;
         if (otherEmp && !empowered) { lands = false; reason = 'empowered tie lost'; }
         else reason = empowered && !otherEmp ? 'empowered tie won' : 'tie';
-      } else if (T.beats[card] === other) { counter = true; reason = 'counter'; }
+      } else if (misty === i) { counter = true; reason = 'counter'; }
+      else if (misty === j) { lands = false; reason = 'countered'; }
+      else if (T.beats[card] === other) { counter = true; reason = 'counter'; }
       else { lands = false; reason = 'countered'; }
     }
     const cl = P[i].stats.clash;
@@ -646,10 +666,11 @@ export function resolveTurn(prev, actions) {
     // La Black Luna: a landed regular attack may inflict a debuff
     if (pk.kind === 'attack' && !pk.secondArrow) for (const b of att.buffs.filter(b => b.type === 'debuffOnHit')) {
       const got = roll(state) * 100 < b.value;
-      proc(att, `${b.source} (${b.inflict.type === 'terror' ? 'Terror' : b.inflict.type} inflicted)`, got);
+      const nm = b.inflict.type[0].toUpperCase() + b.inflict.type.slice(1);
+      proc(att, `${b.source} (${nm} inflicted)`, got);
       if (got) {
         applyEffects(att, def, [{ ...b.inflict, target: 'enemy' }], b.source);
-        say(`${b.source}: ${def.name} is struck with ${b.inflict.type === 'terror' ? 'Terror' : b.inflict.type}!`, { type: 'status', player: pk.to });
+        say(`${b.source}: ${def.name} is struck with ${nm}!`, { type: 'status', player: pk.to });
       }
     }
     if (pk.kind === 'np') {
@@ -715,10 +736,19 @@ export function resolveTurn(prev, actions) {
   // Curse: damage over time at the end of the turn (before guts, so revives still work)
   for (const p of P) {
     const dot = Math.round(sumBuff(p, 'curse'));
-    if (!dot || p.hp <= 0) continue;
-    p.hp -= dot;
-    dealt(P[1 - P.indexOf(p)], 'curse', dot, 'Curse');
-    say(`The curse eats at ${p.name} for ${dot}.`, { type: 'curse', player: P.indexOf(p), amount: dot });
+    if (dot && p.hp > 0) {
+      p.hp -= dot;
+      dealt(P[1 - P.indexOf(p)], 'curse', dot, 'Curse');
+      say(`The curse eats at ${p.name} for ${dot}.`, { type: 'curse', player: P.indexOf(p), amount: dot });
+    }
+    // Poison: every instance is its own debuff, so stacks add up
+    const stacks = p.buffs.filter(b => b.type === 'poison');
+    const pdot = Math.round(stacks.reduce((a, b) => a + b.value, 0));
+    if (pdot && p.hp > 0) {
+      p.hp -= pdot;
+      dealt(P[1 - P.indexOf(p)], 'poison', pdot, 'Poison');
+      say(`Poison eats at ${p.name} for ${pdot}${stacks.length > 1 ? ` (${stacks.length} stacks)` : ''}.`, { type: 'curse', player: P.indexOf(p), amount: pdot });
+    }
   }
 
   // Akhilleus Kosmos: only a Noble Phantasm can down him; anything else leaves him at 1 HP
