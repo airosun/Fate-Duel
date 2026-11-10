@@ -677,14 +677,14 @@ test('Mordred: Clarent starts her at 50% NP; Cigarette Lion raises max AP and it
   assert.equal(g.players[1].np, 0);
 });
 
-test("Siegfried: Fafnir's Blood marks Dragon ~25% of landed attacks; Dragon Slayer and Balmung hit Dragons harder", () => {
+test("Siegfried: Fafnir's Blood marks Dragon ~35% of landed attacks; Dragon Slayer and Balmung hit Dragons harder", () => {
   let marks = 0, n = 400;
   for (let seed = 1; seed <= n; seed++) {
     const r = resolveTurn(createMatch(SERVANTS.siegfried, dummy('B'), { seed }), [atk('buster'), atk('quick')]).state;
     const m = r.players[1].buffs.find(b => b.type === 'statusMark' && b.status === 'dragon');
     if (m) { marks++; assert.equal(m.turns, 1); }   // lasts through the next turn
   }
-  assert.ok(marks / n > 0.19 && marks / n < 0.31, `mark rate ${marks / n}`);
+  assert.ok(marks / n > 0.29 && marks / n < 0.41, `mark rate ${marks / n}`);
   const npDmg = (dragon, slayer) => {
     const s = createMatch(SERVANTS.siegfried, dummy('B'), { seed: 2 });
     s.players[0].np = 100;

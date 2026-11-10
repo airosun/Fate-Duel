@@ -470,8 +470,8 @@ export const SERVANTS = {
     favoredCard: 'buster', maxAp: 10,
     passives: [
       classPassive('riding', 'B'),
-      unique("Fafnir's Blood", 'A landed regular attack has a 25% chance to mark the enemy as Dragon for the next turn',
-        [{ type: 'statusOnHit', status: 'dragon', value: 25, markTurns: 2 }]),
+      unique("Fafnir's Blood", 'A landed regular attack has a 35% chance to mark the enemy as Dragon for the next turn',
+        [{ type: 'statusOnHit', status: 'dragon', value: 35, markTurns: 2 }]),
     ],
     skills: [
       { id: 'avaricious_gold', name: 'Avaricious Gold A', cost: 5,
