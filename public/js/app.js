@@ -772,13 +772,14 @@ function controlsHtml() {
           <button class="np-card ${legal.np ? 'ready' : ''} ${sel('np') ? 'selected' : ''}" id="np" ${legal.np ? '' : 'disabled'}>
             <span class="np-label">Noble Phantasm${np.modeName ? ` · ${esc(np.modeName)}` : ''}</span>
             <b>${esc(np.name)}</b>
-            <small>${legal.np ? esc(describeNp(np)) : `Gauge ${p.np}%`}</small>
+            <small>${legal.np ? esc(describeNp(np)) : legal.taunted && p.np >= T.npMax ? 'Taunted: attacks only' : `Gauge ${p.np}%`}</small>
           </button>
         </div>
+        ${legal.taunted ? `<p class="taunt-note">Taunted: ${esc(ui.match.servants[1 - i].name)} goads you into attacking. Only Quick, Arts or Buster this turn.</p>` : ''}
         <div class="skills">
           ${s.skills.map((sk, k) => {
             const ok = legal.skills.includes(sk.id);
-            const why = p.lastSkillId === sk.id ? 'Used last turn' : (p.ap < sk.cost ? `Needs ${sk.cost} AP` : '');
+            const why = legal.taunted ? 'Taunted: attacks only' : p.lastSkillId === sk.id ? 'Used last turn' : (p.ap < sk.cost ? `Needs ${sk.cost} AP` : '');
             return `<button class="skill ${sel('skill', sk.id) ? 'selected' : ''}" data-skill="${sk.id}" ${ok ? '' : 'disabled'} title="Key: ${k + 1}">
               <span class="skill-top"><b>${esc(sk.name)}</b><em class="ap-cost">${sk.cost} AP</em></span>
               <small>${esc(why || describeSkill(sk))}</small>

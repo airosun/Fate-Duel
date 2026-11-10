@@ -49,6 +49,12 @@ export function describeEffect(e) {
     case 'missChance': return `Attacks on him ${v}% likely to miss`;
     case 'maxApUp': return `Max AP +${v}${turnsText(e)}`;
     case 'npSteal': return `${who}NP -${v}%, gained by self`;
+    case 'npOnlyKo': return 'Only an NP can down him; Sure Hit breaks this';
+    case 'taunt': return `${who}Taunt next turn (attacks only)`;
+    case 'confusion': return `${who}Confusion (${v}% a skill fizzles)${turnsText(e)}`;
+    case 'stun': return `${who}${v}% chance to lose next turn`;
+    case 'debuffOnHit': return `${v}% chance on hit: ${e.inflict?.type}`;
+    case 'apChance': return `${v}% chance of +${e.amount} AP each turn${turnsText(e)}`;
     case 'npSeal': return `${who}NP Seal this turn (NP fizzles, -${v}% gauge)`;
     case 'debuffResistDown': return `${who}debuff resist -${v}%${turnsText(e)}`;
     case 'doubleShot': return `${v}% chance of a second arrow on ${c} attacks`;
@@ -90,6 +96,7 @@ export function describeNp(np) {
   if (np.desc) return np.desc;
   const parts = [`${np.mult}× ATK ${CARD_LABEL[np.card]} damage`];
   if (np.ignoreDefense) parts.push('ignores Damage Cut and Evade');
+  else if (np.ignoreCut) parts.push('ignores damage cut');
   if (np.missingHpBonus) parts.push('stronger vs low-HP targets');
   if (np.preEffects?.length) parts.unshift(describeEffects(np.preEffects));
   if (np.postEffects?.length) parts.push(describeEffects(np.postEffects));
@@ -103,7 +110,7 @@ const BUFF_LABEL = {
   defDown: 'DEF↓', flatDamage: 'Flat Dmg', sureHit: 'Sure Hit', pierceEvade: 'Pierce Evade', debuffPotency: 'Debuff Potency', debuffUp: 'Debuff↑',
   nextHitUp: 'Next Hit↑', affinityAll: 'All Cards Favored', apRecoveryDown: 'AP Recovery↓',
   bonusVsStatus: 'vs Petrified↑', buffFailChance: 'Breaker Gorgon', copyEnemyUnique: 'Trace On',
-  instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF', terror: 'Terror', curse: 'Curse', npSeal: 'NP Seal', debuffResistDown: 'Debuff Res↓', doubleShot: 'Golden Apple', foresight: 'Foresight', maxApUp: 'Max AP↑', statusOnHit: "Fafnir's Blood", dmgVsStatus: 'vs Dragon↑', extraHitChance: 'Sea Demons', missChance: 'Decoys', buffSuccessUp: 'Buff Success↑', cardVuln: '↓ Resist',
+  instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF', terror: 'Terror', curse: 'Curse', npOnlyKo: 'Kosmos', taunt: 'Taunted', confusion: 'Confusion', stun: 'Trap', debuffOnHit: 'Black Luna', apChance: 'AP Chance', npSeal: 'NP Seal', debuffResistDown: 'Debuff Res↓', doubleShot: 'Golden Apple', foresight: 'Foresight', maxApUp: 'Max AP↑', statusOnHit: "Fafnir's Blood", dmgVsStatus: 'vs Dragon↑', extraHitChance: 'Sea Demons', missChance: 'Decoys', buffSuccessUp: 'Buff Success↑', cardVuln: '↓ Resist',
   mirrorAtkUp: 'Arms Mastery', apRecoveryUp: 'AP Recovery↑',
 };
 
@@ -146,6 +153,12 @@ export function explainBuff(b) {
     case 'copyEnemyUnique': return "Copies the opponent's unique passive for the match. Revives can't be copied.";
     case 'apRecoveryDown': return `${b.status === 'petrified' ? 'Petrified: g' : 'G'}ains ${Math.round(b.value)} less AP from each attack.`;
     case 'bonusVsStatus': return `The next attack or Noble Phantasm against a ${b.status} enemy deals ${v}% more damage.`;
+    case 'npOnlyKo': return "Can only be downed by a Noble Phantasm: anything else leaves this servant at 1 HP. A landed Sure Hit attack strikes the heel and removes this.";
+    case 'taunt': return 'Taunted: can only attack (no skills, no Noble Phantasm).';
+    case 'confusion': return `Confused: ${v}% chance a skill fizzles (AP is still spent). Ends once it triggers.`;
+    case 'stun': return `Trapped: ${v}% chance to lose the whole next action. Rolled once, when that turn resolves.`;
+    case 'debuffOnHit': return `A landed regular attack has a ${v}% chance to inflict ${b.inflict?.type === 'terror' ? `Terror (${b.inflict.value}%)` : b.inflict?.type} on the enemy.`;
+    case 'apChance': return `At the end of each turn, a ${v}% chance to gain ${b.amount ?? 2} AP.`;
     case 'npSeal': return `NP Seal: if this servant uses its Noble Phantasm this turn, it fizzles and the gauge drops ${v}%.`;
     case 'debuffResistDown': return `Debuff resistance -${v}%: debuffs on this servant are stronger.`;
     case 'doubleShot': return `${c} attacks have a ${v}% chance to loose a second arrow: +${b.ratio ?? 50}% damage if the attack landed, or a full-damage hit if it was beaten (Evade and Invincible still stop it).`;
@@ -184,7 +197,7 @@ export function buffChip(b) {
   if (b.type === 'statusMark') label = b.status[0].toUpperCase() + b.status.slice(1);
   if (b.type === 'curse') label = `Curse ${Math.round(b.value)}`;
   const val = b.type === 'apRecoveryDown' ? ` −${Math.round(b.value)} AP` : b.type === 'apRecoveryUp' ? ` +${Math.round(b.value)} AP`
-    : b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage', 'sureHit', 'copyEnemyUnique', 'guts', 'ignoreDamageCut'].includes(b.type)
+    : b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage', 'sureHit', 'copyEnemyUnique', 'guts', 'ignoreDamageCut', 'taunt', 'npOnlyKo', 'pierceEvade', 'statusMark'].includes(b.type)
       ? ` ${Math.round(b.value)}%` : (['apRegen', 'flatDamage'].includes(b.type) ? ` +${b.value}` : '');
   const kind = b.debuff ? 'debuff' : b.turns === null ? 'passive' : 'active';
   let duration;

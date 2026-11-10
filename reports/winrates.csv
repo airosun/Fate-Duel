@@ -1,21 +1,23 @@
 servant,class,score_vs_field_pct,overall_win_pct,nps_per_match,hp,atk
-Artoria Pendragon,Saber,51.1,48.5,1.99,1285,123
-Heracles,Berserker,49.7,46.9,1.41,903,122
-Medea,Caster,49.3,47.0,2.53,1215,118
-Sasaki Kojirou,Assassin,48.6,45.4,1.73,1175,115
-EMIYA,Archer,51.1,48.6,1.72,1250,121
-Cú Chulainn,Lancer,50.0,47.8,1.94,1019,117
-Medusa,Rider,48.3,45.4,1.55,1219,117
-Hassan of the Cursed Arm,Assassin,48.8,45.8,1.75,1199,116
-Gilgamesh,Archer,57.8,55.1,1.68,1285,124
-Iskandar,Rider,49.9,47.2,1.59,1268,123
-Hassan of the Hundred Faces,Assassin,49.2,47.1,2.13,1224,116
-Lancelot,Berserker,49.6,46.7,1.62,1237,122
-Gilles de Rais,Caster,48.3,45.7,1.87,1226,116
-Diarmuid Ua Duibhne,Lancer,48.8,46.1,1.96,1234,117
-Mordred,Saber,50.3,47.7,2.16,1281,123
-Siegfried,Saber,48.3,45.8,1.81,1276,119
-Atalanta,Archer,49.3,46.7,1.56,1260,120
-Chiron,Archer,49.9,47.3,1.69,1258,120
-Vlad III,Lancer,51.6,49.1,1.92,963,123
-Karna,Lancer,50.3,47.5,1.74,1271,123
+Artoria Pendragon,Saber,50.5,47.9,1.97,1285,123
+Heracles,Berserker,50.4,47.4,1.40,903,122
+Medea,Caster,49.1,46.8,2.50,1215,118
+Sasaki Kojirou,Assassin,48.3,45.2,1.70,1175,115
+EMIYA,Archer,51.0,48.4,1.70,1250,121
+Cú Chulainn,Lancer,50.1,48.0,1.93,1019,117
+Medusa,Rider,48.6,45.6,1.53,1219,117
+Hassan of the Cursed Arm,Assassin,48.8,45.9,1.74,1199,116
+Gilgamesh,Archer,56.8,54.0,1.66,1285,124
+Iskandar,Rider,49.2,46.5,1.57,1268,123
+Hassan of the Hundred Faces,Assassin,48.6,46.5,2.11,1224,116
+Lancelot,Berserker,49.6,46.7,1.60,1237,122
+Gilles de Rais,Caster,48.5,45.7,1.86,1226,116
+Diarmuid Ua Duibhne,Lancer,48.9,46.1,1.95,1234,117
+Mordred,Saber,50.3,47.6,2.14,1281,123
+Siegfried,Saber,48.0,45.4,1.79,1276,119
+Atalanta,Archer,49.7,47.1,1.53,1260,120
+Chiron,Archer,51.0,48.4,1.67,1258,120
+Vlad III,Lancer,50.8,48.3,1.91,963,123
+Karna,Lancer,50.6,47.6,1.73,1271,123
+Achilles,Rider,50.4,45.9,1.33,925,123
+Astolfo,Rider,50.7,48.1,1.31,1246,120

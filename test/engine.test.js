@@ -857,3 +857,85 @@ test("Kojirou: Heaven Among the Mountains pierces Evade on Quick but isn't Sure 
   assert.ok(h2 && h2.sureHit === true);
   assert.match(SERVANTS.kojirou.skills.find(k => k.id === 'souwa').desc, /Sure Hit/);
 });
+
+test('Achilles: only an NP can down him; a true Sure Hit attack breaks Akhilleus Kosmos (Kojirou\'s passive does not)', () => {
+  // A lethal regular attack leaves him at 1 HP
+  let s = createMatch(dummy('A'), SERVANTS.achilles, { seed: 1 });
+  s.players[1].hp = 5;
+  let r = resolveTurn(s, [atk('arts'), atk('buster')]).state;   // Arts beats Buster
+  assert.equal(r.players[1].hp, 1);
+  assert.equal(r.over, false);
+  // An NP can down him
+  s = createMatch(dummy('A'), SERVANTS.achilles, { seed: 1 });
+  s.players[1].hp = 5; s.players[0].np = 100;
+  assert.equal(resolveTurn(s, [np(), atk('quick')]).state.over, true);
+  // Kojirou's Heaven Among the Mountains (not Sure Hit) leaves Kosmos intact
+  s = createMatch(SERVANTS.kojirou, SERVANTS.achilles, { seed: 1 });
+  r = resolveTurn(s, [atk('quick'), atk('arts')]).state;
+  assert.ok(r.players[1].buffs.some(b => b.type === 'npOnlyKo'));
+  // Knowledge of the Souwa (true Sure Hit) breaks it, then a regular attack can finish him
+  s = createMatch(SERVANTS.kojirou, SERVANTS.achilles, { seed: 1 });
+  s.players[0].ap = 10;
+  s = resolveTurn(s, [skill('souwa'), atk('buster')]).state;
+  s = resolveTurn(s, [atk('quick'), atk('arts')]).state;
+  assert.ok(!s.players[1].buffs.some(b => b.type === 'npOnlyKo'));
+  s.players[1].hp = 5;
+  assert.equal(resolveTurn(s, [atk('quick'), atk('arts')]).state.over, true);
+});
+
+test('Achilles: Taunt forces attacks next turn; Troias Tragōidia confuses (~40% a skill fizzles, then it ends)', () => {
+  let s = createMatch(SERVANTS.achilles, dummy('B'), { seed: 1 });
+  s.players[0].ap = 10;
+  s = resolveTurn(s, [skill('star_spear'), skill('charge')]).state;
+  const legal = getLegalActions(s, 1);
+  assert.ok(legal.taunted && legal.skills.length === 0 && !legal.np);
+  assert.match(validateAction(s, 1, skill('shield')), /./);
+  s = resolveTurn(s, [atk('quick'), atk('arts')]).state;
+  assert.equal(getLegalActions(s, 1).taunted, false);              // only one turn
+  let fumbles = 0, n = 300;
+  for (let seed = 1; seed <= n; seed++) {
+    let c = createMatch(SERVANTS.achilles, dummy('B'), { seed });
+    c.players[0].np = 100;
+    c = resolveTurn(c, [np(), atk('quick')]).state;
+    assert.ok(c.players[1].buffs.some(b => b.type === 'confusion'));
+    c.players[1].ap = 10;
+    const r = resolveTurn(c, [atk('quick'), skill('shield')]);
+    if (r.log.some(l => l.blocked === 'confusion')) {
+      fumbles++;
+      assert.ok(!r.state.players[1].buffs.some(b => b.type === 'confusion'));
+    }
+  }
+  assert.ok(fumbles / n > 0.3 && fumbles / n < 0.5, `fumble ${fumbles / n}`);
+});
+
+test('Astolfo: Black Luna Terror on ~10% of hits; Trap of Argalia ~50% skip next turn; Evaporation AP chance; Hippogriff ignores damage cut', () => {
+  let terror = 0, n = 600;
+  for (let seed = 1; seed <= n; seed++) {
+    const r = resolveTurn(createMatch(SERVANTS.astolfo, dummy('B'), { seed }), [atk('quick'), atk('arts')]).state;
+    if (r.players[1].buffs.some(b => b.type === 'terror')) terror++;
+  }
+  assert.ok(terror / n > 0.06 && terror / n < 0.14, `terror ${terror / n}`);
+  let skipped = 0;
+  for (let seed = 1; seed <= 300; seed++) {
+    let s = createMatch(SERVANTS.astolfo, dummy('B'), { seed });
+    s.players[0].ap = 10;
+    s = resolveTurn(s, [skill('trap_of_argalia'), atk('quick')]).state;
+    const r = resolveTurn(s, [atk('quick'), atk('buster')]);              // Buster would beat Quick
+    if (r.log.some(l => l.blocked === 'stun')) { skipped++; assert.ok(!r.log.some(l => l.type === 'hit' && l.from === 1)); }
+    assert.ok(!r.state.players[1].buffs.some(b => b.type === 'stun'));
+  }
+  assert.ok(skipped / 300 > 0.4 && skipped / 300 < 0.6, `skipped ${skipped / 300}`);
+  let s = createMatch(SERVANTS.astolfo, dummy('B'), { seed: 4 });
+  s.players[0].ap = 10;
+  s = resolveTurn(s, [skill('evaporation'), atk('quick')]).state;
+  assert.ok(s.players[0].stats.procs['Evaporation of Sanity D+ (bonus AP)'].tries === 1);
+  const npDmg = cut => {
+    const x = createMatch(SERVANTS.astolfo, dummy('B'), { seed: 5 });
+    x.players[0].np = 100;
+    if (cut) x.players[1].buffs.push({ type: 'damageCut', value: 50, turns: 2 });
+    const r = resolveTurn(x, [np(), atk('quick')]).state;
+    return { dmg: 1000 - r.players[1].hp, evade: r.players[0].buffs.some(b => b.type === 'evade') };
+  };
+  assert.equal(npDmg(true).dmg, npDmg(false).dmg);
+  assert.ok(npDmg(false).evade);
+});

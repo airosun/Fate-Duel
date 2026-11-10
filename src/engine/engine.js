@@ -155,7 +155,9 @@ const hasBuff = (p, type) => p.buffs.some(b => b.type === type);
 export function getLegalActions(state, idx) {
   const p = state.players[idx];
   const servant = state.servants[idx];
-  const skills = servant.skills
+  // Taunt (Achilles' spear): this turn the master may only attack (no skills, no NP)
+  const taunted = p.buffs.some(b => b.type === 'taunt');
+  const skills = taunted ? [] : servant.skills
     .filter(s => p.ap >= s.cost && p.lastSkillId !== s.id)
     .map(s => s.id);
   const seals = [];
@@ -164,7 +166,7 @@ export function getLegalActions(state, idx) {
   if (p.seals >= 3 && p.np < T.npMax) seals.push('grandOrder');
   // Teacher's Wisdom: uses left of "see the opponent's locked action first"
   const foresight = p.buffs.filter(b => b.type === 'foresight').reduce((a, b) => a + (b.charges ?? 0), 0);
-  return { attacks: [...CARDS], skills, np: p.np >= T.npMax, seals, foresight };
+  return { attacks: [...CARDS], skills, np: !taunted && p.np >= T.npMax, seals, foresight, taunted };
 }
 
 export function validateAction(state, idx, action) {
@@ -190,12 +192,12 @@ export function validateAction(state, idx, action) {
 
 // ---------- effects ----------
 
-const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', 'curse', 'debuffResistDown', 'npSeal'];
+const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', 'curse', 'debuffResistDown', 'npSeal', 'taunt', 'confusion', 'stun'];
 
 // Lasting positive effects a servant puts on itself (what Breaker Gorgon can make fail).
 const BUFF_TYPES = new Set(['ignoreDamageCut', 'buffSuccessUp', 'apRecoveryUp', 'atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
   'cardNpGainUp', 'debuffResist', 'guts', 'apRegen', 'busterConvert', 'flatDamage', 'sureHit', 'pierceEvade',
-  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight']);
+  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight', 'npOnlyKo', 'debuffOnHit', 'apChance']);
 const hasStatus = (p, status) => p.buffs.some(b => b.status === status);
 
 function resistScale(target, e, user) {
@@ -287,6 +289,8 @@ function applyEffectRaw(target, e, source, user) {
         ratio: e.ratio,
         markTurns: e.markTurns,
         onRevive: e.onRevive,
+        inflict: e.inflict,
+        amount: e.amount,
         debuff: DEBUFFS.includes(e.type),
         source,
       });
@@ -411,7 +415,7 @@ function npPacket(att, def, np, { empowered = false, nextHit = 0, vsBonus = 0 } 
   const raw = att.atk * mult * atkMultiplier(att, np.card, nextHit) * (1 + vsBonus / 100) * (1 + vsStatusPct(att, def) / 100)
     * (1 + sumBuff(att, 'npUp') / 100)
     + sumBuff(att, 'flatDamage');
-  return defend(def, raw, { isNp: true, ignoreDefense: !!np.ignoreDefense, ignoreCut: hasBuff(att, 'ignoreDamageCut'), card: np.card });
+  return defend(def, raw, { isNp: true, ignoreDefense: !!np.ignoreDefense, ignoreCut: !!np.ignoreCut || hasBuff(att, 'ignoreDamageCut'), card: np.card });
 }
 
 function gainNp(p, base, { defending = false, card, artsEffect = 0 } = {}) {
@@ -443,6 +447,19 @@ export function resolveTurn(prev, actions) {
     say(`${P[i].name} read ${P[1 - i].name}'s move in advance! (${fb.copiedFrom ?? fb.source}, ${fb.charges} left)`, { type: 'foresight', player: i });
   }
 
+  // 0b. Trap of Argalia: a tripped servant may lose its whole main action this turn (rolled once, then it ends)
+  for (const i of [0, 1]) {
+    const stun = P[i].buffs.find(b => b.type === 'stun' && b.armed);
+    if (!stun) continue;
+    P[i].buffs.splice(P[i].buffs.indexOf(stun), 1);
+    const down = roll(state) * 100 < stun.value;
+    proc(P[1 - i], `${sourceLabel(S[1 - i], stun.source)} (turns skipped)`, down);
+    if (down) {
+      mains[i] = { type: 'stunned' };
+      say(`${P[i].name} is tripped up and loses this turn!`, { type: 'blocked', player: i, blocked: 'stun' });
+    } else say(`${P[i].name} keeps their footing.`, { type: 'info', player: i });
+  }
+
   // 1. Command Seals
   for (const i of [0, 1]) {
     const seal = actions[i].seal;
@@ -468,6 +485,18 @@ export function resolveTurn(prev, actions) {
     P[i].lastSkillId = skill ? skill.id : null;
     if (!skill) continue;
     P[i].ap -= skill.cost;
+    // Confusion (Troias Tragōidia): a chance the skill doesn't go off (AP is still spent). Ends once it triggers.
+    const conf = P[i].buffs.find(b => b.type === 'confusion');
+    if (conf) {
+      const lost = roll(state) * 100 < conf.value;
+      proc(P[1 - i], `${sourceLabel(S[1 - i], conf.source)} (skills fumbled)`, lost);
+      if (lost) {
+        P[i].buffs.splice(P[i].buffs.indexOf(conf), 1);
+        skillUses[i] = null;
+        say(`${P[i].name} is confused and fumbles ${skill.name}!`, { type: 'blocked', player: i, blocked: 'confusion' });
+        continue;
+      }
+    }
     const option = skill.options?.find(o => o.id === mains[i].option);
     const effects = skill.effects.map(e => (e.type === 'setNpMode' ? { ...e, value: option.id } : e));
     skillUses[i] = { ...skill, effects };
@@ -604,6 +633,25 @@ export function resolveTurn(prev, actions) {
       continue;
     }
     def.hp -= pk.amount;
+    if (pk.kind === 'np') def.hitByNp = true;
+    // Akhilleus Kosmos: a landed true Sure Hit attack strikes his heel and removes the passive
+    if (pk.kind === 'attack' && pk.sureHit) {
+      const kosmos = def.buffs.find(b => b.type === 'npOnlyKo');
+      if (kosmos) {
+        def.buffs.splice(def.buffs.indexOf(kosmos), 1);
+        proc(att, 'Sure Hit (Akhilleus Kosmos broken)', true);
+        say(`${att.name}'s Sure Hit strikes ${def.name}'s heel! ${kosmos.source} is broken.`, { type: 'status', player: pk.to });
+      }
+    }
+    // La Black Luna: a landed regular attack may inflict a debuff
+    if (pk.kind === 'attack' && !pk.secondArrow) for (const b of att.buffs.filter(b => b.type === 'debuffOnHit')) {
+      const got = roll(state) * 100 < b.value;
+      proc(att, `${b.source} (${b.inflict.type === 'terror' ? 'Terror' : b.inflict.type} inflicted)`, got);
+      if (got) {
+        applyEffects(att, def, [{ ...b.inflict, target: 'enemy' }], b.source);
+        say(`${b.source}: ${def.name} is struck with ${b.inflict.type === 'terror' ? 'Terror' : b.inflict.type}!`, { type: 'status', player: pk.to });
+      }
+    }
     if (pk.kind === 'np') {
       att.stats.nps.landed++;
       dealt(att, 'np', pk.amount, S[pk.from].np.name);
@@ -673,6 +721,15 @@ export function resolveTurn(prev, actions) {
     say(`The curse eats at ${p.name} for ${dot}.`, { type: 'curse', player: P.indexOf(p), amount: dot });
   }
 
+  // Akhilleus Kosmos: only a Noble Phantasm can down him; anything else leaves him at 1 HP
+  for (const p of P) {
+    if (p.hp <= 0 && !p.hitByNp && !p.instantKilled && p.buffs.some(b => b.type === 'npOnlyKo')) {
+      p.hp = 1;
+      say(`${p.name} can only be downed by a Noble Phantasm! (1 HP)`, { type: 'guts', player: P.indexOf(p) });
+    }
+    delete p.hitByNp;
+  }
+
   // Guts
   for (const p of P) {
     if (p.hp > 0) continue;
@@ -694,6 +751,13 @@ export function resolveTurn(prev, actions) {
   for (const p of P) {
     const regen = sumBuff(p, 'apRegen');
     if (regen) p.ap = Math.min(p.maxAp, p.ap + regen);
+    // Evaporation of Sanity: each turn it's active, a fresh chance at bonus AP
+    for (const b of p.buffs.filter(b => b.type === 'apChance')) {
+      const got = roll(state) * 100 < b.value;
+      proc(p, `${sourceLabel(S[P.indexOf(p)], b.source)} (bonus AP)`, got);
+      if (got) { p.ap = Math.min(p.maxAp, p.ap + (b.amount ?? 2)); say(`${p.name} gains ${b.amount ?? 2} bonus AP!`, { type: 'info', player: P.indexOf(p) }); }
+    }
+    for (const b of p.buffs) if (b.type === 'stun') b.armed = true;   // Trap of Argalia rolls next turn
     p.buffs = p.buffs.filter(b => b.turns === null || --b.turns > 0);
     syncMaxAp(p);
     p.hp = Math.max(0, p.hp);

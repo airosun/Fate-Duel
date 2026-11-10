@@ -601,6 +601,65 @@ export const SERVANTS = {
           desc: 'Heavy Buster damage, then the enemy takes +20% Buster damage for 2 turns',
           postEffects: [{ type: 'cardVuln', card: 'buster', value: 20, turns: 3, target: 'enemy' }] },
   },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
+  achilles: {
+    id: 'achilles', name: 'Achilles', class: 'Rider',
+    fgoHp: 13219, fgoAtk: 11883, fgoNpAtk: 0.57, fgoNpDef: 3,
+    favoredCard: 'quick', maxAp: 10, hpMult: 0.73, // 27% below FGO-derived HP: only an NP (or Sure Hit first) can down him
+    passives: [
+      classPassive('magicResistance', 'C'),
+      classPassive('riding', 'A+'),
+      classPassive('divinity', 'C'),
+      unique('Akhilleus Kosmos', 'Can only be downed by a Noble Phantasm (anything else leaves him at 1 HP). A landed Sure Hit attack strikes his heel and removes this',
+        [{ type: 'npOnlyKo' }]),
+    ],
+    skills: [
+      { id: 'comet_form', name: 'Drómos Komḗtēs A+', cost: 5,
+        desc: 'Quick +30% and Sure Hit for 3 turns',
+        effects: [{ type: 'cardUp', card: 'quick', value: 30, turns: 3 }, { type: 'sureHit', turns: 3 }] },
+      { id: 'amaranth', name: 'Andreíos Amárantos B', cost: 5,
+        desc: 'Invincible this turn; damage cut 20% for 2 turns',
+        effects: [{ type: 'invincible' }, { type: 'damageCut', value: 20, turns: 2 }] },
+      { id: 'star_spear', name: 'Diatrekhōn Astēr Lonkhē B+', cost: 5,
+        desc: 'NP +20% now; NP gain +30% for 3 turns; Taunt: next turn the enemy can only attack (no skills or NP)',
+        effects: [{ type: 'npCharge', value: 20 }, { type: 'npGainUp', value: 30, turns: 3 },
+                  { type: 'taunt', value: 1, turns: 2, target: 'enemy' }] },
+    ],
+    np: { name: 'Troias Tragōidia', card: 'quick', mult: 3.4,
+          desc: 'Quick +30% for this NP, heavy Quick damage, then Confusion on the enemy (40% chance a skill fizzles) for 3 turns',
+          preEffects: [{ type: 'cardUp', card: 'quick', value: 30, turns: 1 }],
+          postEffects: [{ type: 'confusion', value: 40, turns: 4, status: 'confused', target: 'enemy' }] },
+  },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
+  astolfo: {
+    id: 'astolfo', name: 'Astolfo', class: 'Rider',
+    fgoHp: 11172, fgoAtk: 8937, fgoNpAtk: 0.66, fgoNpDef: 1,
+    favoredCard: 'quick', maxAp: 10,
+    passives: [
+      classPassive('magicResistance', 'A'),
+      classPassive('riding', 'A+'),
+      classPassive('independentAction', 'B'),
+      unique('La Black Luna', 'A landed regular attack has a 10% chance to strike the enemy with Terror (40%) for 3 turns',
+        [{ type: 'debuffOnHit', value: 10, inflict: { type: 'terror', value: 40, turns: 3, status: 'terrified' } }]),
+    ],
+    skills: [
+      { id: 'monstrous_strength', name: 'Monstrous Strength C-', cost: 3,
+        desc: 'ATK +30% for 3 turns',
+        effects: [{ type: 'atkUp', value: 30, turns: 3 }] },
+      { id: 'trap_of_argalia', name: 'Trap of Argalia D', cost: 5,
+        desc: '50% chance the enemy loses its next turn (rolled when that turn resolves)',
+        effects: [{ type: 'stun', value: 50, turns: 2, target: 'enemy' }] },
+      { id: 'evaporation', name: 'Evaporation of Sanity D+', cost: 4,
+        desc: 'NP +20% now; NP gain +30% for 3 turns; each turn, a 50% chance of +2 AP',
+        effects: [{ type: 'npCharge', value: 20 }, { type: 'npGainUp', value: 30, turns: 3 },
+                  { type: 'apChance', value: 50, amount: 2, turns: 3 }] },
+    ],
+    np: { name: 'Hippogriff', card: 'quick', mult: 4.2, ignoreCut: true,
+          desc: 'Heavy Quick damage that ignores damage cut, then Evade for 2 turns',
+          postEffects: [{ type: 'evade', turns: 3 }] },
+  },
 };
 
 export const ROSTER = Object.values(SERVANTS);

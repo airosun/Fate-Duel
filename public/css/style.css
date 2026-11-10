@@ -587,3 +587,5 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
 .el-acts { display: flex; flex-wrap: wrap; gap: .2rem 1.2rem; margin: .1rem 0 .3rem; font-size: .8rem; color: var(--muted); }
 .el-act b { color: var(--gold2); font-weight: 700; margin-right: .2rem; }
 .end-screen.with-stats .stats-screen { margin-top: 1rem; }
+
+.taunt-note { margin: .2rem 0 .5rem; padding: .45rem .7rem; border: 1px solid var(--buster); border-radius: 8px; background: rgba(226, 70, 58, .08); color: #ffb3aa; font-size: .85rem; }
