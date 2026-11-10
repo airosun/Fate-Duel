@@ -699,3 +699,33 @@ test("Siegfried: Fafnir's Blood marks Dragon ~25% of landed attacks; Dragon Slay
   assert.equal(npDmg(false, true), plain);
   assert.equal(sp.np.vsStatus.value, 40);
 });
+
+test('match stats: damage dealt matches HP lost; hits, NPs and chance effects are counted', () => {
+  const cards = ['quick', 'arts', 'buster'];
+  for (const [a, b] of [['gilles', 'hundred_faces'], ['siegfried', 'medusa'], ['diarmuid', 'lancelot']]) {
+    for (let seed = 1; seed <= 20; seed++) {
+      let s = createMatch(SERVANTS[a], SERVANTS[b], { seed });
+      for (let t = 0; t < 4 && !s.over; t++) {
+        s = resolveTurn(s, [0, 1].map(i => {
+          if (s.players[i].np >= 100) return np();
+          return atk(cards[(seed + t * (i + 1)) % 3]);
+        })).state;
+      }
+      if (s.over) continue;
+      for (const i of [0, 1]) {
+        const me = s.players[i].stats, foe = s.players[1 - i];
+        const dealtTotal = me.dmg.attack + me.dmg.np + me.dmg.extra + me.dmg.curse;
+        assert.equal(dealtTotal, foe.maxHp - foe.hp + foe.stats.healed, `${a} vs ${b} seed ${seed}`);
+        const landed = me.landed.quick + me.landed.arts + me.landed.buster;
+        assert.ok(landed <= me.attempted.quick + me.attempted.arts + me.attempted.buster);
+        assert.ok(me.nps.landed <= me.nps.fired);
+        for (const v of Object.values(me.procs)) assert.ok(v.hits <= v.tries);
+      }
+      assert.equal(s.history.at(-1).hp[1], s.players[1].hp);
+    }
+  }
+  // Gilles' Sea Demons are counted per landed Arts attack
+  let s = createMatch(SERVANTS.gilles, dummy('B'), { seed: 9 });
+  s = resolveTurn(s, [atk('arts'), atk('buster')]).state;
+  assert.equal(s.players[0].stats.procs['Summoning: Sea Demons (follow-up hits)'].tries, 1);
+});

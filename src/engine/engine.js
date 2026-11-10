@@ -28,6 +28,32 @@ export function deriveStats(servant, { uniquesOff = false } = {}) {
   return { hp, atk };
 }
 
+// ---------- match stats (shown on the post-battle stats screen) ----------
+export function newStats() {
+  return {
+    dmg: { attack: 0, np: 0, extra: 0, curse: 0 }, biggest: { amount: 0, what: '' },
+    attempted: { quick: 0, arts: 0, buster: 0 }, landed: { quick: 0, arts: 0, buster: 0 },
+    clash: { won: 0, lost: 0, tied: 0 }, nps: { fired: 0, landed: 0, blocked: 0 },
+    negated: 0, healed: 0, skills: 0, seals: 0, revives: 0, maxCombo: 0, combo: 0,
+    procs: {}, // name -> { hits, tries } for chance-based effects (Sea Demons, decoys, Terror…)
+  };
+}
+const statsOf = p => p.stats ?? (p.stats = newStats());
+function proc(p, name, success) {
+  const s = statsOf(p).procs[name] ?? (statsOf(p).procs[name] = { hits: 0, tries: 0 });
+  s.tries++; if (success) s.hits++;
+}
+function dealt(att, kind, amount, what) {
+  const st = statsOf(att);
+  st.dmg[kind] += amount;
+  if (amount > st.biggest.amount) st.biggest = { amount, what };
+}
+// Skill ids / passive names / 'np' -> a readable name for the stats screen
+function sourceLabel(servant, source) {
+  if (source === 'np') return servant.np.name;
+  return servant.skills.find(k => k.id === source)?.name ?? source ?? 'Unknown';
+}
+
 function createPlayer(servant, { blockUniques = false } = {}) {
   const { hp, atk } = deriveStats(servant, { uniquesOff: blockUniques });
   const p = {
@@ -46,6 +72,7 @@ function createPlayer(servant, { blockUniques = false } = {}) {
     lastSkillId: null,
     empower: false,
     buffs: [],
+    stats: newStats(),
   };
   let passives = servant.passives ?? (servant.passive ? [servant.passive] : []);
   if (blockUniques) { // the opponent's Ea switches off every unique passive
@@ -193,9 +220,12 @@ function applyEffect(target, e, source, user) {
 
 function applyEffectRaw(target, e, source, user) {
   switch (e.type) {
-    case 'heal':
+    case 'heal': {
+      const before = target.hp;
       target.hp = Math.min(target.maxHp, target.hp + Math.round(target.maxHp * e.value / 100));
+      if (target.stats) target.stats.healed += target.hp - before;
       return;
+    }
     case 'npCharge':
       target.np = Math.min(T.npMax, target.np + e.value);
       return;
@@ -262,18 +292,24 @@ const buffName = e => (e.type === 'cardUp' ? `${CARD_NAME[e.card]} up`
 // Rolls for effects that can fail: an effect's own `chance` (e.g. Expert of
 // Many Specializations, 80%) and the enemy's Breaker Gorgon. The user's
 // buffSuccessUp raises the first and lowers the second, point for point.
-function screenBuffs(state, user, enemy, effects, say) {
+function screenBuffs(state, user, enemy, effects, say, label = 'Chance buffs') {
   if (!effects?.length) return [];
   const success = sumBuff(user, 'buffSuccessUp');
   const fail = Math.max(0, sumBuff(enemy, 'buffFailChance') - success);
   return effects.filter(e => {
     if (e.target === 'enemy') return true;
-    if (e.chance != null && roll(state) * 100 >= Math.min(100, e.chance + success)) {
-      say(`${user.name}'s ${buffName(e)} doesn't take hold (${e.chance + success >= 100 ? 100 : e.chance + success}% chance).`, { type: 'buffFail' });
-      return false;
+    if (e.chance != null) {
+      const ok = roll(state) * 100 < Math.min(100, e.chance + success);
+      proc(user, `${label} (buffs landed)`, ok);
+      if (!ok) {
+        say(`${user.name}'s ${buffName(e)} doesn't take hold (${e.chance + success >= 100 ? 100 : e.chance + success}% chance).`, { type: 'buffFail' });
+        return false;
+      }
     }
     if (!fail || !BUFF_TYPES.has(e.type)) return true;
-    if (roll(state) * 100 >= fail) return true;
+    const gorgon = roll(state) * 100 < fail;
+    proc(enemy, 'Breaker Gorgon (enemy buffs failed)', gorgon);
+    if (!gorgon) return true;
     say(`${user.name}'s ${buffName(e)} buff fails to take hold! (Breaker Gorgon)`, { type: 'buffFail' });
     return false;
   });
@@ -298,7 +334,10 @@ function applyEffects(user, enemy, effects, source) {
     // Eternal Arms Mastery (Lancelot): when the enemy buffs its own ATK, gain a weaker copy.
     if (e.type === 'atkUp' && e.target !== 'enemy' && source !== 'mirror') {
       const share = sumBuff(enemy, 'mirrorAtkUp');
-      if (share) applyEffect(enemy, { type: 'atkUp', value: Math.round(e.value * share) / 100, turns: e.turns }, 'mirror', enemy);
+      if (share) {
+        applyEffect(enemy, { type: 'atkUp', value: Math.round(e.value * share) / 100, turns: e.turns }, 'mirror', enemy);
+        proc(enemy, 'Eternal Arms Mastery (ATK buffs copied)', true);
+      }
     }
   }
 }
@@ -381,11 +420,11 @@ export function resolveTurn(prev, actions) {
     if (!seal) continue;
     const p = P[i];
     if (seal === 'grandOrder') {
-      p.seals -= 3; p.np = T.npMax;
+      p.seals -= 3; p.np = T.npMax; p.stats.seals += 3;
       say(`${p.name}'s master burns all three Command Seals: NP gauge full!`, { type: 'seal', player: i, seal });
       continue;
     }
-    p.seals -= 1;
+    p.seals -= 1; p.stats.seals++;
     if (seal === 'heal') applyEffect(p, { type: 'heal', value: T.seals.healPct });
     if (seal === 'recharge') applyEffect(p, { type: 'apGain', value: T.seals.rechargeAp });
     if (seal === 'empower') p.empower = true;
@@ -404,7 +443,8 @@ export function resolveTurn(prev, actions) {
     const effects = skill.effects.map(e => (e.type === 'setNpMode' ? { ...e, value: option.id } : e));
     skillUses[i] = { ...skill, effects };
     say(`${P[i].name} uses ${skill.name}${option ? ` (${option.label})` : ''}.`, { type: 'skill', player: i, skillId: skill.id });
-    applyEffects(P[i], P[1 - i], screenBuffs(state, P[i], P[1 - i], effects.filter(e => e.target !== 'enemy'), say), skill.id);
+    P[i].stats.skills++;
+    applyEffects(P[i], P[1 - i], screenBuffs(state, P[i], P[1 - i], effects.filter(e => e.target !== 'enemy'), say, skill.name), skill.id);
   }
   for (const i of [0, 1]) {
     const skill = skillUses[i];
@@ -418,7 +458,7 @@ export function resolveTurn(prev, actions) {
   const packets = []; // { from, to, amount, blocked, kind, card }
   const npUsers = [0, 1].filter(i => mains[i].type === 'np');
   const nps = [0, 1].map(i => npOf(S[i], P[i]));
-  const npPre = [0, 1].map(i => (npUsers.includes(i) ? screenBuffs(state, P[i], P[1 - i], nps[i].preEffects, say) : []));
+  const npPre = [0, 1].map(i => (npUsers.includes(i) ? screenBuffs(state, P[i], P[1 - i], nps[i].preEffects, say, nps[i].name) : []));
   for (const i of npUsers) {
     const att = structuredClone(P[i]), def = structuredClone(P[1 - i]);
     applyEffects(att, def, npPre[i], 'np');
@@ -433,11 +473,16 @@ export function resolveTurn(prev, actions) {
     // npName ties the chance to one NP (Shaytan's Arm only works with Zabaniya).
     const ik = P[i].buffs.filter(b => b.type === 'instantKillChance' && (!b.npName || b.npName === nps[i].name))
       .reduce((a, b) => a + b.value, 0);
-    if (ik && !pk.blocked && roll(state) * 100 < ik) pk.instantKill = true;
+    if (ik && !pk.blocked) {
+      pk.instantKill = roll(state) * 100 < ik;
+      const ikSrc = P[i].buffs.find(b => b.type === 'instantKillChance')?.source ?? 'Instant kill';
+      proc(P[i], `${ikSrc} (instant kills)`, pk.instantKill);
+    }
     packets.push(pk);
   }
   for (const i of npUsers) {
     P[i].np = 0;
+    P[i].stats.nps.fired++;
     say(`${P[i].name} unleashes ${nps[i].name}${nps[i].modeName ? ` (${nps[i].modeName})` : ''}${P[i].empower ? ', empowered by a Command Seal' : ''}!`, { type: 'np', player: i });
     P[i].empower = false;
   }
@@ -458,6 +503,7 @@ export function resolveTurn(prev, actions) {
     if (conv) P[i].buffs.splice(P[i].buffs.indexOf(conv), 1);
     const quickEff = card === 'quick' && effectiveness(P[i], 'quick') > 0 ? T.quickEffectAp : 0; // once
     gainAttackAp(P[i], T.apPerAttack + T.cards[card].apBonus + quickEff);
+    P[i].stats.attempted[card]++;
 
     let lands = true, counter = false, reason = 'unopposed';
     if (mains[j].type === 'np') { lands = false; reason = 'overpowered by NP'; }
@@ -470,6 +516,9 @@ export function resolveTurn(prev, actions) {
       } else if (T.beats[card] === other) { counter = true; reason = 'counter'; }
       else { lands = false; reason = 'countered'; }
     }
+    const cl = P[i].stats.clash;
+    if (reason === 'counter') cl.won++; else if (!lands) cl.lost++; else if (reason.includes('tie')) cl.tied++;
+    if (!lands) P[i].stats.combo = 0;
     if (!lands) { say(`${P[i].name}'s ${CARD_NAME[card]} attack fails (${reason}).`, { type: 'whiff', player: i, card, reason }); continue; }
     const nextHit = sumBuff(P[i], 'nextHitUp');
     const vs = P[i].buffs.find(b => b.type === 'bonusVsStatus' && hasStatus(P[j], b.status));
@@ -481,23 +530,39 @@ export function resolveTurn(prev, actions) {
   for (const pk of packets) {
     const att = P[pk.from], def = P[pk.to];
     if (pk.blocked) {
+      def.stats.negated++;
+      if (pk.kind === 'np') att.stats.nps.blocked++; else att.stats.combo = 0;
       say(`${def.name} negates ${att.name}'s ${pk.kind === 'np' ? 'Noble Phantasm' : CARD_NAME[pk.card] + ' attack'} (${pk.blocked}).`, { type: 'blocked', ...pk });
       continue;
     }
     // Terror: a frightened servant may not follow through on a regular attack. Ends once it triggers.
     const terror = pk.kind === 'attack' ? att.buffs.find(b => b.type === 'terror') : null;
-    if (terror && roll(state) * 100 < terror.value) {
+    const frozen = terror && roll(state) * 100 < terror.value;
+    if (terror) proc(def, `${sourceLabel(S[pk.to], terror.source)} (Terror freezes)`, frozen);
+    if (frozen) {
+      att.stats.combo = 0;
       att.buffs.splice(att.buffs.indexOf(terror), 1);
       say(`${att.name} freezes in terror and doesn't follow through!`, { type: 'blocked', ...pk, blocked: 'terror' });
       continue;
     }
     // One Hundred Personas: regular attacks on this servant may miss outright (Sure Hit ignores it)
     const miss = pk.kind === 'attack' && !pk.sureHit ? sumBuff(def, 'missChance') : 0;
-    if (miss && roll(state) * 100 < miss) {
+    const decoy = miss && roll(state) * 100 < miss;
+    if (miss) proc(def, `${def.buffs.find(b => b.type === 'missChance')?.source ?? 'Decoys'} (attacks dodged)`, decoy);
+    if (decoy) {
+      att.stats.combo = 0;
       say(`${att.name}'s ${CARD_NAME[pk.card]} attack strikes a decoy and misses! (${def.name})`, { type: 'blocked', ...pk });
       continue;
     }
     def.hp -= pk.amount;
+    if (pk.kind === 'np') {
+      att.stats.nps.landed++;
+      dealt(att, 'np', pk.amount, S[pk.from].np.name);
+    } else {
+      att.stats.landed[pk.card]++;
+      att.stats.combo++; att.stats.maxCombo = Math.max(att.stats.maxCombo, att.stats.combo);
+      dealt(att, 'attack', pk.amount, `${CARD_NAME[pk.card]} attack${pk.reason === 'counter' ? ' (counter)' : ''}`);
+    }
     if (pk.instantKill) {
       def.hp = 0;
       def.instantKilled = true;
@@ -516,27 +581,33 @@ export function resolveTurn(prev, actions) {
     say(`${att.name} hits ${def.name} for ${pk.amount}${pk.hitAs && pk.hitAs !== pk.card ? ` (${CARD_NAME[pk.card]} → Buster)` : ''}${pk.reason === 'counter' ? ' (counter!)' : ''}.`, { type: 'hit', ...pk });
     // Fafnir's Blood: a landed regular attack may mark the enemy with a status (e.g. Dragon) for the next turn
     if (pk.kind === 'attack') for (const b of att.buffs.filter(b => b.type === 'statusOnHit')) {
-      if (roll(state) * 100 >= b.value) continue;
+      const marked = roll(state) * 100 < b.value;
+      proc(att, `${b.source} (${b.status[0].toUpperCase() + b.status.slice(1)} marks)`, marked);
+      if (!marked) continue;
       def.buffs = def.buffs.filter(x => !(x.type === 'statusMark' && x.status === b.status));
       def.buffs.push({ type: 'statusMark', status: b.status, value: 0, turns: b.markTurns ?? 2, debuff: true, source: b.source });
       say(`${def.name} is marked: ${b.status[0].toUpperCase() + b.status.slice(1)}!`, { type: 'status', player: pk.to, status: b.status });
     }
     // Summoning: Sea Demons — a landed Arts attack may bring a follow-up hit for a share of its damage
     if (pk.kind === 'attack' && !pk.instantKill) for (const b of att.buffs.filter(b => b.type === 'extraHitChance' && b.card === pk.hitAs)) {
-      if (roll(state) * 100 >= b.value) continue;
+      const summoned = roll(state) * 100 < b.value;
+      proc(att, `${b.source} (follow-up hits)`, summoned);
+      if (!summoned) continue;
       const extra = Math.max(1, Math.round(pk.amount * (b.ratio ?? 30) / 100));
       def.hp -= extra;
+      dealt(att, 'extra', extra, 'Sea Demon');
       say(`A Sea Demon lashes ${def.name} for ${extra}!`, { type: 'hit', from: pk.from, to: pk.to, kind: 'extra', card: pk.hitAs, amount: extra });
     }
   }
   for (const i of npUsers) applyEffects(P[i], P[1 - i], npPre[i], 'np');
-  for (const i of npUsers) applyEffects(P[i], P[1 - i], screenBuffs(state, P[i], P[1 - i], nps[i].postEffects, say), 'np');
+  for (const i of npUsers) applyEffects(P[i], P[1 - i], screenBuffs(state, P[i], P[1 - i], nps[i].postEffects, say, nps[i].name), 'np');
 
   // Curse: damage over time at the end of the turn (before guts, so revives still work)
   for (const p of P) {
     const dot = Math.round(sumBuff(p, 'curse'));
     if (!dot || p.hp <= 0) continue;
     p.hp -= dot;
+    dealt(P[1 - P.indexOf(p)], 'curse', dot, 'Curse');
     say(`The curse eats at ${p.name} for ${dot}.`, { type: 'curse', player: P.indexOf(p), amount: dot });
   }
 
@@ -548,6 +619,7 @@ export function resolveTurn(prev, actions) {
     if (!g) continue;
     p.hp = Math.max(1, Math.round(p.maxHp * g.value / 100));
     p.revived = true;
+    p.stats.revives++;
     if (g.resetNp) p.np = 0;
     if (g.resetAp) p.ap = 0;
     if (g.charges != null && --g.charges > 0) { /* keep */ } else p.buffs.splice(p.buffs.indexOf(g), 1);
@@ -572,7 +644,7 @@ export function resolveTurn(prev, actions) {
     say(state.result.winner === null ? 'Draw!' : `${P[state.result.winner].name} wins!`, { type: 'end', ...state.result });
   }
 
-  state.history.push({ turn: state.turn, actions, log });
+  state.history.push({ turn: state.turn, actions, log, hp: P.map(p => Math.max(0, p.hp)) });
   state.turn += 1;
   return { state, log };
 }

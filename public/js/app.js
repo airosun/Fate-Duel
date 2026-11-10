@@ -8,6 +8,7 @@ import { ROSTER } from '/src/data/servants.js';
 import { TUNING as T, CARDS } from '/src/engine/constants.js';
 import { CARD_LABEL, describeSkill, describeNp, describeEffects, buffChip } from './describe.js';
 import { chooseAction } from '/src/engine/ai.js';
+import { statsHtml } from './stats.js';
 import { nextStrength, START_STRENGTH } from '/src/engine/difficulty.js';
 
 const app = document.getElementById('app');
@@ -84,7 +85,10 @@ function masterLabel(i) {
   return i === mySeat() ? `${name} (You)` : name;
 }
 
-function show(screen) { ui.screen = screen; render(); }
+function show(screen) {
+  if (screen !== 'end') ui.statsOpen = false; // a new match starts with the summary view
+  ui.screen = screen; render();
+}
 
 function render() {
   if (!ui.revealing) { overlay.hidden = true; overlay.innerHTML = ''; }
@@ -995,13 +999,21 @@ function renderEnd() {
   }
 
   if (cpuNote) actions = cpuNote + actions;
+  const statsToggle = `<button class="btn ghost" id="statsToggle">${ui.statsOpen ? 'Hide battle stats' : 'Battle stats'}</button>`;
   app.innerHTML = `
-    <div class="end-screen ${draw ? 'draw' : ''}">
-      ${draw ? `<div class="end-pair">${art(m.servants[0], 'end-art')}${art(m.servants[1], 'end-art')}</div>` : art(s, `end-art ${headline === 'Defeat' ? 'loser' : 'winner'}`)}
+    <div class="end-screen ${draw ? 'draw' : ''} ${ui.statsOpen ? 'with-stats' : ''}">
+      ${ui.statsOpen ? '' : draw ? `<div class="end-pair">${art(m.servants[0], 'end-art')}${art(m.servants[1], 'end-art')}</div>` : art(s, `end-art ${headline === 'Defeat' ? 'loser' : 'winner'}`)}
       <h1>${headline}</h1>
       <p class="tag">${sub}</p>
       ${actions}
+      ${statsToggle}
+      ${ui.statsOpen ? statsHtml(m, { masterLabel, art }) : ''}
     </div>`;
+  app.querySelector('#statsToggle').onclick = () => {
+    ui.statsOpen = !ui.statsOpen;
+    render();
+    if (ui.statsOpen) app.querySelector('.stats-screen')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   if (online()) {
     const $ = sel => app.querySelector(sel);
