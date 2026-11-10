@@ -44,6 +44,9 @@ export function describeEffect(e) {
     case 'neutralizeEnemyUnique': return `Neutralizes the enemy's unique passives`;
     case 'ignoreDamageCut': return `Attacks and NP ignore damage cut${turnsText(e)}`;
     case 'missChance': return `Attacks on him ${v}% likely to miss`;
+    case 'terror': return `${who}Terror (${v}% chance to skip an attack)${turnsText(e)}`;
+    case 'curse': return `${who}Curse (${v} damage per turn)${turnsText(e)}`;
+    case 'extraHitChance': return `${v}% chance of a ${e.ratio}% follow-up hit on ${c} attacks`;
     case 'buffSuccessUp': return `Buff success +${v}%${turnsText(e)}`;
     case 'cardVuln': return `${who}takes +${v}% ${c} damage${turnsText(e)}`;
     case 'mirrorAtkUp': return `Copies ${v}% of enemy ATK buffs`;
@@ -87,7 +90,7 @@ const BUFF_LABEL = {
   defDown: 'DEF↓', flatDamage: 'Flat Dmg', sureHit: 'Sure Hit', debuffPotency: 'Debuff Potency',
   nextHitUp: 'Next Hit↑', affinityAll: 'All Cards Favored', apRecoveryDown: 'AP Recovery↓',
   bonusVsStatus: 'vs Petrified↑', buffFailChance: 'Breaker Gorgon', copyEnemyUnique: 'Trace On',
-  instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF', missChance: 'Decoys', buffSuccessUp: 'Buff Success↑', cardVuln: '↓ Resist',
+  instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF', terror: 'Terror', curse: 'Curse', extraHitChance: 'Sea Demons', missChance: 'Decoys', buffSuccessUp: 'Buff Success↑', cardVuln: '↓ Resist',
   mirrorAtkUp: 'Arms Mastery', apRecoveryUp: 'AP Recovery↑',
 };
 
@@ -127,6 +130,9 @@ export function explainBuff(b) {
     case 'copyEnemyUnique': return "Copies the opponent's unique passive for the match. Revives can't be copied.";
     case 'apRecoveryDown': return `${b.status === 'petrified' ? 'Petrified: g' : 'G'}ains ${Math.round(b.value)} less AP from each attack.`;
     case 'bonusVsStatus': return `The next attack or Noble Phantasm against a ${b.status} enemy deals ${v}% more damage.`;
+    case 'terror': return `Terrified: ${v}% chance to not follow through on a regular attack. Ends once it triggers.`;
+    case 'curse': return `Cursed: takes ${Math.round(b.value)} damage at the end of each turn.`;
+    case 'extraHitChance': return `A landed ${c} attack has a ${v}% chance to bring a follow-up hit for ${b.ratio ?? 30}% of its damage.`;
     case 'missChance': return `Regular attacks against this servant have a ${v}% chance to miss. Sure Hit ignores this.`;
     case 'buffSuccessUp': return `Chance-based buffs are ${v}% more likely to land, and enemy buff-failure effects are ${v}% weaker.`;
     case 'cardVuln': return `Takes ${v}% more damage from ${c} attacks and ${c} Noble Phantasms. ${c === 'Arts' ? `Arts hits on this servant also give the attacker +${T.artsEffectNpGain}% NP gain.` : ''}`;
@@ -148,6 +154,8 @@ export function buffChip(b) {
   if (b.type === 'sureHit' && b.card) label = `${CARD_LABEL[b.card]} Sure Hit`;
   if (b.type === 'apRecoveryDown' && b.status === 'petrified') label = 'Petrified';
   if (b.type === 'cardVuln') label = `${CARD_LABEL[b.card]} Resist↓`;
+  if (b.type === 'terror') label = 'Terror';
+  if (b.type === 'curse') label = `Curse ${Math.round(b.value)}`;
   const val = b.type === 'apRecoveryDown' ? ` −${Math.round(b.value)} AP` : b.type === 'apRecoveryUp' ? ` +${Math.round(b.value)} AP`
     : b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage', 'sureHit', 'copyEnemyUnique', 'guts', 'ignoreDamageCut'].includes(b.type)
       ? ` ${Math.round(b.value)}%` : (['apRegen', 'flatDamage'].includes(b.type) ? ` +${b.value}` : '');

@@ -159,12 +159,12 @@ export function validateAction(state, idx, action) {
 
 // ---------- effects ----------
 
-const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln'];
+const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', 'curse'];
 
 // Lasting positive effects a servant puts on itself (what Breaker Gorgon can make fail).
 const BUFF_TYPES = new Set(['ignoreDamageCut', 'buffSuccessUp', 'apRecoveryUp', 'atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
   'cardNpGainUp', 'debuffResist', 'guts', 'apRegen', 'busterConvert', 'flatDamage', 'sureHit',
-  'nextHitUp', 'bonusVsStatus', 'debuffPotency']);
+  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'extraHitChance']);
 const hasStatus = (p, status) => p.buffs.some(b => b.status === status);
 
 function resistScale(target, e, user) {
@@ -224,6 +224,7 @@ function applyEffect(target, e, source, user) {
         status: e.status,
         copiedFrom: e.copiedFrom,
         npName: e.npName,
+        ratio: e.ratio,
         debuff: DEBUFFS.includes(e.type),
         source,
       });
@@ -461,6 +462,13 @@ export function resolveTurn(prev, actions) {
       say(`${def.name} negates ${att.name}'s ${pk.kind === 'np' ? 'Noble Phantasm' : CARD_NAME[pk.card] + ' attack'} (${pk.blocked}).`, { type: 'blocked', ...pk });
       continue;
     }
+    // Terror: a frightened servant may not follow through on a regular attack. Ends once it triggers.
+    const terror = pk.kind === 'attack' ? att.buffs.find(b => b.type === 'terror') : null;
+    if (terror && roll(state) * 100 < terror.value) {
+      att.buffs.splice(att.buffs.indexOf(terror), 1);
+      say(`${att.name} freezes in terror and doesn't follow through!`, { type: 'blocked', ...pk, blocked: 'terror' });
+      continue;
+    }
     // One Hundred Personas: regular attacks on this servant may miss outright (Sure Hit ignores it)
     const miss = pk.kind === 'attack' && !pk.sureHit ? sumBuff(def, 'missChance') : 0;
     if (miss && roll(state) * 100 < miss) {
@@ -484,9 +492,24 @@ export function resolveTurn(prev, actions) {
     if (pk.nextHit) att.buffs = att.buffs.filter(b => b.type !== 'nextHitUp'); // consumed on a landed attack or NP
     if (pk.vsBonus) att.buffs = att.buffs.filter(b => b.type !== 'bonusVsStatus'); // one hit only
     say(`${att.name} hits ${def.name} for ${pk.amount}${pk.hitAs && pk.hitAs !== pk.card ? ` (${CARD_NAME[pk.card]} → Buster)` : ''}${pk.reason === 'counter' ? ' (counter!)' : ''}.`, { type: 'hit', ...pk });
+    // Summoning: Sea Demons — a landed Arts attack may bring a follow-up hit for a share of its damage
+    if (pk.kind === 'attack' && !pk.instantKill) for (const b of att.buffs.filter(b => b.type === 'extraHitChance' && b.card === pk.hitAs)) {
+      if (roll(state) * 100 >= b.value) continue;
+      const extra = Math.max(1, Math.round(pk.amount * (b.ratio ?? 30) / 100));
+      def.hp -= extra;
+      say(`A Sea Demon lashes ${def.name} for ${extra}!`, { type: 'hit', from: pk.from, to: pk.to, kind: 'extra', card: pk.hitAs, amount: extra });
+    }
   }
   for (const i of npUsers) applyEffects(P[i], P[1 - i], npPre[i], 'np');
   for (const i of npUsers) applyEffects(P[i], P[1 - i], screenBuffs(state, P[i], P[1 - i], nps[i].postEffects, say), 'np');
+
+  // Curse: damage over time at the end of the turn (before guts, so revives still work)
+  for (const p of P) {
+    const dot = Math.round(sumBuff(p, 'curse'));
+    if (!dot || p.hp <= 0) continue;
+    p.hp -= dot;
+    say(`The curse eats at ${p.name} for ${dot}.`, { type: 'curse', player: P.indexOf(p), amount: dot });
+  }
 
   // Guts
   for (const p of P) {

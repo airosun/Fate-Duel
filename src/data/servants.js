@@ -378,6 +378,64 @@ export const SERVANTS = {
           desc: 'Heavy Quick damage, then ATK +30% for 3 turns',
           postEffects: [{ type: 'atkUp', value: 30, turns: 4 }] },
   },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
+  gilles: {
+    id: 'gilles', name: 'Gilles de Rais', class: 'Caster',
+    fgoHp: 9506, fgoAtk: 6514, fgoNpAtk: 1.58, fgoNpDef: 3,
+    favoredCard: 'arts', maxAp: 10,
+    passives: [
+      classPassive('territoryCreation', 'B'),
+      unique('Summoning: Sea Demons', 'A landed Arts attack has a 40% chance to bring a Sea Demon follow-up hit for 30% of its damage',
+        [{ type: 'extraHitChance', card: 'arts', value: 40, ratio: 30 }]),
+    ],
+    skills: [
+      { id: 'mental_pollution', name: 'Mental Pollution A', cost: 4,
+        desc: 'Debuff success +30% and debuff resist +30% for 3 turns',
+        effects: [{ type: 'debuffPotency', value: 30, turns: 3 }, { type: 'debuffResist', value: 30, turns: 3 }] },
+      { id: 'blasphemy', name: 'Blasphemy Aesthetic C+++', cost: 5,
+        desc: 'Drain 15% enemy NP; enemy takes +15% Arts and +15% Buster damage for 3 turns',
+        effects: [{ type: 'npDrain', value: 15, target: 'enemy' },
+                  { type: 'cardVuln', card: 'arts', value: 15, turns: 3, target: 'enemy' },
+                  { type: 'cardVuln', card: 'buster', value: 15, turns: 3, target: 'enemy' }] },
+      { id: 'evil_eye', name: 'Evil Eye of the Abyss B+++', cost: 6,
+        desc: 'Terror (40%) and Curse (30/turn) on the enemy and DEF -15% for 3 turns; his next attack on a Cursed enemy +30%',
+        effects: [{ type: 'terror', value: 40, turns: 3, status: 'terrified', target: 'enemy' },
+                  { type: 'curse', value: 30, turns: 3, status: 'cursed', target: 'enemy' },
+                  { type: 'defDown', value: 15, turns: 3, target: 'enemy' },
+                  { type: 'bonusVsStatus', status: 'cursed', value: 30, turns: 3 }] },
+    ],
+    np: { name: "Prelati's Spellbook", card: 'buster', mult: 3.8,
+          desc: 'Heavy Buster damage, then enemy ATK -20% for 3 turns',
+          postEffects: [{ type: 'atkDown', value: 20, turns: 4, target: 'enemy' }] },
+  },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
+  diarmuid: {
+    id: 'diarmuid', name: 'Diarmuid Ua Duibhne', class: 'Lancer',
+    fgoHp: 10098, fgoAtk: 6877, fgoNpAtk: 0.79, fgoNpDef: 4,
+    favoredCard: 'quick', maxAp: 10,
+    passives: [
+      classPassive('magicResistance', 'B'),
+      unique("Knight's Oath", 'Quick and Arts +10% (attacks and NP)',
+        [{ type: 'cardUp', card: 'quick', value: 10 }, { type: 'cardUp', card: 'arts', value: 10 }]),
+    ],
+    skills: [
+      { id: 'eye_of_mind', name: 'Eye of the Mind (True) B', cost: 4,
+        desc: 'Evade and damage cut 20% for 2 turns',
+        effects: [{ type: 'evade', turns: 2 }, { type: 'damageCut', value: 20, turns: 2 }] },
+      { id: 'love_spot', name: 'Love Spot C', cost: 4,
+        desc: 'Enemy ATK -20% for 3 turns; NP +15%',
+        effects: [{ type: 'atkDown', value: 20, turns: 3, target: 'enemy' }, { type: 'npCharge', value: 15 }] },
+      { id: 'blighted_love', name: 'Blighted Love Flowing in Profusion A', cost: 5,
+        desc: 'Quick +25%, Arts +25% and NP gain +25% for 3 turns; AP +2',
+        effects: [{ type: 'cardUp', card: 'quick', value: 25, turns: 3 }, { type: 'cardUp', card: 'arts', value: 25, turns: 3 },
+                  { type: 'npGainUp', value: 25, turns: 3 }, { type: 'apGain', value: 2 }] },
+    ],
+    np: { name: 'Gáe Dearg & Gáe Buidhe', card: 'quick', mult: 3.0,
+          desc: 'Heavy Quick damage, then Curse the enemy (30 damage per turn for 3 turns)',
+          postEffects: [{ type: 'curse', value: 30, turns: 3, status: 'cursed', target: 'enemy' }] },
+  },
 };
 
 export const ROSTER = Object.values(SERVANTS);

@@ -605,3 +605,48 @@ test('NPs use ATK up, card effectiveness of their card, next-hit boosts and bonu
   assert.ok(!vs.buffs.some(x => x.type === 'bonusVsStatus'));
   assert.equal(npDmg([b('bonusVsStatus', 50, { status: 'petrified' })]).dmg, base);         // not petrified: no bonus
 });
+
+test('Gilles: Sea Demons add a 30% follow-up on ~40% of landed Arts attacks', () => {
+  let procs = 0, n = 400;
+  for (let seed = 1; seed <= n; seed++) {
+    const s = createMatch(SERVANTS.gilles, dummy('B'), { seed });
+    const r = resolveTurn(s, [atk('arts'), atk('buster')]);
+    const demon = r.log.find(l => l.kind === 'extra');
+    if (demon) {
+      procs++;
+      const hit = r.log.find(l => l.type === 'hit' && l.kind === 'attack' && l.from === 0);
+      assert.equal(demon.amount, Math.round(hit.amount * 0.3));
+    }
+  }
+  assert.ok(procs / n > 0.33 && procs / n < 0.47, `proc rate ${procs / n}`);
+});
+
+test('Terror: ~40% chance the enemy skips a winning attack, then it ends; Curse ticks at end of turn', () => {
+  let froze = 0, n = 300;
+  for (let seed = 1; seed <= n; seed++) {
+    let s = createMatch(SERVANTS.gilles, dummy('B'), { seed });
+    s.players[0].ap = 10;
+    const r = resolveTurn(s, [skill('evil_eye'), atk('arts')]);
+    const curse = r.state.players[1].buffs.find(b => b.type === 'curse');
+    assert.equal(curse.value, 30);
+    assert.ok(r.log.some(l => l.type === 'curse' && l.player === 1 && l.amount === 30));
+    if (r.log.some(l => l.blocked === 'terror')) {
+      froze++;
+      assert.ok(!r.state.players[1].buffs.some(b => b.type === 'terror'), 'Terror ends once it triggers');
+      assert.equal(r.state.players[0].hp, s.players[0].hp);
+    }
+  }
+  assert.ok(froze / n > 0.32 && froze / n < 0.48, `freeze rate ${froze / n}`);
+});
+
+test('Diarmuid: Knight\'s Oath boosts Quick and Arts; his NP curses the enemy', () => {
+  const s = createMatch(SERVANTS.diarmuid, dummy('B'), { seed: 3 });
+  assert.equal(s.players[0].buffs.filter(b => b.type === 'cardUp' && b.turns === null).length, 2);
+  s.players[0].np = 100;
+  let r = resolveTurn(s, [np(), skill('shield')]).state;
+  const hpAfterNp = r.players[1].hp;
+  assert.ok(r.players[1].buffs.some(b => b.type === 'curse' && b.value === 30));
+  r.players[1].ap = 10;
+  r = resolveTurn(r, [skill('love_spot'), skill('charge')]).state;
+  assert.equal(r.players[1].hp, hpAfterNp - 30);   // first tick already happened at the end of the NP turn
+});

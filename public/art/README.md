@@ -17,6 +17,8 @@ The game tries `.png`, then `.jpg`, then `.webp`, and falls back to a class-colo
 | Iskandar | `iskandar.png` |
 | Hassan of the Hundred Faces | `hundred_faces.png` |
 | Lancelot | `lancelot.png` |
+| Gilles de Rais | `gilles.png` |
+| Diarmuid Ua Duibhne | `diarmuid.png` |
 
 Tips
 - Portrait-oriented full art works best (e.g. Final Ascension stage art). Images are cropped with
