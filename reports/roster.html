@@ -71,13 +71,13 @@ footer { color: var(--muted); font-size: .8rem; }
 <div class="wrap">
   <header>
     <h1>Fate<span>/</span>Duel Roster</h1>
-    <p class="intro">18 servants and their complete kits, generated from the game's own data. HP and ATK are the in-game values; NP gain is relative to an average servant (1.00×).</p>
+    <p class="intro">20 servants and their complete kits, generated from the game's own data. HP and ATK are the in-game values; NP gain is relative to an average servant (1.00×).</p>
   </header>
   <nav class="filters" aria-label="Filter by class">
-    <button type="button" data-filter="all" aria-pressed="true">All (18)</button>
+    <button type="button" data-filter="all" aria-pressed="true">All (20)</button>
     <button type="button" data-filter="Saber" aria-pressed="false">Saber (3)</button>
     <button type="button" data-filter="Archer" aria-pressed="false">Archer (4)</button>
-    <button type="button" data-filter="Lancer" aria-pressed="false">Lancer (2)</button>
+    <button type="button" data-filter="Lancer" aria-pressed="false">Lancer (4)</button>
     <button type="button" data-filter="Rider" aria-pressed="false">Rider (2)</button>
     <button type="button" data-filter="Caster" aria-pressed="false">Caster (2)</button>
     <button type="button" data-filter="Assassin" aria-pressed="false">Assassin (3)</button>
@@ -698,6 +698,74 @@ footer { color: var(--muted); font-size: .8rem; }
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Antares Snipe</h4><span class="card arts">Arts</span><span class="mult">3.5×</span></div>
     <p>Strip the enemy&#39;s Evade, Invincible and damage cut, then heavy Arts damage</p></div>
     <p class="fgo">FGO stats: 12,250 HP · 9,294 ATK · NP 0.68% / 3%</p>
+  </article>
+
+  <article class="servant" id="vlad" data-class="Lancer">
+    <header>
+      <div class="badge" aria-hidden="true">VI</div>
+      <div class="title"><span class="cls">Lancer</span><h3>Vlad III</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>963<small>×0.75</small></dd></div>
+      <div><dt>ATK</dt><dd>123</dd></div>
+      <div><dt>Max AP</dt><dd>10</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>0.79× <small>atk</small> · 1.29× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card arts">Arts</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Mad Enhancement EX</span><span>Buster attacks +15% damage</span></li>
+        <li><span class="name">Protection of Faith<span class="tag">Unique</span></span><span>Revives once with 15% HP; on revival, NP gain +30% for the rest of the battle (a normal buff, so it can be removed)</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">Bloodsucker A<span class="ap">5 AP</span></span><span>Drain 20% of the enemy&#39;s NP and gain what was drained</span></li>
+        <li><span class="name">Legend of Dracula A+<span class="ap">4 AP</span></span><span>ATK +20% for 3 turns; damage cut 20% for 2 turns</span></li>
+        <li><span class="name">Fearsome Immortal A+<span class="ap">4 AP</span></span><span>Arts +30% and NP gain +30% for 3 turns</span></li>
+      </ul>
+    </section>
+    <div class="np">
+    <div class="np-head"><span class="label">Noble Phantasm</span><h4>Kazikli Bey</h4><span class="card arts">Arts</span><span class="mult">3.4×</span></div>
+    <p>Heavy Arts damage, then the enemy takes +20% Arts damage for 2 turns</p></div>
+    <p class="fgo">FGO stats: 15,086 HP · 11,499 ATK · NP 0.5% / 5%</p>
+  </article>
+
+  <article class="servant" id="karna" data-class="Lancer">
+    <header>
+      <div class="badge" aria-hidden="true">K</div>
+      <div class="title"><span class="cls">Lancer</span><h3>Karna</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>1,271</dd></div>
+      <div><dt>ATK</dt><dd>123</dd></div>
+      <div><dt>Max AP</dt><dd>10</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>0.95× <small>atk</small> · 1.15× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card buster">Buster</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Magic Resistance C</span><span>Enemy debuffs on self 10% weaker</span></li>
+        <li><span class="name">Riding A</span><span>Quick attacks +12% damage</span></li>
+        <li><span class="name">Divinity A</span><span>+10 flat damage on every hit</span></li>
+        <li><span class="name">Son of the Sun God<span class="tag">Unique</span></span><span>Buster +10% and NP damage +10%</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">Knowledge of the Deprived A<span class="ap">5 AP</span></span><span>Enemy debuff resist -20% for 3 turns; NP Seal this turn: if the enemy uses its NP now, it fizzles and the gauge drops 20%</span></li>
+        <li><span class="name">Flash of the Sun God EX<span class="ap">5 AP</span></span><span>Quick +20%, Buster +20% and NP damage +20% for 3 turns</span></li>
+        <li><span class="name">Almsgiver&#39;s End<span class="ap">4 AP</span></span><span>NP +30% now; NP gain +30% for 3 turns</span></li>
+      </ul>
+    </section>
+    <div class="np">
+    <div class="np-head"><span class="label">Noble Phantasm</span><h4>Vasavi Shakti</h4><span class="card buster">Buster</span><span class="mult">3.2×</span></div>
+    <p>Heavy Buster damage, then the enemy takes +20% Buster damage for 2 turns</p></div>
+    <p class="fgo">FGO stats: 13,632 HP · 11,976 ATK · NP 0.72% / 4%</p>
   </article>
   </main>
   <footer>Generated from src/data/servants.js on 2026-11-10. Kits are rebuilt whenever a servant is added or rebalanced.</footer>

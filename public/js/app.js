@@ -86,7 +86,7 @@ function masterLabel(i) {
 }
 
 function show(screen) {
-  if (screen !== 'end') ui.statsOpen = false; // a new match starts with the summary view
+  if (screen !== 'end') { ui.statsOpen = false; ui.endLogOpen = false; } // a new match starts with the summary view
   const changed = ui.screen !== screen;
   if (changed) ui.miniShown = false;
   ui.screen = screen; render();
@@ -764,9 +764,8 @@ function controlsHtml() {
             <button class="cmd-card ${c} ${sel('attack', c) ? 'selected' : ''}" data-card="${c}" title="Key: ${c[0].toUpperCase()}">
               ${art(s, 'card-art')}
               <div class="cmd-frame">
-                <span class="cmd-name">${CARD_LABEL[c]}</span>
+                <span class="cmd-name">${CARD_LABEL[c]}${isFavored(s, c) ? '<span class="cmd-fav" title="Favored card: bonus damage">★</span>' : ''}</span>
                 <span class="cmd-perk">${perk[c]}</span>
-                ${isFavored(s, c) ? '<span class="cmd-fav" title="Favored card">★</span>' : ''}
                 ${conv && c !== 'buster' ? '<span class="cmd-conv">hits as Buster</span>' : ''}
               </div>
             </button>`).join('')}
@@ -856,6 +855,22 @@ function waitingControlsHtml() {
         <p class="muted">Waiting for your opponent…</p>
         ${foresightState()?.seat === 1 - mySeat() ? '' : '<button class="btn ghost small" id="unlock">Change action</button>'}
       </div>
+    </section>`;
+}
+
+// Full battle log for the end screen: every turn in order, with what each master chose.
+function endLogHtml(m) {
+  const turns = m.history ?? [];
+  const side = (i, a) => a?.main ? `<span class="el-act side-${i}"><b>${esc(m.servants[i].name)}</b> ${esc(describeAction(i, a))}</span>` : '';
+  return `
+    <section class="end-log st-card">
+      <h3>Battle log</h3>
+      ${turns.length ? turns.map(t => `
+        <div class="log-turn">
+          <h4>Turn ${t.turn}</h4>
+          <div class="el-acts">${side(0, t.actions?.[0])}${side(1, t.actions?.[1])}</div>
+          ${t.log.map(l => `<p class="log-${l.type}">${esc(l.msg)}</p>`).join('')}
+        </div>`).join('') : '<p class="muted">No turns were played.</p>'}
     </section>`;
 }
 
@@ -1126,16 +1141,25 @@ function renderEnd() {
   }
 
   if (cpuNote) actions = cpuNote + actions;
-  const statsToggle = `<button class="btn ghost" id="statsToggle">${ui.statsOpen ? 'Hide battle stats' : 'Battle stats'}</button>`;
+  const statsToggle = `<div class="end-toggles">
+      <button class="btn ghost" id="statsToggle">${ui.statsOpen ? 'Hide battle stats' : 'Battle stats'}</button>
+      <button class="btn ghost" id="endLogToggle">${ui.endLogOpen ? 'Hide battle log' : 'Battle log'}</button>
+    </div>`;
   app.innerHTML = `
-    <div class="end-screen ${draw ? 'draw' : ''} ${ui.statsOpen ? 'with-stats' : ''}">
-      ${ui.statsOpen ? '' : draw ? `<div class="end-pair">${art(m.servants[0], 'end-art')}${art(m.servants[1], 'end-art')}</div>` : art(s, `end-art ${headline === 'Defeat' ? 'loser' : 'winner'}`)}
+    <div class="end-screen ${draw ? 'draw' : ''} ${ui.statsOpen || ui.endLogOpen ? 'with-stats' : ''}">
+      ${ui.statsOpen || ui.endLogOpen ? '' : draw ? `<div class="end-pair">${art(m.servants[0], 'end-art')}${art(m.servants[1], 'end-art')}</div>` : art(s, `end-art ${headline === 'Defeat' ? 'loser' : 'winner'}`)}
       <h1>${headline}</h1>
       <p class="tag">${sub}</p>
       ${actions}
       ${statsToggle}
+      ${ui.endLogOpen ? endLogHtml(m) : ''}
       ${ui.statsOpen ? statsHtml(m, { masterLabel, art }) : ''}
     </div>`;
+  app.querySelector('#endLogToggle').onclick = () => {
+    ui.endLogOpen = !ui.endLogOpen;
+    render();
+    if (ui.endLogOpen) app.querySelector('.end-log')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
   app.querySelector('#statsToggle').onclick = () => {
     ui.statsOpen = !ui.statsOpen;
     render();

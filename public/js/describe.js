@@ -8,6 +8,7 @@ export const CARD_LABEL = { quick: 'Quick', arts: 'Arts', buster: 'Buster' };
 const turnsText = (e) => {
   let t = e.turns ?? T.defaultTurns[e.type];
   if (e.type === 'invincible') t = 1;
+  if (t > 50) return ' (rest of battle)';
   return t ? ` (${t}T)` : '';
 };
 
@@ -25,7 +26,7 @@ export function describeEffect(e) {
     case 'npGainUp': return `NP gain +${v}%${turnsText(e)}`;
     case 'cardNpGainUp': return `${c} NP gain +${v}%${turnsText(e)}`;
     case 'debuffResist': return `Debuffs on self ${v}% weaker`;
-    case 'guts': return `Guts: revive at ${v}% HP${e.charges ? ` (${e.charges}×)` : ''}`;
+    case 'guts': return `Guts: revive at ${v}% HP${e.charges ? ` (${e.charges}×)` : ''}${e.onRevive ? `; then ${e.onRevive.map(x => describeEffect(x)).join(', ')}` : ''}`;
     case 'atkDown': return `${who}ATK −${v}%${turnsText(e)}`;
     case 'apRegen': return `+${v} AP each turn`;
     case 'busterConvert': return `Next attack hits as Buster`;
@@ -46,6 +47,9 @@ export function describeEffect(e) {
     case 'ignoreDamageCut': return `Attacks and NP ignore damage cut${turnsText(e)}`;
     case 'missChance': return `Attacks on him ${v}% likely to miss`;
     case 'maxApUp': return `Max AP +${v}${turnsText(e)}`;
+    case 'npSteal': return `${who}NP -${v}%, gained by self`;
+    case 'npSeal': return `${who}NP Seal this turn (NP fizzles, -${v}% gauge)`;
+    case 'debuffResistDown': return `${who}debuff resist -${v}%${turnsText(e)}`;
     case 'doubleShot': return `${v}% chance of a second arrow on ${c} attacks`;
     case 'foresight': return `${e.charges}× per battle: see the opponent's locked action first`;
     case 'hpCost': return `lose ${v}% HP (can't KO)`;
@@ -98,7 +102,7 @@ const BUFF_LABEL = {
   defDown: 'DEF↓', flatDamage: 'Flat Dmg', sureHit: 'Sure Hit', debuffPotency: 'Debuff Potency', debuffUp: 'Debuff↑',
   nextHitUp: 'Next Hit↑', affinityAll: 'All Cards Favored', apRecoveryDown: 'AP Recovery↓',
   bonusVsStatus: 'vs Petrified↑', buffFailChance: 'Breaker Gorgon', copyEnemyUnique: 'Trace On',
-  instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF', terror: 'Terror', curse: 'Curse', doubleShot: 'Golden Apple', foresight: 'Foresight', maxApUp: 'Max AP↑', statusOnHit: "Fafnir's Blood", dmgVsStatus: 'vs Dragon↑', extraHitChance: 'Sea Demons', missChance: 'Decoys', buffSuccessUp: 'Buff Success↑', cardVuln: '↓ Resist',
+  instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF', terror: 'Terror', curse: 'Curse', npSeal: 'NP Seal', debuffResistDown: 'Debuff Res↓', doubleShot: 'Golden Apple', foresight: 'Foresight', maxApUp: 'Max AP↑', statusOnHit: "Fafnir's Blood", dmgVsStatus: 'vs Dragon↑', extraHitChance: 'Sea Demons', missChance: 'Decoys', buffSuccessUp: 'Buff Success↑', cardVuln: '↓ Resist',
   mirrorAtkUp: 'Arms Mastery', apRecoveryUp: 'AP Recovery↑',
 };
 
@@ -123,7 +127,8 @@ export function explainBuff(b) {
     case 'guts': {
       const at = b.value ? `${v}% HP` : '1 HP';
       const reset = b.resetNp || b.resetAp ? ' Its NP gauge and AP drop to 0 when it revives.' : ' Keeps its AP and NP gauge.';
-      return `Survives one killing blow and comes back at ${at}.${reset}`;
+      const bonus = b.onRevive?.length ? ` On revival: ${b.onRevive.map(x => describeEffect(x)).join(', ')}.` : '';
+      return `Survives one killing blow and comes back at ${at}.${reset}${bonus}`;
     }
     case 'atkDown': return `Deals ${v}% less damage.`;
     case 'defDown': return `Takes ${v}% more damage from attacks and Noble Phantasms.`;
@@ -139,6 +144,8 @@ export function explainBuff(b) {
     case 'copyEnemyUnique': return "Copies the opponent's unique passive for the match. Revives can't be copied.";
     case 'apRecoveryDown': return `${b.status === 'petrified' ? 'Petrified: g' : 'G'}ains ${Math.round(b.value)} less AP from each attack.`;
     case 'bonusVsStatus': return `The next attack or Noble Phantasm against a ${b.status} enemy deals ${v}% more damage.`;
+    case 'npSeal': return `NP Seal: if this servant uses its Noble Phantasm this turn, it fizzles and the gauge drops ${v}%.`;
+    case 'debuffResistDown': return `Debuff resistance -${v}%: debuffs on this servant are stronger.`;
     case 'doubleShot': return `${c} attacks have a ${v}% chance to loose a second arrow: +${b.ratio ?? 50}% damage if the attack landed, or a full-damage hit if it was beaten (Evade and Invincible still stop it).`;
     case 'foresight': return `${b.charges ?? 0} use${b.charges === 1 ? '' : 's'} left: see the opponent's locked-in action before choosing.`;
     case 'maxApUp': return `Max AP +${v}. AP above the normal maximum is lost when this ends.`;
@@ -181,6 +188,7 @@ export function buffChip(b) {
   let duration;
   if (b.copiedFrom) duration = `Copied from ${b.copiedFrom} · lasts the whole match`;
   else if (b.turns === null) duration = b.charges != null ? `Passive · ${b.charges} use${b.charges === 1 ? '' : 's'} left` : 'Passive · lasts the whole match';
+  else if (b.turns > 50) duration = 'Lasts the rest of the battle (can be removed)';
   else if (b.turns === 1) duration = 'Ends after this turn';
   else duration = `${b.turns} turns left, including this one`;
   if (b.type === 'busterConvert') duration += ' · used up by one attack';

@@ -545,6 +545,61 @@ export const SERVANTS = {
           desc: "Strip the enemy's Evade, Invincible and damage cut, then heavy Arts damage",
           preEffects: [{ type: 'removeDefBuffs', target: 'enemy' }] },
   },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
+  vlad: {
+    id: 'vlad', name: 'Vlad III', class: 'Lancer',
+    fgoHp: 15086, fgoAtk: 11499, fgoNpAtk: 0.5, fgoNpDef: 5,
+    favoredCard: 'arts', maxAp: 10, hpMult: 0.75, // 25% below FGO-derived HP: Protection of Faith is an extra life
+    passives: [
+      classPassive('madness', 'EX'),
+      unique('Protection of Faith', 'Revives once with 15% HP; on revival, NP gain +30% for the rest of the battle (a normal buff, so it can be removed)',
+        [{ type: 'guts', value: 15, charges: 1, onRevive: [{ type: 'npGainUp', value: 30, turns: 99 }] }]),
+    ],
+    skills: [
+      { id: 'bloodsucker', name: 'Bloodsucker A', cost: 5,
+        desc: "Drain 20% of the enemy's NP and gain what was drained",
+        effects: [{ type: 'npSteal', value: 20, target: 'enemy' }] },
+      { id: 'legend_of_dracula', name: 'Legend of Dracula A+', cost: 4,
+        desc: 'ATK +20% for 3 turns; damage cut 20% for 2 turns',
+        effects: [{ type: 'atkUp', value: 20, turns: 3 }, { type: 'damageCut', value: 20, turns: 2 }] },
+      { id: 'fearsome_immortal', name: 'Fearsome Immortal A+', cost: 4,
+        desc: 'Arts +30% and NP gain +30% for 3 turns',
+        effects: [{ type: 'cardUp', card: 'arts', value: 30, turns: 3 }, { type: 'npGainUp', value: 30, turns: 3 }] },
+    ],
+    np: { name: 'Kazikli Bey', card: 'arts', mult: 3.4,
+          desc: 'Heavy Arts damage, then the enemy takes +20% Arts damage for 2 turns',
+          postEffects: [{ type: 'cardVuln', card: 'arts', value: 20, turns: 3, target: 'enemy' }] },
+  },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
+  karna: {
+    id: 'karna', name: 'Karna', class: 'Lancer',
+    fgoHp: 13632, fgoAtk: 11976, fgoNpAtk: 0.72, fgoNpDef: 4,
+    favoredCard: 'buster', maxAp: 10,
+    passives: [
+      classPassive('magicResistance', 'C'),
+      classPassive('riding', 'A'),
+      classPassive('divinity', 'A'),
+      unique('Son of the Sun God', 'Buster +10% and NP damage +10%',
+        [{ type: 'cardUp', card: 'buster', value: 10 }, { type: 'npUp', value: 10 }]),
+    ],
+    skills: [
+      { id: 'knowledge_of_deprived', name: 'Knowledge of the Deprived A', cost: 5,
+        desc: "Enemy debuff resist -20% for 3 turns; NP Seal this turn: if the enemy uses its NP now, it fizzles and the gauge drops 20%",
+        effects: [{ type: 'debuffResistDown', value: 20, turns: 3, target: 'enemy' }, { type: 'npSeal', value: 20, turns: 1, target: 'enemy' }] },
+      { id: 'flash_of_sun_god', name: 'Flash of the Sun God EX', cost: 5,
+        desc: 'Quick +20%, Buster +20% and NP damage +20% for 3 turns',
+        effects: [{ type: 'cardUp', card: 'quick', value: 20, turns: 3 }, { type: 'cardUp', card: 'buster', value: 20, turns: 3 },
+                  { type: 'npUp', value: 20, turns: 3 }] },
+      { id: 'almsgivers_end', name: "Almsgiver's End", cost: 4,
+        desc: 'NP +30% now; NP gain +30% for 3 turns',
+        effects: [{ type: 'npCharge', value: 30 }, { type: 'npGainUp', value: 30, turns: 3 }] },
+    ],
+    np: { name: 'Vasavi Shakti', card: 'buster', mult: 3.2,
+          desc: 'Heavy Buster damage, then the enemy takes +20% Buster damage for 2 turns',
+          postEffects: [{ type: 'cardVuln', card: 'buster', value: 20, turns: 3, target: 'enemy' }] },
+  },
 };
 
 export const ROSTER = Object.values(SERVANTS);

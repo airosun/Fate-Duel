@@ -190,7 +190,7 @@ export function validateAction(state, idx, action) {
 
 // ---------- effects ----------
 
-const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', 'curse'];
+const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', 'curse', 'debuffResistDown', 'npSeal'];
 
 // Lasting positive effects a servant puts on itself (what Breaker Gorgon can make fail).
 const BUFF_TYPES = new Set(['ignoreDamageCut', 'buffSuccessUp', 'apRecoveryUp', 'atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
@@ -203,7 +203,7 @@ function resistScale(target, e, user) {
   // rolling a chance (the engine has no RNG). The caster's debuffPotency
   // cancels resistance point-for-point (it can't push debuffs above 100%).
   if (e.target !== 'enemy') return 1;
-  const resist = sumBuff(target, 'debuffResist') - (user ? sumBuff(user, 'debuffPotency') : 0);
+  const resist = (sumBuff(target, 'debuffResist') - sumBuff(target, 'debuffResistDown')) - (user ? sumBuff(user, 'debuffPotency') : 0);
   // debuffUp (Mental Pollution): the caster's debuffs are X% stronger, applied after resistance
   const up = user ? sumBuff(user, 'debuffUp') : 0;
   return Math.min(1, Math.max(0, 1 - resist / 100)) * (1 + up / 100);
@@ -235,6 +235,12 @@ function applyEffectRaw(target, e, source, user) {
     case 'npDrain':
       target.np = Math.max(0, target.np - Math.round(e.value * resistScale(target, e, user)));
       return;
+    case 'npSteal': { // Bloodsucker: drain the enemy's NP and gain what was actually drained
+      const before = target.np;
+      target.np = Math.max(0, target.np - Math.round(e.value * resistScale(target, e, user)));
+      if (user) user.np = Math.min(T.npMax, user.np + (before - target.np));
+      return;
+    }
     case 'apGain':
       target.ap = Math.min(target.maxAp, target.ap + e.value);
       return;
@@ -280,6 +286,7 @@ function applyEffectRaw(target, e, source, user) {
         npName: e.npName,
         ratio: e.ratio,
         markTurns: e.markTurns,
+        onRevive: e.onRevive,
         debuff: DEBUFFS.includes(e.type),
         source,
       });
@@ -474,6 +481,15 @@ export function resolveTurn(prev, actions) {
   // own hit), so neither NP's effects touch the other. All NP effects land on
   // the real field after all damage.
   const packets = []; // { from, to, amount, blocked, kind, card }
+  // NP Seal (Knowledge of the Deprived): an NP chosen this turn fizzles and the gauge drops by X%.
+  for (const i of [0, 1]) {
+    const seal = mains[i].type === 'np' && P[i].buffs.find(b => b.type === 'npSeal');
+    if (!seal) continue;
+    mains[i] = { type: 'sealed' };
+    P[i].np = Math.max(0, P[i].np - Math.round(seal.value));
+    proc(P[1 - i], `${sourceLabel(S[1 - i], seal.source)} (NPs sealed)`, true);
+    say(`${P[i].name}'s Noble Phantasm is sealed! It fizzles and the gauge drops to ${P[i].np}%.`, { type: 'blocked', player: i, blocked: 'npSeal' });
+  }
   const npUsers = [0, 1].filter(i => mains[i].type === 'np');
   const nps = [0, 1].map(i => npOf(S[i], P[i]));
   const npPre = [0, 1].map(i => (npUsers.includes(i) ? screenBuffs(state, P[i], P[1 - i], nps[i].preEffects, say, nps[i].name) : []));
@@ -666,6 +682,8 @@ export function resolveTurn(prev, actions) {
     if (g.resetAp) p.ap = 0;
     if (g.charges != null && --g.charges > 0) { /* keep */ } else p.buffs.splice(p.buffs.indexOf(g), 1);
     say(`${p.name} refuses to fall! (guts: ${p.hp} HP)`, { type: 'guts', player: P.indexOf(p) });
+    // Protection of Faith: buffs gained on revival are ordinary (removable) buffs, sourced to the passive
+    if (g.onRevive) applyEffects(p, P[1 - P.indexOf(p)], g.onRevive, g.source);
   }
 
   // 6. End of turn

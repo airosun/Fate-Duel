@@ -23,6 +23,8 @@ The game tries `.png`, then `.jpg`, then `.webp`, and falls back to a class-colo
 | Siegfried | `siegfried.png` |
 | Atalanta | `atalanta.png` |
 | Chiron | `chiron.png` |
+| Vlad III | `vlad.png` |
+| Karna | `karna.png` |
 
 Tips
 - Portrait-oriented full art works best (e.g. Final Ascension stage art). Images are cropped with

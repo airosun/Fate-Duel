@@ -195,7 +195,8 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
 }
 .cmd-name { font-family: var(--title); font-weight: 900; font-size: 1.1rem; text-shadow: 0 2px 4px rgba(0,0,0,.6); }
 .cmd-perk { font-size: .72rem; font-weight: 700; opacity: .9; }
-.cmd-fav { position: absolute; top: -1.6rem; right: .4rem; color: var(--gold2); font-size: 1.1rem; text-shadow: 0 0 6px #000; }
+.cmd-name { display: inline-flex; align-items: center; justify-content: center; gap: .3rem; }
+.cmd-fav { color: var(--gold2); font-size: 1.7rem; line-height: 1; text-shadow: 0 0 8px rgba(243, 220, 147, .7), 0 2px 4px #000; }
 .cmd-conv { font-size: .65rem; background: var(--buster); border-radius: 3px; padding: 0 .3rem; align-self: center; }
 
 .np-card {
@@ -576,3 +577,13 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
 .foresight-box.warn b { color: #f3c48a; }
 .foresight-note { color: #f3c48a; font-size: .9rem; max-width: 34rem; margin: .3rem auto; }
 .log-foresight { color: #9fe8d8; }
+
+/* end screen: battle log */
+.end-toggles { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; margin-top: 1rem; }
+.end-toggles #statsToggle { margin-top: 0; }
+.end-log { width: min(860px, 100%); margin: 1.5rem auto 0; text-align: left; max-height: 70vh; overflow-y: auto; }
+.end-log .log-turn { border-top: 1px solid rgba(138, 111, 53, .25); padding-top: .2rem; }
+.end-log .log-turn:first-of-type { border-top: 0; }
+.el-acts { display: flex; flex-wrap: wrap; gap: .2rem 1.2rem; margin: .1rem 0 .3rem; font-size: .8rem; color: var(--muted); }
+.el-act b { color: var(--gold2); font-weight: 700; margin-right: .2rem; }
+.end-screen.with-stats .stats-screen { margin-top: 1rem; }

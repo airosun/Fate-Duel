@@ -786,3 +786,38 @@ test("Chiron: Teacher's Wisdom has 3 uses, Ea switches it off; Eternal Consecrat
   assert.equal(guarded.dmg, plain);
   assert.equal(guarded.left.filter(b => ['damageCut', 'invincible'].includes(b.type)).length, 0);
 });
+
+test('Vlad III: Protection of Faith revives at 15% and grants removable NP gain; Bloodsucker steals NP', () => {
+  let s = createMatch(SERVANTS.vlad, dummy('B'), { seed: 1 });
+  s.players[0].hp = 1; s.players[0].ap = 10;
+  s = resolveTurn(s, [skill('legend_of_dracula'), atk('arts')]).state;   // dummy hits through: KO -> revive
+  const v = s.players[0];
+  assert.equal(v.hp, Math.round(v.maxHp * 0.15));
+  const npg = v.buffs.find(b => b.type === 'npGainUp' && b.source === 'Protection of Faith');
+  assert.ok(npg && npg.turns > 50 && npg.value === 30);
+  const r = createMatch(SERVANTS.medea, SERVANTS.vlad, { seed: 2 });
+  r.players[1].buffs.push({ ...npg }); r.players[0].np = 100;
+  const after = resolveTurn(r, [np(), atk('quick')]).state;               // Rule Breaker strips buffs
+  assert.ok(!after.players[1].buffs.some(b => b.type === 'npGainUp' && b.source === 'Protection of Faith'));
+
+  let b = createMatch(SERVANTS.vlad, dummy('B'), { seed: 3 });
+  b.players[1].np = 50; b.players[0].np = 10; b.players[0].ap = 10; b.players[1].ap = 10;
+  b = resolveTurn(b, [skill('bloodsucker'), skill('shield')]).state;
+  assert.equal(b.players[1].np, 30);
+  assert.equal(b.players[0].np, 30);
+});
+
+test("Karna: NP Seal makes a same-turn NP fizzle and costs 20% gauge; debuff resist down; Son of the Sun God", () => {
+  let s = createMatch(SERVANTS.karna, SERVANTS.artoria, { seed: 1 });
+  s.players[1].np = 100; s.players[0].ap = 10;
+  const hp = s.players[0].hp;
+  const r = resolveTurn(s, [skill('knowledge_of_deprived'), np()]);
+  assert.equal(r.state.players[0].hp, hp);
+  const sealed = r.state.players[1].np;
+  assert.ok(sealed >= 80 && sealed < 100, `gauge ${sealed}`);           // 20%, a little less through Magic Resistance
+  assert.ok(r.log.some(l => l.blocked === 'npSeal'));
+  assert.ok(!r.state.players[1].buffs.some(b => b.type === 'npSeal'), 'NP Seal lasts only this turn');
+  assert.ok(r.state.players[1].buffs.some(b => b.type === 'debuffResistDown'));
+  const k = createMatch(SERVANTS.karna, dummy('B'));
+  assert.ok(k.players[0].buffs.some(b => b.type === 'npUp' && b.turns === null && b.value === 10));
+});
