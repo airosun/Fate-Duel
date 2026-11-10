@@ -43,6 +43,11 @@ export function describeEffect(e) {
     case 'copyEnemyUnique': return `Copies the enemy's unique passive`;
     case 'neutralizeEnemyUnique': return `Neutralizes the enemy's unique passives`;
     case 'ignoreDamageCut': return `Attacks and NP ignore damage cut${turnsText(e)}`;
+    case 'missChance': return `Attacks on him ${v}% likely to miss`;
+    case 'buffSuccessUp': return `Buff success +${v}%${turnsText(e)}`;
+    case 'cardVuln': return `${who}takes +${v}% ${c} damage${turnsText(e)}`;
+    case 'mirrorAtkUp': return `Copies ${v}% of enemy ATK buffs`;
+    case 'apRecoveryUp': return `+${v} AP from attacks${turnsText(e)}`;
     case 'instantKillChance': return `NP ${v}% chance to kill outright`;
     case 'affinityAll': return `Every favored-card bonus`;
     case 'setNpMode': return `Change NP mode`;
@@ -82,7 +87,8 @@ const BUFF_LABEL = {
   defDown: 'DEF↓', flatDamage: 'Flat Dmg', sureHit: 'Sure Hit', debuffPotency: 'Debuff Potency',
   nextHitUp: 'Next Hit↑', affinityAll: 'All Cards Favored', apRecoveryDown: 'AP Recovery↓',
   bonusVsStatus: 'vs Petrified↑', buffFailChance: 'Breaker Gorgon', copyEnemyUnique: 'Trace On',
-  instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF',
+  instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF', missChance: 'Decoys', buffSuccessUp: 'Buff Success↑', cardVuln: '↓ Resist',
+  mirrorAtkUp: 'Arms Mastery', apRecoveryUp: 'AP Recovery↑',
 };
 
 // Plain-language explanation of what a buff, debuff or passive does.
@@ -121,6 +127,11 @@ export function explainBuff(b) {
     case 'copyEnemyUnique': return "Copies the opponent's unique passive for the match. Revives can't be copied.";
     case 'apRecoveryDown': return `${b.status === 'petrified' ? 'Petrified: g' : 'G'}ains ${Math.round(b.value)} less AP from each attack.`;
     case 'bonusVsStatus': return `The next attack against a ${b.status} enemy deals ${v}% more damage.`;
+    case 'missChance': return `Regular attacks against this servant have a ${v}% chance to miss. Sure Hit ignores this.`;
+    case 'buffSuccessUp': return `Chance-based buffs are ${v}% more likely to land, and enemy buff-failure effects are ${v}% weaker.`;
+    case 'cardVuln': return `Takes ${v}% more damage from ${c} attacks and ${c} Noble Phantasms. ${c === 'Arts' ? `Arts hits on this servant also give the attacker +${T.artsEffectNpGain}% NP gain.` : ''}`;
+    case 'mirrorAtkUp': return `When the enemy raises its own ATK, this servant gains ${v}% of that boost for the same duration.`;
+    case 'apRecoveryUp': return `Gains ${Math.round(b.value)} more AP from each attack.`;
     case 'ignoreDamageCut': return "Attacks and Noble Phantasms go straight through the enemy's damage cut. Evade still dodges regular attacks.";
     case 'neutralizeEnemyUnique': return "Switches off all of the opponent's unique passives for the whole match.";
     case 'instantKillChance': return b.npName
@@ -136,7 +147,8 @@ export function buffChip(b) {
   if (b.type === 'cardNpGainUp') label = `${CARD_LABEL[b.card]} NP↑`;
   if (b.type === 'sureHit' && b.card) label = `${CARD_LABEL[b.card]} Sure Hit`;
   if (b.type === 'apRecoveryDown' && b.status === 'petrified') label = 'Petrified';
-  const val = b.type === 'apRecoveryDown' ? ` −${Math.round(b.value)} AP`
+  if (b.type === 'cardVuln') label = `${CARD_LABEL[b.card]} Resist↓`;
+  const val = b.type === 'apRecoveryDown' ? ` −${Math.round(b.value)} AP` : b.type === 'apRecoveryUp' ? ` +${Math.round(b.value)} AP`
     : b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage', 'sureHit', 'copyEnemyUnique', 'guts', 'ignoreDamageCut'].includes(b.type)
       ? ` ${Math.round(b.value)}%` : (['apRegen', 'flatDamage'].includes(b.type) ? ` +${b.value}` : '');
   const kind = b.debuff ? 'debuff' : b.turns === null ? 'passive' : 'active';

@@ -159,10 +159,10 @@ export function validateAction(state, idx, action) {
 
 // ---------- effects ----------
 
-const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown'];
+const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln'];
 
 // Lasting positive effects a servant puts on itself (what Breaker Gorgon can make fail).
-const BUFF_TYPES = new Set(['ignoreDamageCut', 'atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
+const BUFF_TYPES = new Set(['ignoreDamageCut', 'buffSuccessUp', 'apRecoveryUp', 'atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
   'cardNpGainUp', 'debuffResist', 'guts', 'apRegen', 'busterConvert', 'flatDamage', 'sureHit',
   'nextHitUp', 'bonusVsStatus', 'debuffPotency']);
 const hasStatus = (p, status) => p.buffs.some(b => b.status === status);
@@ -236,18 +236,27 @@ const BUFF_NAMES = {
   npGainUp: 'NP gain up', debuffResist: 'debuff resist', guts: 'Guts', apRegen: 'AP regen',
   busterConvert: 'Buster strike', flatDamage: 'flat damage', sureHit: 'Sure Hit', nextHitUp: 'next-hit boost',
   bonusVsStatus: 'bonus damage', debuffPotency: 'debuff potency', instantKillChance: 'instant kill',
-  ignoreDamageCut: 'ignore damage cut',
+  ignoreDamageCut: 'ignore damage cut', buffSuccessUp: 'buff success up', apRecoveryUp: 'AP recovery up',
 };
 const buffName = e => (e.type === 'cardUp' ? `${CARD_NAME[e.card]} up`
   : e.type === 'cardNpGainUp' ? `${CARD_NAME[e.card]} NP gain up` : BUFF_NAMES[e.type] ?? e.type);
 
 // Breaker Gorgon: each buff the user puts on itself may fail to land.
+// Rolls for effects that can fail: an effect's own `chance` (e.g. Expert of
+// Many Specializations, 80%) and the enemy's Breaker Gorgon. The user's
+// buffSuccessUp raises the first and lowers the second, point for point.
 function screenBuffs(state, user, enemy, effects, say) {
-  const chance = sumBuff(enemy, 'buffFailChance');
-  if (!chance || !effects?.length) return effects ?? [];
+  if (!effects?.length) return [];
+  const success = sumBuff(user, 'buffSuccessUp');
+  const fail = Math.max(0, sumBuff(enemy, 'buffFailChance') - success);
   return effects.filter(e => {
-    if (e.target === 'enemy' || !BUFF_TYPES.has(e.type)) return true;
-    if (roll(state) * 100 >= chance) return true;
+    if (e.target === 'enemy') return true;
+    if (e.chance != null && roll(state) * 100 >= Math.min(100, e.chance + success)) {
+      say(`${user.name}'s ${buffName(e)} doesn't take hold (${e.chance + success >= 100 ? 100 : e.chance + success}% chance).`, { type: 'buffFail' });
+      return false;
+    }
+    if (!fail || !BUFF_TYPES.has(e.type)) return true;
+    if (roll(state) * 100 >= fail) return true;
     say(`${user.name}'s ${buffName(e)} buff fails to take hold! (Breaker Gorgon)`, { type: 'buffFail' });
     return false;
   });
@@ -255,7 +264,7 @@ function screenBuffs(state, user, enemy, effects, say) {
 
 // AP from attacking, reduced by AP-recovery debuffs (Petrify, Bellerophon).
 function gainAttackAp(p, amount) {
-  const cut = Math.round(sumBuff(p, 'apRecoveryDown'));
+  const cut = Math.round(sumBuff(p, 'apRecoveryDown')) - Math.round(sumBuff(p, 'apRecoveryUp'));
   p.ap = Math.min(p.maxAp, p.ap + Math.max(0, amount - cut));
 }
 
@@ -267,7 +276,13 @@ function conditionMet(user, e) {
 
 function applyEffects(user, enemy, effects, source) {
   for (const e of effects ?? []) {
-    if (conditionMet(user, e)) applyEffect(e.target === 'enemy' ? enemy : user, e, source, user);
+    if (!conditionMet(user, e)) continue;
+    applyEffect(e.target === 'enemy' ? enemy : user, e, source, user);
+    // Eternal Arms Mastery (Lancelot): when the enemy buffs its own ATK, gain a weaker copy.
+    if (e.type === 'atkUp' && e.target !== 'enemy' && source !== 'mirror') {
+      const share = sumBuff(enemy, 'mirrorAtkUp');
+      if (share) applyEffect(enemy, { type: 'atkUp', value: Math.round(e.value * share) / 100, turns: e.turns }, 'mirror', enemy);
+    }
   }
 }
 
@@ -286,11 +301,12 @@ function atkMultiplier(p, card, extraPct = 0) {
 
 const hasAffinity = (p, card) => p.favoredCard === card || hasBuff(p, 'affinityAll');
 
-function defend(defender, raw, { isNp, ignoreDefense, sureHit, ignoreCut = false }) {
+function defend(defender, raw, { isNp, ignoreDefense, sureHit, ignoreCut = false, card }) {
   if (hasBuff(defender, 'invincible')) return { amount: 0, blocked: 'invincible' };
   if (!isNp && !ignoreDefense && !sureHit && hasBuff(defender, 'evade')) return { amount: 0, blocked: 'evade' };
   const cut = ignoreDefense || ignoreCut ? 0 : Math.min(T.maxDamageCut, sumBuff(defender, 'damageCut'));
-  const vuln = 1 + sumBuff(defender, 'defDown') / 100;
+  // cardVuln: takes more damage from one card type (attacks and NPs of that card)
+  const vuln = 1 + (sumBuff(defender, 'defDown') + (card ? sumBuff(defender, 'cardVuln', card) : 0)) / 100;
   return { amount: Math.round(raw * vuln * (1 - cut / 100)), blocked: null };
 }
 
@@ -302,7 +318,8 @@ function attackPacket(att, def, card, { counter, empowered, nextHit = 0, vsBonus
   raw += sumBuff(att, 'flatDamage');
   const sureHit = att.buffs.some(b => b.type === 'sureHit' && (!b.card || b.card === card));
   // ignoreDamageCut (Iskandar): attacks and NPs go straight through damage cut; Evade still works
-  return defend(def, raw, { isNp: false, ignoreDefense: false, sureHit, ignoreCut: hasBuff(att, 'ignoreDamageCut') });
+  const out = defend(def, raw, { isNp: false, ignoreDefense: false, sureHit, ignoreCut: hasBuff(att, 'ignoreDamageCut'), card });
+  return { ...out, sureHit };
 }
 
 function npPacket(att, def, np, { empowered = false } = {}) {
@@ -310,7 +327,7 @@ function npPacket(att, def, np, { empowered = false } = {}) {
   if (np.missingHpBonus) mult *= 1 + np.missingHpBonus * (1 - def.hp / def.maxHp);
   const raw = att.atk * mult * atkMultiplier(att, np.card) * (1 + sumBuff(att, 'npUp') / 100)
     + sumBuff(att, 'flatDamage');
-  return defend(def, raw, { isNp: true, ignoreDefense: !!np.ignoreDefense, ignoreCut: hasBuff(att, 'ignoreDamageCut') });
+  return defend(def, raw, { isNp: true, ignoreDefense: !!np.ignoreDefense, ignoreCut: hasBuff(att, 'ignoreDamageCut'), card: np.card });
 }
 
 function gainNp(p, base, { defending = false, card, artsEffect = 0 } = {}) {
@@ -438,6 +455,12 @@ export function resolveTurn(prev, actions) {
       say(`${def.name} negates ${att.name}'s ${pk.kind === 'np' ? 'Noble Phantasm' : CARD_NAME[pk.card] + ' attack'} (${pk.blocked}).`, { type: 'blocked', ...pk });
       continue;
     }
+    // One Hundred Personas: regular attacks on this servant may miss outright (Sure Hit ignores it)
+    const miss = pk.kind === 'attack' && !pk.sureHit ? sumBuff(def, 'missChance') : 0;
+    if (miss && roll(state) * 100 < miss) {
+      say(`${att.name}'s ${CARD_NAME[pk.card]} attack strikes a decoy and misses! (${def.name})`, { type: 'blocked', ...pk });
+      continue;
+    }
     def.hp -= pk.amount;
     if (pk.instantKill) {
       def.hp = 0;
@@ -446,7 +469,7 @@ export function resolveTurn(prev, actions) {
     }
     gainNp(def, T.npGainOnHit, { defending: true });
     if (pk.kind === 'attack') {
-      const artsBoosted = pk.hitAs === 'arts' && (effectiveness(att, 'arts') > 0 || pk.nextHit > 0);
+      const artsBoosted = pk.hitAs === 'arts' && (effectiveness(att, 'arts') > 0 || pk.nextHit > 0 || sumBuff(def, 'cardVuln', 'arts') > 0);
       const artsEffect = artsBoosted ? T.artsEffectNpGain : 0; // flat, once
       gainNp(att, T.cards[pk.hitAs].npGain, { card: pk.hitAs, artsEffect });
       const nextHitAp = pk.nextHit && pk.card === 'quick' ? 1 : 0;

@@ -321,6 +321,63 @@ export const SERVANTS = {
           desc: 'Heavy Buster damage, then the enemy takes 20% more damage for 2 turns',
           postEffects: [{ type: 'defDown', value: 20, turns: 3, target: 'enemy' }] },
   },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
+  hundred_faces: {
+    id: 'hundred_faces', name: 'Hassan of the Hundred Faces', class: 'Assassin',
+    fgoHp: 9310, fgoAtk: 6686, fgoNpAtk: 0.48, fgoNpDef: 4,
+    favoredCard: 'arts', maxAp: 10,
+    passives: [
+      classPassive('presenceConcealment', 'A'),
+      unique('One Hundred Personas', 'Regular attacks against him have a 10% chance to miss (Sure Hit ignores this)',
+        [{ type: 'missChance', value: 10 }]),
+    ],
+    skills: [
+      { id: 'library', name: 'Library of Stored Information B', cost: 6,
+        desc: 'NP +30% now; NP gain +30% and buff success +20% for 3 turns',
+        effects: [{ type: 'npCharge', value: 30 }, { type: 'npGainUp', value: 30, turns: 3 },
+                  { type: 'buffSuccessUp', value: 20, turns: 3 }] },
+      { id: 'expert', name: 'Expert of Many Specializations A+', cost: 4,
+        desc: 'Evade for 2 turns; Quick, Arts and Buster +25% for 3 turns, each with an 80% chance',
+        effects: [{ type: 'evade', turns: 2 },
+                  { type: 'cardUp', card: 'quick', value: 25, turns: 3, chance: 80 },
+                  { type: 'cardUp', card: 'arts', value: 25, turns: 3, chance: 80 },
+                  { type: 'cardUp', card: 'buster', value: 25, turns: 3, chance: 80 }] },
+      { id: 'battle_retreat', name: 'Battle Retreat B', cost: 3,
+        desc: 'Heal 30% HP, but remove all of his own buffs (passives stay)',
+        effects: [{ type: 'removeBuffs' }, { type: 'heal', value: 30 }] },
+    ],
+    np: { name: 'Zabaniya (Delusional Illusion)', card: 'arts', mult: 3.4,
+          desc: 'Heavy Arts damage, then the enemy takes 20% more damage from Arts for 2 turns',
+          postEffects: [{ type: 'cardVuln', card: 'arts', value: 20, turns: 3, target: 'enemy' }] },
+  },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
+  lancelot: {
+    id: 'lancelot', name: 'Lancelot', class: 'Berserker',
+    fgoHp: 10327, fgoAtk: 10477, fgoNpAtk: 0.5, fgoNpDef: 5,
+    favoredCard: 'buster', maxAp: 10,
+    passives: [
+      classPassive('magicResistance', 'E'),
+      classPassive('madness', 'C'),
+      unique('Eternal Arms Mastery', 'When the enemy raises its own ATK, he gains half as much for the same duration',
+        [{ type: 'mirrorAtkUp', value: 50 }]),
+    ],
+    skills: [
+      { id: 'arondight', name: 'Arondight A++', cost: 3,
+        desc: '+2 AP from each attack for 3 turns',
+        effects: [{ type: 'apRecoveryUp', value: 2, turns: 3 }] },
+      { id: 'protection_of_spirits', name: 'Protection of the Spirits A', cost: 4,
+        desc: 'NP +30% and AP +3 now',
+        effects: [{ type: 'npCharge', value: 30 }, { type: 'apGain', value: 3 }] },
+      { id: 'mana_reversal', name: 'Mana Reversal A', cost: 4,
+        desc: 'NP gain +30% and Quick +40% (attacks and NP) for 3 turns',
+        effects: [{ type: 'npGainUp', value: 30, turns: 3 }, { type: 'cardUp', card: 'quick', value: 40, turns: 3 }] },
+    ],
+    np: { name: 'Knight of Owner', card: 'quick', mult: 4.0,
+          desc: 'Heavy Quick damage, then ATK +30% for 3 turns',
+          postEffects: [{ type: 'atkUp', value: 30, turns: 4 }] },
+  },
 };
 
 export const ROSTER = Object.values(SERVANTS);

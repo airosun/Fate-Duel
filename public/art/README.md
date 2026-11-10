@@ -15,6 +15,8 @@ The game tries `.png`, then `.jpg`, then `.webp`, and falls back to a class-colo
 | Hassan of the Cursed Arm | `hassan.png` |
 | Gilgamesh | `gilgamesh.png` |
 | Iskandar | `iskandar.png` |
+| Hassan of the Hundred Faces | `hundred_faces.png` |
+| Lancelot | `lancelot.png` |
 
 Tips
 - Portrait-oriented full art works best (e.g. Final Ascension stage art). Images are cropped with

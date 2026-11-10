@@ -535,3 +535,51 @@ test('Iskandar: Ionioi Hetairoi also ignores damage cut while Towards the Beyond
   s = resolveTurn(s, [np(), atk('arts')]).state;
   assert.equal(hp - s.players[1].hp, Math.round(k.atk * 3.5 * (1 + 0.25 + 0.10) + 6));   // ATK +25%, Bucephalus Buster +10%
 });
+
+test('Hundred Faces: attacks on him miss about 10% of the time; Sure Hit ignores it', () => {
+  let misses = 0;
+  for (let seed = 1; seed <= 500; seed++) {
+    const s = createMatch(dummy('A'), SERVANTS.hundred_faces, { seed });
+    const r = resolveTurn(s, [atk('arts'), atk('buster')]).state;   // A's Arts beats Buster
+    if (r.players[1].hp === s.players[1].hp) misses++;
+  }
+  assert.ok(misses / 500 > 0.06 && misses / 500 < 0.14, `miss rate ${misses / 500}`);
+});
+
+test('Hundred Faces: Expert buffs land ~80% each; Library raises that to 100%', () => {
+  let landed = 0;
+  for (let seed = 1; seed <= 300; seed++) {
+    const s = createMatch(SERVANTS.hundred_faces, dummy('B'), { seed });
+    const r = resolveTurn(s, [skill('expert'), atk('arts')]).state;
+    landed += r.players[0].buffs.filter(b => b.type === 'cardUp').length;
+  }
+  assert.ok(landed / 900 > 0.74 && landed / 900 < 0.86, `land rate ${landed / 900}`);
+  let s = createMatch(SERVANTS.hundred_faces, dummy('B'), { seed: 5 });
+  s.players[0].ap = 10;
+  s = resolveTurn(s, [skill('library'), atk('arts')]).state;
+  s = resolveTurn(s, [skill('expert'), atk('arts')]).state;
+  assert.equal(s.players[0].buffs.filter(b => b.type === 'cardUp').length, 3);
+});
+
+test('Hundred Faces: Battle Retreat heals but strips his own buffs; Zabaniya makes the enemy weak to Arts', () => {
+  let s = createMatch(SERVANTS.hundred_faces, dummy('B'), { seed: 2 });
+  s.players[0].ap = 10; s.players[0].hp = 600;
+  s = resolveTurn(s, [skill('expert'), atk('arts')]).state;
+  s.players[1].ap = 10;                      // dummy just shields, so no damage this turn
+  s = resolveTurn(s, [skill('battle_retreat'), skill('shield')]).state;
+  assert.equal(s.players[0].buffs.filter(b => b.turns !== null).length, 0);
+  assert.equal(s.players[0].hp, 600 + Math.round(s.players[0].maxHp * 0.3));
+  s.players[0].np = 100;
+  s = resolveTurn(s, [np(), atk('arts')]).state;
+  assert.ok(s.players[1].buffs.some(b => b.type === 'cardVuln' && b.card === 'arts' && b.value === 20));
+});
+
+test('Lancelot: Eternal Arms Mastery copies half of an enemy ATK buff; Arondight adds AP from attacks', () => {
+  let s = createMatch(SERVANTS.artoria, SERVANTS.lancelot, { seed: 1 });
+  s = resolveTurn(s, [skill('knight_of_utopia'), skill('arondight')]).state;
+  const mirror = s.players[1].buffs.find(b => b.source === 'mirror');
+  assert.equal(mirror.value, 10);           // half of Knight of Utopia's ATK +20%
+  const ap = s.players[1].ap;
+  s = resolveTurn(s, [atk('buster'), atk('arts')]).state;   // Lancelot's Arts wins: +2 +1 land +2 Arondight
+  assert.equal(s.players[1].ap, Math.min(s.players[1].maxAp, ap + 2 + 1 + 2));
+});

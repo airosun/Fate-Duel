@@ -1,11 +1,13 @@
 servant,class,score_vs_field_pct,overall_win_pct,nps_per_match,hp,atk
-Artoria Pendragon,Saber,52.2,49.5,1.98,1285,123
-Heracles,Berserker,51.8,48.8,1.43,903,122
-Medea,Caster,43.9,42.3,2.53,1215,118
-Sasaki Kojirou,Assassin,44.9,42.4,1.75,1175,115
-EMIYA,Archer,50.5,48.1,1.75,1250,121
-Cú Chulainn,Lancer,50.2,48.1,1.93,1019,117
-Medusa,Rider,48.8,46.1,1.56,1219,117
-Hassan of the Cursed Arm,Assassin,47.7,45.0,1.77,1199,116
-Gilgamesh,Archer,57.5,54.2,1.64,1285,124
-Iskandar,Rider,52.5,49.5,1.58,1268,123
+Artoria Pendragon,Saber,52.2,49.6,1.99,1285,123
+Heracles,Berserker,51.1,48.4,1.43,903,122
+Medea,Caster,43.8,42.2,2.55,1215,118
+Sasaki Kojirou,Assassin,46.2,43.4,1.76,1175,115
+EMIYA,Archer,50.9,48.5,1.75,1250,121
+Cú Chulainn,Lancer,51.4,49.1,1.95,1019,117
+Medusa,Rider,49.0,46.1,1.56,1219,117
+Hassan of the Cursed Arm,Assassin,48.1,45.5,1.77,1199,116
+Gilgamesh,Archer,58.0,54.8,1.65,1285,124
+Iskandar,Rider,52.1,49.1,1.58,1268,123
+Hassan of the Hundred Faces,Assassin,47.7,45.7,2.15,1224,116
+Lancelot,Berserker,49.5,46.8,1.63,1237,122

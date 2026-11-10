@@ -570,6 +570,7 @@ function sourceName(servant, b) {
   const sk = servant.skills.find(x => x.id === b.source);
   if (sk) return sk.name;
   if (b.source === 'np') return servant.np.name;
+  if (b.source === 'mirror') return 'Eternal Arms Mastery (copied ATK buff)';
   return b.source ?? 'Passive';
 }
 
