@@ -838,3 +838,22 @@ test('Sure Hit (e.g. Chiron\'s Wisdom of Divine) always hits through One Hundred
   }
   assert.ok(missesWithout > 10, 'without Sure Hit, decoys do trigger');
 });
+
+test("Kojirou: Heaven Among the Mountains pierces Evade on Quick but isn't Sure Hit; Knowledge of the Souwa is real Sure Hit", () => {
+  const withEvade = s => { s.players[1].buffs.push({ type: 'evade', value: 0, turns: 2 }); return s; };
+  // Passive: Quick goes through Evade, flagged as pierce but not Sure Hit
+  let r = resolveTurn(withEvade(createMatch(SERVANTS.kojirou, dummy('B'), { seed: 1 })), [atk('quick'), atk('arts')]);
+  const hit = r.log.find(l => l.type === 'hit' && l.from === 0 && l.kind === 'attack');
+  assert.ok(hit && hit.pierce === true && hit.sureHit === false);
+  // Passive doesn't cover Arts
+  r = resolveTurn(withEvade(createMatch(SERVANTS.kojirou, dummy('B'), { seed: 1 })), [atk('arts'), atk('buster')]);
+  assert.ok(r.log.some(l => l.type === 'blocked' && l.from === 0));
+  // Knowledge of the Souwa: true Sure Hit on every card
+  let s = createMatch(SERVANTS.kojirou, dummy('B'), { seed: 2 });
+  s.players[0].ap = 10;
+  s = resolveTurn(s, [skill('souwa'), atk('quick')]).state;
+  r = resolveTurn(withEvade(s), [atk('arts'), atk('buster')]);
+  const h2 = r.log.find(l => l.type === 'hit' && l.from === 0 && l.kind === 'attack');
+  assert.ok(h2 && h2.sureHit === true);
+  assert.match(SERVANTS.kojirou.skills.find(k => k.id === 'souwa').desc, /Sure Hit/);
+});

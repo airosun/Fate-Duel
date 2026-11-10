@@ -194,7 +194,7 @@ const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', '
 
 // Lasting positive effects a servant puts on itself (what Breaker Gorgon can make fail).
 const BUFF_TYPES = new Set(['ignoreDamageCut', 'buffSuccessUp', 'apRecoveryUp', 'atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
-  'cardNpGainUp', 'debuffResist', 'guts', 'apRegen', 'busterConvert', 'flatDamage', 'sureHit',
+  'cardNpGainUp', 'debuffResist', 'guts', 'apRegen', 'busterConvert', 'flatDamage', 'sureHit', 'pierceEvade',
   'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight']);
 const hasStatus = (p, status) => p.buffs.some(b => b.status === status);
 
@@ -392,10 +392,14 @@ function attackPacket(att, def, card, { counter, empowered, nextHit = 0, vsBonus
   if (counter) raw *= 1 + T.counterBonus;
   if (empowered) raw *= 1 + T.seals.empowerBonus;
   raw += sumBuff(att, 'flatDamage');
+  // True Sure Hit (skills like Knowledge of the Souwa, Wisdom of Divine) vs. passives that only share
+  // its evade-piercing property (Heaven Among the Mountains: pierceEvade). Future Sure Hit-only
+  // functions should check pk.sureHit, never pk.pierce.
   const sureHit = att.buffs.some(b => b.type === 'sureHit' && (!b.card || b.card === card));
+  const pierce = sureHit || att.buffs.some(b => b.type === 'pierceEvade' && (!b.card || b.card === card));
   // ignoreDamageCut (Iskandar): attacks and NPs go straight through damage cut; Evade still works
-  const out = defend(def, raw, { isNp: false, ignoreDefense: false, sureHit, ignoreCut: hasBuff(att, 'ignoreDamageCut'), card });
-  return { ...out, sureHit };
+  const out = defend(def, raw, { isNp: false, ignoreDefense: false, sureHit: pierce, ignoreCut: hasBuff(att, 'ignoreDamageCut'), card });
+  return { ...out, sureHit, pierce };
 }
 
 // NPs use the same ATK modifiers as regular attacks: atkUp/atkDown, card effectiveness
@@ -591,7 +595,7 @@ export function resolveTurn(prev, actions) {
       continue;
     }
     // One Hundred Personas: regular attacks on this servant may miss outright (Sure Hit ignores it)
-    const miss = pk.kind === 'attack' && !pk.sureHit && !pk.secondArrow ? sumBuff(def, 'missChance') : 0;
+    const miss = pk.kind === 'attack' && !pk.pierce && !pk.secondArrow ? sumBuff(def, 'missChance') : 0;
     const decoy = miss && roll(state) * 100 < miss;
     if (miss) proc(def, `${def.buffs.find(b => b.type === 'missChance')?.source ?? 'Decoys'} (attacks dodged)`, decoy);
     if (decoy) {

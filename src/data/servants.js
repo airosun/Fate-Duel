@@ -120,8 +120,8 @@ export const SERVANTS = {
     favoredCard: 'quick', maxAp: 10,
     passives: [
       classPassive('presenceConcealment', 'D'),
-      unique('Heaven Among the Mountains', 'Quick attacks always hit through Evade',
-        [{ type: 'sureHit', card: 'quick' }]),
+      unique('Heaven Among the Mountains', 'Quick attacks pierce Evade and decoys (not Sure Hit)',
+        [{ type: 'pierceEvade', card: 'quick' }]),
     ],
     skills: [
       { id: 'minds_eye', name: 'Eye of the Mind (False) A', cost: 4,
@@ -131,7 +131,7 @@ export const SERVANTS = {
         desc: 'Cleanse own debuffs; Quick +40% for 3 turns',
         effects: [{ type: 'cleanse' }, { type: 'cardUp', card: 'quick', value: 40, turns: 3 }] },
       { id: 'souwa', name: 'Knowledge of the Souwa B++', cost: 5,
-        desc: 'All attacks hit through Evade for 3 turns',
+        desc: 'Sure Hit for 3 turns (all attacks pierce Evade and decoys)',
         effects: [{ type: 'sureHit', turns: 3 }] },
     ],
     np: { name: 'Tsubame Gaeshi', card: 'quick', mult: 3.8,
