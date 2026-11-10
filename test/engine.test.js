@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createMatch, resolveTurn, getLegalActions, validateAction } from '../src/engine/engine.js';
+import { createMatch, resolveTurn, getLegalActions, validateAction, foresightView } from '../src/engine/engine.js';
 import { SERVANTS } from '../src/data/servants.js';
 import { TUNING as T } from '../src/engine/constants.js';
 
@@ -1009,4 +1009,88 @@ test('Off-ladder ranks: Presence Concealment C+ sits between B and C', () => {
   const d = SERVANTS.semiramis.passives[0];
   assert.match(d.name, /C\+/);
   assert.equal(d.effects[0].value, 7);
+});
+
+// Find a seed whose Works of Art roll lands on the given work.
+const withWork = (name, opp = dummy('B')) => {
+  for (let seed = 1; seed < 500; seed++) {
+    const s = createMatch(SERVANTS.shakespeare, opp, { seed });
+    if (s.players[0].work.name === name) return s;
+  }
+  throw new Error('no seed for ' + name);
+};
+
+test('Shakespeare: Works of Art rolls one work per battle by weight, seeded; Ea blocks it', () => {
+  const c = {};
+  for (let seed = 1; seed <= 2000; seed++) {
+    const w = createMatch(SERVANTS.shakespeare, dummy('B'), { seed }).players[0].work.name;
+    c[w] = (c[w] ?? 0) + 1;
+  }
+  assert.ok(c.Macbeth > 520 && c.Macbeth < 680, `Macbeth ${c.Macbeth}`);
+  assert.ok(c['Romeo and Juliet'] > 140 && c['Romeo and Juliet'] < 260);
+  assert.equal(createMatch(SERVANTS.shakespeare, dummy('B'), { seed: 7 }).players[0].work.name,
+               createMatch(SERVANTS.shakespeare, dummy('B'), { seed: 7 }).players[0].work.name);
+  const m = withWork('Macbeth');
+  assert.equal(m.players[0].buffs.filter(b => b.type === 'cardUp' && b.turns === null && b.source === 'Works of Art: Macbeth').length, 3);
+  assert.equal(createMatch(SERVANTS.shakespeare, SERVANTS.gilgamesh, { seed: 1 }).players[0].work, undefined);
+});
+
+test('Shakespeare: Hamlet Madness forces a random action; Midsummer Charm throws the next clash', () => {
+  let s = withWork('Hamlet');
+  s.players[1].buffs.push({ type: 'madness', value: 1, turns: 2, debuff: true, source: 'Works of Art: Hamlet' });
+  s = resolveTurn(s, [atk('arts'), atk('quick')]).state;                 // arms at end of turn
+  const r = resolveTurn(s, [atk('arts'), atk('quick')]);
+  assert.ok(r.log.some(l => /Madness/.test(l.msg)));
+  assert.ok(!r.state.players[1].buffs.some(b => b.type === 'madness'));
+
+  let c = withWork("A Midsummer Night's Dream");
+  c.players[1].buffs.push({ type: 'charm', value: 1, turns: 2, debuff: true, source: "Works of Art: A Midsummer Night's Dream" });
+  c = resolveTurn(c, [skill('the_globe'), skill('charge')]).state;
+  const r2 = resolveTurn(c, [atk('buster'), atk('arts')]);               // Arts would beat Buster, but Charm turns it to Quick
+  assert.ok(r2.log.some(l => l.type === 'hit' && l.from === 0 && l.reason === 'counter'));
+  assert.ok(!r2.log.some(l => l.type === 'hit' && l.from === 1));
+});
+
+test('Shakespeare: Romeo and Juliet can end a KO in a draw; Othello reveals lie ~40% of the time', () => {
+  let draws = 0, n = 300;
+  for (let seed = 1; seed <= n; seed++) {
+    const s = withWork('Romeo and Juliet');
+    s.rng = seed;
+    s.players[1].hp = 1;
+    const r = resolveTurn(s, [atk('arts'), atk('buster')]).state;
+    assert.ok(r.over);
+    if (r.result.winner === null) draws++;
+  }
+  assert.ok(draws / n > 0.05 && draws / n < 0.16, `draws ${draws / n}`);
+  const o = withWork('Othello');
+  assert.equal(getLegalActions(o, 0).foresight, 3);
+  let lies = 0, seed = 3;
+  const rand = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+  for (let k = 0; k < 1000; k++) {
+    const seen = foresightView(o, 0, atk('quick'), rand);
+    if (seen.main.card !== 'quick' || seen.main.type !== 'attack') lies++;
+  }
+  assert.ok(lies > 330 && lies < 470, `lies ${lies}`);
+  const honest = createMatch(SERVANTS.chiron, dummy('B'), { seed: 1 });
+  assert.deepEqual(foresightView(honest, 0, atk('quick'), rand), atk('quick'));
+});
+
+test("Avicebron: Golem's Support ~40% on landed Buster; Fig Tree heals above 30% HP, Invincible below", () => {
+  let golems = 0, n = 400;
+  for (let seed = 1; seed <= n; seed++) {
+    const r = resolveTurn(createMatch(SERVANTS.avicebron, dummy('B'), { seed }), [atk('buster'), atk('quick')]);
+    const g = r.log.find(l => l.kind === 'extra' && l.from === 0);
+    if (g) { golems++; assert.match(g.msg, /Golem/); }
+  }
+  assert.ok(golems / n > 0.33 && golems / n < 0.47, `golems ${golems / n}`);
+  let s = createMatch(SERVANTS.avicebron, dummy('B'), { seed: 1 });
+  s.players[0].ap = 10; s.players[0].hp = Math.round(s.players[0].maxHp * 0.5);
+  let r = resolveTurn(s, [skill('fig_tree'), skill('charge')]).state;
+  assert.equal(r.players[0].hp, Math.round(s.players[0].maxHp * 0.5) + Math.round(s.players[0].maxHp * 0.3));
+  assert.ok(!r.players[0].buffs.some(b => b.type === 'invincible'));
+  s = createMatch(SERVANTS.avicebron, dummy('B'), { seed: 1 });
+  s.players[0].ap = 10; s.players[0].hp = 100;
+  r = resolveTurn(s, [skill('fig_tree'), atk('arts')]);
+  assert.equal(r.state.players[0].hp, 100);                            // no heal, and the attack is blocked
+  assert.ok(r.log.some(l => l.type === 'blocked' && l.from === 1));
 });

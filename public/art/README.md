@@ -29,6 +29,8 @@ The game tries `.png`, then `.jpg`, then `.webp`, and falls back to a class-colo
 | Astolfo | `astolfo.png` |
 | Jack the Ripper | `jack.png` |
 | Semiramis | `semiramis.png` |
+| William Shakespeare | `shakespeare.png` |
+| Avicebron | `avicebron.png` |
 
 Tips
 - Portrait-oriented full art works best (e.g. Final Ascension stage art). Images are cropped with

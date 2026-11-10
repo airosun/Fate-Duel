@@ -115,7 +115,7 @@ export function createMatch(servantA, servantB, { seed } = {}) {
   const players = [createPlayer(servantA, { blockUniques: block[0] }), createPlayer(servantB, { blockUniques: block[1] })];
   if (!block[0]) applyCopiedUniques(players[0], servantA, servantB);
   if (!block[1]) applyCopiedUniques(players[1], servantB, servantA);
-  return {
+  const state = {
     turn: 1,
     over: false,
     result: null, // { winner: 0 | 1 | null, reason }
@@ -126,6 +126,35 @@ export function createMatch(servantA, servantB, { seed } = {}) {
     // the server never sends it to clients.
     rng: (seed ?? Math.floor(Math.random() * 2 ** 32)) >>> 0,
   };
+  // Works of Art (Shakespeare): pick one work by weight for this battle; its effects become the passive.
+  for (const p of players) {
+    const ph = p.buffs.find(b => b.type === 'randomWork');
+    if (!ph) continue;
+    p.buffs.splice(p.buffs.indexOf(ph), 1);
+    let r = roll(state) * ph.works.reduce((a, w) => a + w.weight, 0);
+    const work = ph.works.find(w => (r -= w.weight) < 0) ?? ph.works.at(-1);
+    p.work = { name: work.name, desc: work.desc, from: ph.source };
+    for (const e of work.effects) applyEffect(p, { ...e, turns: null }, `${ph.source}: ${work.name}`, p);
+  }
+  return state;
+}
+
+// Othello: what a deceptive reader is shown. With probability `deceive`% the reveal is a lie:
+// a different legal action the opponent could have taken. `rand` is the caller's RNG (the
+// server's or client's, never the match RNG, so the lie can't be inferred from match state).
+export function foresightView(state, reader, real, rand = Math.random) {
+  const b = state.players[reader].buffs.find(x => x.type === 'foresight' && x.charges > 0);
+  if (!b?.deceive || rand() * 100 >= b.deceive) return real;
+  const j = 1 - reader, legal = getLegalActions(state, j);
+  const options = [
+    ...legal.attacks.map(card => ({ type: 'attack', card })),
+    ...legal.skills.map(skillId => ({ type: 'skill', skillId })),
+    ...(legal.np ? [{ type: 'np' }] : []),
+  ].filter(m => !(m.type === real.main.type && m.card === real.main.card && m.skillId === real.main.skillId));
+  const main = options[Math.floor(rand() * options.length)] ?? real.main;
+  const sk = main.type === 'skill' && state.servants[j].skills.find(k => k.id === main.skillId);
+  if (sk?.options) main.option = sk.options[0].id;
+  return { main, seal: real.seal ?? null };
 }
 
 // Draw a number in [0, 1) and advance the match's RNG.
@@ -192,12 +221,12 @@ export function validateAction(state, idx, action) {
 
 // ---------- effects ----------
 
-const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', 'curse', 'debuffResistDown', 'npSeal', 'taunt', 'confusion', 'stun', 'poison', 'nullifyBoosts'];
+const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', 'curse', 'debuffResistDown', 'npSeal', 'taunt', 'confusion', 'stun', 'poison', 'nullifyBoosts', 'madness', 'charm'];
 
 // Lasting positive effects a servant puts on itself (what Breaker Gorgon can make fail).
 const BUFF_TYPES = new Set(['ignoreDamageCut', 'buffSuccessUp', 'apRecoveryUp', 'atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
   'cardNpGainUp', 'debuffResist', 'guts', 'apRegen', 'busterConvert', 'flatDamage', 'sureHit', 'pierceEvade',
-  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight', 'npOnlyKo', 'debuffOnHit', 'apChance', 'rpsOverride']);
+  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight', 'npOnlyKo', 'debuffOnHit', 'apChance', 'rpsOverride', 'randomWork', 'starCrossed']);
 const hasStatus = (p, status) => p.buffs.some(b => b.status === status);
 
 function resistScale(target, e, user) {
@@ -291,6 +320,8 @@ function applyEffectRaw(target, e, source, user) {
         onRevive: e.onRevive,
         inflict: e.inflict,
         vs: e.vs,
+        works: e.works,
+        deceive: e.deceive,
         amount: e.amount,
         debuff: DEBUFFS.includes(e.type),
         source,
@@ -345,6 +376,9 @@ function gainAttackAp(p, amount) {
 function conditionMet(user, e) {
   if (!e.condition) return true;
   if (e.condition === 'afterRevive') return user.revived;
+  // Fig Tree of Tranquility: one effect above a HP threshold, another below it
+  if (e.condition === 'hpBelow') return (100 * user.hp) / user.maxHp < e.threshold;
+  if (e.condition === 'hpAtLeast') return (100 * user.hp) / user.maxHp >= e.threshold;
   throw new Error(`Unknown condition: ${e.condition}`);
 }
 
@@ -469,6 +503,23 @@ export function resolveTurn(prev, actions) {
     } else say(`${P[i].name} keeps their footing.`, { type: 'info', player: i });
   }
 
+  // 0c. Madness (Hamlet): the maddened servant's main action is replaced by a random legal one
+  for (const i of [0, 1]) {
+    const mad = P[i].buffs.find(b => b.type === 'madness' && b.armed);
+    if (!mad) continue;
+    P[i].buffs.splice(P[i].buffs.indexOf(mad), 1);
+    if (mains[i].type === 'stunned') continue;
+    const legal = getLegalActions(state, i);
+    const pool = [...legal.attacks.map(card => ({ type: 'attack', card })), ...legal.skills.map(skillId => ({ type: 'skill', skillId })),
+      ...(legal.np ? [{ type: 'np' }] : [])];
+    const pick = pool[Math.floor(roll(state) * pool.length)];
+    const sk = pick.type === 'skill' && S[i].skills.find(k => k.id === pick.skillId);
+    if (sk?.options) pick.option = sk.options[Math.floor(roll(state) * sk.options.length)].id;
+    mains[i] = pick;
+    proc(P[1 - i], `${mad.source} (Madness: random actions)`, true);
+    say(`${P[i].name} is gripped by Madness and acts on impulse: ${pick.type === 'attack' ? CARD_NAME[pick.card] + ' attack' : pick.type === 'np' ? 'Noble Phantasm' : sk.name}!`, { type: 'status', player: i });
+  }
+
   // 1. Command Seals
   for (const i of [0, 1]) {
     const seal = actions[i].seal;
@@ -565,6 +616,18 @@ export function resolveTurn(prev, actions) {
 
   // 4. Regular attacks — RPS clash
   const clash = { cards: [null, null], outcome: null };
+  // A Midsummer Night's Dream: a Charmed attacker's card becomes the one that loses to the charmer's card
+  for (const j of [0, 1]) {
+    const ch = P[j].buffs.find(b => b.type === 'charm' && b.armed);
+    if (!ch) continue;
+    P[j].buffs.splice(P[j].buffs.indexOf(ch), 1);
+    const i = 1 - j;
+    if (mains[j].type !== 'attack' || mains[i].type !== 'attack') continue;
+    const lose = T.beats[mains[i].card];
+    proc(P[i], `${ch.source} (Charm: clashes thrown)`, true);
+    if (mains[j].card !== lose) say(`${P[j].name} is Charmed and swaps to ${CARD_NAME[lose]}!`, { type: 'status', player: j });
+    mains[j] = { ...mains[j], card: lose };
+  }
   // The Misty Night of London: a Quick attack that would lose to Buster may win instead (rolled once per clash)
   let misty = null;
   if (mains[0].type === 'attack' && mains[1].type === 'attack') for (const i of [0, 1]) {
@@ -726,8 +789,8 @@ export function resolveTurn(prev, actions) {
       if (!summoned) continue;
       const extra = Math.max(1, Math.round(pk.amount * (b.ratio ?? 30) / 100));
       def.hp -= extra;
-      dealt(att, 'extra', extra, 'Sea Demon');
-      say(`A Sea Demon lashes ${def.name} for ${extra}!`, { type: 'hit', from: pk.from, to: pk.to, kind: 'extra', card: pk.hitAs, amount: extra });
+      dealt(att, 'extra', extra, b.source === 'Summoning: Sea Demons' ? 'Sea Demon' : b.source);
+      say(`${b.source === 'Summoning: Sea Demons' ? 'A Sea Demon lashes' : `${b.source}: a strike hits`} ${def.name} for ${extra}!`, { type: 'hit', from: pk.from, to: pk.to, kind: 'extra', card: pk.hitAs, amount: extra });
     }
   }
   for (const i of npUsers) applyEffects(P[i], P[1 - i], npPre[i], 'np');
@@ -787,13 +850,28 @@ export function resolveTurn(prev, actions) {
       proc(p, `${sourceLabel(S[P.indexOf(p)], b.source)} (bonus AP)`, got);
       if (got) { p.ap = Math.min(p.maxAp, p.ap + (b.amount ?? 2)); say(`${p.name} gains ${b.amount ?? 2} bonus AP!`, { type: 'info', player: P.indexOf(p) }); }
     }
-    for (const b of p.buffs) if (b.type === 'stun') b.armed = true;   // Trap of Argalia rolls next turn
+    // Trap of Argalia / Madness / Charm inflicted this turn take effect next turn
+    for (const b of p.buffs) if (['stun', 'madness', 'charm'].includes(b.type)) b.armed = true;
     p.buffs = p.buffs.filter(b => b.turns === null || --b.turns > 0);
     syncMaxAp(p);
     p.hp = Math.max(0, p.hp);
   }
 
-  const dead = P.map(p => p.hp <= 0);
+  let dead = P.map(p => p.hp <= 0);
+  // Romeo and Juliet: when one servant falls, a chance the other falls with them (a draw)
+  if (dead[0] !== dead[1]) for (const p of P) {
+    const sc = p.buffs.find(b => b.type === 'starCrossed');
+    if (!sc) continue;
+    const both = roll(state) * 100 < sc.value;
+    proc(p, `${sc.source} (shared falls)`, both);
+    if (both) {
+      const other = P[dead[0] ? 1 : 0];
+      other.hp = 0;
+      say(`${sc.source}: star-crossed, ${other.name} falls as well!`, { type: 'guts', player: P.indexOf(other) });
+      dead = P.map(x => x.hp <= 0);
+      break;
+    }
+  }
   if (dead[0] && dead[1]) state.result = { winner: null, reason: 'double KO' };
   else if (dead[0] || dead[1]) state.result = { winner: dead[0] ? 1 : 0, reason: 'KO' };
   else if (state.turn >= T.maxTurns) state.result = { winner: null, reason: 'turn limit' };

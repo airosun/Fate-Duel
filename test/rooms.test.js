@@ -183,3 +183,22 @@ test("Teacher's Wisdom online: reveal only to the reader, opponent's lock become
   assert.equal(d.lastTurn.actions[0].foresight, true);
   assert.equal(d.match.players[0].buffs.find(b => b.type === 'foresight').charges, 2);
 });
+
+test('Othello online: the reader gets one fixed reveal per turn (maybe a lie); spectators see the truth', () => {
+  let lies = 0;
+  for (let k = 0; k < 60; k++) {
+    const { rm, room, H, B, C } = room3();
+    rm.setRole(room, C, 'spectator');
+    startBattle(rm, room, H, B, ['shakespeare', 'medea']);
+    const p = room.duel.match.players[0];
+    p.buffs = p.buffs.filter(b => b.type !== 'foresight');
+    p.buffs.push({ type: 'foresight', charges: 3, deceive: 40, value: 0, turns: null, source: 'Works of Art: Othello' });
+    rm.foresight(room, H);
+    rm.lock(room, B, atk('buster'));
+    const seen = rm.snapshot(room, H).duel.foresight.revealed;
+    assert.deepEqual(rm.snapshot(room, H).duel.foresight.revealed, seen, 'stable within the turn');
+    assert.deepEqual(rm.snapshot(room, C).duel.foresight.revealed.main, { type: 'attack', card: 'buster' });
+    if (seen.main.type !== 'attack' || seen.main.card !== 'buster') lies++;
+  }
+  assert.ok(lies > 10 && lies < 40, `lies ${lies}/60`);
+});

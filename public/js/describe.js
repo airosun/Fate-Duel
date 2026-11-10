@@ -12,7 +12,16 @@ const turnsText = (e) => {
   return t ? ` (${t}T)` : '';
 };
 
+const cap = t => (t ? t[0].toUpperCase() + t.slice(1) : '');
+
 export function describeEffect(e) {
+  const base = describeEffectCore(e);
+  if (e.condition === 'hpBelow') return `${base} (if below ${e.threshold}% HP)`;
+  if (e.condition === 'hpAtLeast') return `${base} (if at ${e.threshold}%+ HP)`;
+  return base;
+}
+
+function describeEffectCore(e) {
   const v = e.value;
   const c = CARD_LABEL[e.card] ?? '';
   const who = e.target === 'enemy' ? 'Enemy ' : '';
@@ -56,12 +65,16 @@ export function describeEffect(e) {
     case 'taunt': return `${who}Taunt next turn (attacks only)`;
     case 'confusion': return `${who}Confusion (${v}% a skill fizzles)${turnsText(e)}`;
     case 'stun': return `${who}${v}% chance to lose next turn`;
-    case 'debuffOnHit': return `${v}% chance on hit: ${e.inflict?.type === 'terror' ? 'Terror' : e.inflict?.type === 'poison' ? `Poison (${e.inflict.value}/turn)` : e.inflict?.type}`;
+    case 'debuffOnHit': return `${v}% chance on hit: ${e.inflict?.type === 'terror' ? 'Terror' : e.inflict?.type === 'poison' ? `Poison (${e.inflict.value}/turn)` : cap(e.inflict?.type)}`;
     case 'apChance': return `${v}% chance of +${e.amount} AP each turn${turnsText(e)}`;
     case 'npSeal': return `${who}NP Seal this turn (NP fizzles, -${v}% gauge)`;
     case 'debuffResistDown': return `${who}debuff resist -${v}%${turnsText(e)}`;
     case 'doubleShot': return `${v}% chance of a second arrow on ${c} attacks`;
-    case 'foresight': return `${e.charges}× per battle: see the opponent's locked action first`;
+    case 'foresight': return `${e.charges}× per battle: see the opponent's locked action first${e.deceive ? ` (${e.deceive}% chance it's a lie)` : ''}`;
+    case 'madness': return `${who}Madness: random action next turn`;
+    case 'charm': return `${who}Charm: next turn their attack loses the clash`;
+    case 'starCrossed': return `${v}% chance a fall takes both servants`;
+    case 'randomWork': return 'a random work each battle';
     case 'hpCost': return `lose ${v}% HP (can't KO)`;
     case 'removeDefBuffs': return `${who}loses Evade, Invincible and damage cut`;
     case 'statusOnHit': return `${v}% chance to mark the enemy ${e.status} on hit`;
@@ -113,7 +126,7 @@ const BUFF_LABEL = {
   defDown: 'DEF↓', flatDamage: 'Flat Dmg', sureHit: 'Sure Hit', pierceEvade: 'Pierce Evade', debuffPotency: 'Debuff Potency', debuffUp: 'Debuff↑',
   nextHitUp: 'Next Hit↑', affinityAll: 'All Cards Favored', apRecoveryDown: 'AP Recovery↓',
   bonusVsStatus: 'vs Petrified↑', buffFailChance: 'Breaker Gorgon', copyEnemyUnique: 'Trace On',
-  instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF', terror: 'Terror', curse: 'Curse', rpsOverride: 'Misty Night', poison: 'Poison', nullifyBoosts: 'No Boosts', npOnlyKo: 'Kosmos', taunt: 'Taunted', confusion: 'Confusion', stun: 'Trap', debuffOnHit: 'Black Luna', apChance: 'AP Chance', npSeal: 'NP Seal', debuffResistDown: 'Debuff Res↓', doubleShot: 'Golden Apple', foresight: 'Foresight', maxApUp: 'Max AP↑', statusOnHit: "Fafnir's Blood", dmgVsStatus: 'vs Dragon↑', extraHitChance: 'Sea Demons', missChance: 'Decoys', buffSuccessUp: 'Buff Success↑', cardVuln: '↓ Resist',
+  instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF', terror: 'Terror', curse: 'Curse', madness: 'Madness', charm: 'Charm', starCrossed: 'Star-Crossed', rpsOverride: 'Misty Night', poison: 'Poison', nullifyBoosts: 'No Boosts', npOnlyKo: 'Kosmos', taunt: 'Taunted', confusion: 'Confusion', stun: 'Trap', debuffOnHit: 'Black Luna', apChance: 'AP Chance', npSeal: 'NP Seal', debuffResistDown: 'Debuff Res↓', doubleShot: 'Golden Apple', foresight: 'Foresight', maxApUp: 'Max AP↑', statusOnHit: "Fafnir's Blood", dmgVsStatus: 'vs Dragon↑', extraHitChance: 'Sea Demons', missChance: 'Decoys', buffSuccessUp: 'Buff Success↑', cardVuln: '↓ Resist',
   mirrorAtkUp: 'Arms Mastery', apRecoveryUp: 'AP Recovery↑',
 };
 
@@ -163,12 +176,15 @@ export function explainBuff(b) {
     case 'taunt': return 'Taunted: can only attack (no skills, no Noble Phantasm).';
     case 'confusion': return `Confused: ${v}% chance a skill fizzles (AP is still spent). Ends once it triggers.`;
     case 'stun': return `Trapped: ${v}% chance to lose the whole next action. Rolled once, when that turn resolves.`;
-    case 'debuffOnHit': return `A landed regular attack has a ${v}% chance to inflict ${b.inflict?.type === 'terror' ? `Terror (${b.inflict.value}%)` : b.inflict?.type === 'poison' ? `Poison (${b.inflict.value} damage per turn, stacking)` : b.inflict?.type} on the enemy.`;
+    case 'debuffOnHit': return `A landed regular attack has a ${v}% chance to inflict ${b.inflict?.type === 'terror' ? `Terror (${b.inflict.value}%)` : b.inflict?.type === 'poison' ? `Poison (${b.inflict.value} damage per turn, stacking)` : cap(b.inflict?.type)} on the enemy.`;
     case 'apChance': return `At the end of each turn, a ${v}% chance to gain ${b.amount ?? 2} AP.`;
     case 'npSeal': return `NP Seal: if this servant uses its Noble Phantasm this turn, it fizzles and the gauge drops ${v}%.`;
     case 'debuffResistDown': return `Debuff resistance -${v}%: debuffs on this servant are stronger.`;
     case 'doubleShot': return `${c} attacks have a ${v}% chance to loose a second arrow: +${b.ratio ?? 50}% damage if the attack landed, or a full-damage hit if it was beaten (Evade and Invincible still stop it).`;
-    case 'foresight': return `${b.charges ?? 0} use${b.charges === 1 ? '' : 's'} left: see the opponent's locked-in action before choosing.`;
+    case 'foresight': return `${b.charges ?? 0} use${b.charges === 1 ? '' : 's'} left: see the opponent's locked-in action before choosing.${b.deceive ? ` Othello deceives: a ${b.deceive}% chance what you see is a lie.` : ''}`;
+    case 'madness': return 'Madness: next turn this servant takes a random action instead of the one chosen.';
+    case 'charm': return "Charmed: next turn, if both servants attack, this servant's card becomes the one that loses to the charmer's.";
+    case 'starCrossed': return `Romeo and Juliet: when either servant falls, a ${v}% chance the other falls too and the battle ends in a draw.`;
     case 'maxApUp': return `Max AP +${v}. AP above the normal maximum is lost when this ends.`;
     case 'statusMark': return b.status === 'dragon' ? 'Dragon: no effect on its own, but Siegfried\'s Dragon Slayer and Balmung deal extra damage to it.' : `Marked: ${b.status}.`;
     case 'statusOnHit': return `A landed regular attack has a ${v}% chance to mark the enemy as ${b.status[0].toUpperCase() + b.status.slice(1)} for the next turn.`;
@@ -198,12 +214,13 @@ export function buffChip(b) {
   if (b.type === 'apRecoveryDown' && b.status === 'petrified') label = 'Petrified';
   if (b.type === 'cardVuln') label = `${CARD_LABEL[b.card]} Resist↓`;
   if (b.type === 'terror') label = 'Terror';
+  if (b.type === 'extraHitChance') label = `${b.source === "Golem's Support" ? 'Golem' : 'Sea Demons'} ${Math.round(b.value)}%`;
   if (b.type === 'foresight') label = `Foresight ×${b.charges ?? 0}`;
   if (b.type === 'doubleShot') label = `2nd Arrow ${Math.round(b.value)}%`;
   if (b.type === 'statusMark') label = b.status[0].toUpperCase() + b.status.slice(1);
   if (b.type === 'curse') label = `Curse ${Math.round(b.value)}`;
   const val = b.type === 'apRecoveryDown' ? ` −${Math.round(b.value)} AP` : b.type === 'apRecoveryUp' ? ` +${Math.round(b.value)} AP`
-    : b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage', 'sureHit', 'copyEnemyUnique', 'guts', 'ignoreDamageCut', 'nullifyBoosts', 'taunt', 'npOnlyKo', 'pierceEvade', 'statusMark'].includes(b.type)
+    : b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage', 'sureHit', 'copyEnemyUnique', 'guts', 'ignoreDamageCut', 'nullifyBoosts', 'madness', 'charm', 'taunt', 'npOnlyKo', 'pierceEvade', 'statusMark'].includes(b.type)
       ? ` ${Math.round(b.value)}%` : (['apRegen', 'flatDamage'].includes(b.type) ? ` +${b.value}` : '');
   const kind = b.debuff ? 'debuff' : b.turns === null ? 'passive' : 'active';
   let duration;

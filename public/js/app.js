@@ -3,7 +3,7 @@
 //  - Online mode: the server owns the match; this client renders snapshots and
 //    sends intents (pick, lock in, rematch). Screens are shared between modes.
 
-import { createMatch, getLegalActions, resolveTurn, validateAction, deriveStats, npOf } from '/src/engine/engine.js';
+import { createMatch, getLegalActions, resolveTurn, validateAction, deriveStats, npOf, foresightView } from '/src/engine/engine.js';
 import { ROSTER } from '/src/data/servants.js';
 import { TUNING as T, CARDS } from '/src/engine/constants.js';
 import { CARD_LABEL, describeSkill, describeNp, describeEffects, buffChip } from './describe.js';
@@ -668,6 +668,7 @@ function panelHtml(i) {
         </div>
         <div class="buffs">
           ${p.empower ? badge('active', 'Empowered', 'Command Seal: Empower', `The next attack or Noble Phantasm deals ${T.seals.empowerBonus * 100}% more damage, whichever comes first. An empowered attack also wins a tie.`, 'Used up by the next attack or NP') : ''}
+          ${p.work ? badge('passive work', `🎭 ${p.work.name}`, `${p.work.from}: ${p.work.name}`, `This battle's work: ${p.work.desc}.`, 'Chosen at random when the battle began; lasts the whole battle') : ''}
           ${(p.neutralized ?? []).map(n => badge('passive blocked', `⊘ ${n}`, `Neutralized: ${n}`, "The opponent's Ea switches off this unique passive for the whole match.", '')).join('')}
           ${(p.copyBlocked ?? []).map(n => badge('passive blocked', `✕ ${n}`, `Trace On: ${n}`, "Trace On couldn't copy this passive, because revives can't be copied.", '')).join('')}
           ${p.buffs.map(b => ({ b, chip: buffChip(b) }))
@@ -704,6 +705,7 @@ const SEAL_INFO = {
 function foresightState() {
   return online() ? ui.net.snap?.duel?.foresight ?? null : ui.foresight ?? null;
 }
+const foresightDeceit = i => ui.match.players[i].buffs.find(x => x.type === 'foresight')?.deceive ?? 0;
 function foresightName(i) {
   const b = ui.match.players[i].buffs.find(x => x.type === 'foresight');
   return b?.copiedFrom ? `Trace On: ${b.copiedFrom}` : b?.source ?? "Teacher's Wisdom";
@@ -712,7 +714,7 @@ function foresightHtml(i, legal) {
   const f = foresightState(), j = 1 - i, foe = ui.match.servants[j].name;
   if (f?.seat === i && f.revealed) return `
     <div class="foresight-box revealed"><b>${esc(foresightName(i))}</b>
-      <span>${esc(online() ? ui.net.snap.duel.seats[j].name : masterLabel(j))} locked in <strong>${esc(describeAction(j, f.revealed))}</strong>. It's final for this turn.</span></div>`;
+      <span>${esc(online() ? ui.net.snap.duel.seats[j].name : masterLabel(j))} locked in <strong>${esc(describeAction(j, f.revealed))}</strong>. It's final for this turn.${foresightDeceit(i) ? ` <em class="lie-risk">But Othello deceives: a ${foresightDeceit(i)}% chance this is a lie.</em>` : ''}</span></div>`;
   if (f?.seat === i) return `
     <div class="foresight-box"><b>${esc(foresightName(i))}</b>
       <span>Waiting for ${esc(foe)}'s master to lock in. Their action will appear here, and then you choose.</span></div>`;
@@ -733,10 +735,10 @@ async function useForesight() {
   }
   if (vsCpu()) { // the CPU decides now; that's what Chiron sees and what it will play
     ui.cpuPlanned = chooseAction(ui.match, j, { strength: cpuStrength() });
-    ui.foresight = { seat: i, revealed: ui.cpuPlanned };
+    ui.foresight = { seat: i, revealed: foresightView(ui.match, i, ui.cpuPlanned) };
     return setDraft({});
   }
-  if (ui.locked[j]) { ui.foresight = { seat: i, revealed: ui.locked[j] }; return setDraft({}); }
+  if (ui.locked[j]) { ui.foresight = { seat: i, revealed: foresightView(ui.match, i, ui.locked[j]) }; return setDraft({}); }
   // Hot seat, reading master goes first: hand the turn over, then come back with the action revealed.
   ui.foresight = { seat: i, revealed: null };
   beginLocalTurn(j, false, `${masterLabel(i)} used ${foresightName(i)}. Lock in your action: it will be shown to them and can't be changed this turn.`);
@@ -997,7 +999,7 @@ async function lockIn() {
     setTimeout(() => {
       let cpu = ui.cpuPlanned;
       if (!cpu && ui.foresight?.seat !== i && wantsForesight(ui.match, 1)) { // CPU reads the player's move
-        cpu = { ...chooseAction(ui.match, 1, { strength: cpuStrength(), known: action }), foresight: true };
+        cpu = { ...chooseAction(ui.match, 1, { strength: cpuStrength(), known: foresightView(ui.match, 1, action) }), foresight: true };
       }
       ui.locked[1] = cpu ?? chooseAction(ui.match, 1, { strength: cpuStrength() });
       resolveLocal();
@@ -1006,7 +1008,7 @@ async function lockIn() {
   }
   const j = 1 - i;
   if (ui.foresight?.seat === j && !ui.foresight.revealed) { // the reader goes last, now with this action shown
-    ui.foresight.revealed = action;
+    ui.foresight.revealed = foresightView(ui.match, j, action);
     return beginLocalTurn(j, false, `${foresightName(j)}: ${masterLabel(i)}'s action is revealed. Choose your response.`);
   }
   if (ui.locked[j]) resolveLocal();

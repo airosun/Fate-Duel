@@ -71,15 +71,15 @@ footer { color: var(--muted); font-size: .8rem; }
 <div class="wrap">
   <header>
     <h1>Fate<span>/</span>Duel Roster</h1>
-    <p class="intro">24 servants and their complete kits, generated from the game's own data. HP and ATK are the in-game values; NP gain is relative to an average servant (1.00×).</p>
+    <p class="intro">26 servants and their complete kits, generated from the game's own data. HP and ATK are the in-game values; NP gain is relative to an average servant (1.00×).</p>
   </header>
   <nav class="filters" aria-label="Filter by class">
-    <button type="button" data-filter="all" aria-pressed="true">All (24)</button>
+    <button type="button" data-filter="all" aria-pressed="true">All (26)</button>
     <button type="button" data-filter="Saber" aria-pressed="false">Saber (3)</button>
     <button type="button" data-filter="Archer" aria-pressed="false">Archer (4)</button>
     <button type="button" data-filter="Lancer" aria-pressed="false">Lancer (4)</button>
     <button type="button" data-filter="Rider" aria-pressed="false">Rider (4)</button>
-    <button type="button" data-filter="Caster" aria-pressed="false">Caster (2)</button>
+    <button type="button" data-filter="Caster" aria-pressed="false">Caster (4)</button>
     <button type="button" data-filter="Assassin" aria-pressed="false">Assassin (5)</button>
     <button type="button" data-filter="Berserker" aria-pressed="false">Berserker (2)</button>
   </nav>
@@ -904,6 +904,72 @@ footer { color: var(--muted); font-size: .8rem; }
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Hanging Gardens of Babylon</h4><span class="card buster">Buster</span><span class="mult">2.65×</span></div>
     <p>NP damage +30% for this NP, heavy Buster damage, then damage cut 20% for 2 turns</p></div>
     <p class="fgo">FGO stats: 13,266 HP · 11,309 ATK · NP 0.39% / 4%</p>
+  </article>
+
+  <article class="servant" id="shakespeare" data-class="Caster">
+    <header>
+      <div class="badge" aria-hidden="true">WS</div>
+      <div class="title"><span class="cls">Caster</span><h3>William Shakespeare</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>1,207</dd></div>
+      <div><dt>ATK</dt><dd>115</dd></div>
+      <div><dt>Max AP</dt><dd>10</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>1.41× <small>atk</small> · 1.00× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card arts">Arts</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Territory Creation C</span><span>Arts attacks +8% damage</span></li>
+        <li><span class="name">Works of Art<span class="tag">Unique</span></span><span>At the start of each battle, one of his works takes the stage (see the badge for which)</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">Enchant A<span class="ap">4 AP</span></span><span>Buster +30% for 3 turns</span></li>
+        <li><span class="name">Iambic Pentameter A+<span class="ap">6 AP</span></span><span>Invincible this turn; heal 20% HP; NP +20% now; NP damage +20% for 3 turns</span></li>
+        <li><span class="name">The Globe: The King&#39;s Men C<span class="ap">4 AP</span></span><span>NP +20% now; NP gain +30% for 3 turns</span></li>
+      </ul>
+    </section>
+    <div class="np">
+    <div class="np-head"><span class="label">Noble Phantasm</span><h4>First Folio</h4><span class="card buster">Buster</span><span class="mult">2.85×</span></div>
+    <p>Heavy Buster damage</p></div>
+    <p class="fgo">FGO stats: 8,080 HP · 5,798 ATK · NP 1.59% / 3%</p>
+  </article>
+
+  <article class="servant" id="avicebron" data-class="Caster">
+    <header>
+      <div class="badge" aria-hidden="true">A</div>
+      <div class="title"><span class="cls">Caster</span><h3>Avicebron</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>1,232</dd></div>
+      <div><dt>ATK</dt><dd>116</dd></div>
+      <div><dt>Max AP</dt><dd>10</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>0.87× <small>atk</small> · 1.00× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card arts">Arts</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Territory Creation B</span><span>Arts attacks +10% damage</span></li>
+        <li><span class="name">Golem&#39;s Support<span class="tag">Unique</span></span><span>A landed Buster attack has a 40% chance of a Golem strike for 30% of its damage</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">Numerology B<span class="ap">5 AP</span></span><span>Arts +25% and Buster +25% for 3 turns</span></li>
+        <li><span class="name">High-Speed Incantation B+<span class="ap">4 AP</span></span><span>NP +40% now</span></li>
+        <li><span class="name">Fig Tree of Tranquility EX<span class="ap">5 AP</span></span><span>Heal 30% HP; below 30% HP it grants Invincible this turn instead</span></li>
+      </ul>
+    </section>
+    <div class="np">
+    <div class="np-head"><span class="label">Noble Phantasm</span><h4>Golem Keter Malkuth</h4><span class="card buster">Buster</span><span class="mult">2.7×</span></div>
+    <p>NP damage +30% for this NP, heavy Buster damage, then NP gain +30% for 3 turns</p></div>
+    <p class="fgo">FGO stats: 9,981 HP · 6,376 ATK · NP 0.61% / 3%</p>
   </article>
   </main>
   <footer>Generated from src/data/servants.js on 2026-11-10. Kits are rebuilt whenever a servant is added or rebalanced.</footer>

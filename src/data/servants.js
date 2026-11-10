@@ -717,6 +717,70 @@ export const SERVANTS = {
           preEffects: [{ type: 'npUp', value: 30, turns: 1 }],
           postEffects: [{ type: 'damageCut', value: 20, turns: 3 }] },
   },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
+  shakespeare: {
+    id: 'shakespeare', name: 'William Shakespeare', class: 'Caster',
+    fgoHp: 8080, fgoAtk: 5798, fgoNpAtk: 1.59, fgoNpDef: 3,
+    favoredCard: 'arts', maxAp: 10,
+    passives: [
+      classPassive('territoryCreation', 'C'),
+      unique('Works of Art', 'At the start of each battle, one of his works takes the stage (see the badge for which)', [{
+        type: 'randomWork', works: [
+          { name: 'Hamlet', weight: 20, desc: 'A landed regular attack has a 10% chance to inflict Madness: next turn the enemy takes a random action',
+            effects: [{ type: 'debuffOnHit', value: 10, inflict: { type: 'madness', value: 1, turns: 2 } }] },
+          { name: 'Macbeth', weight: 30, desc: 'Quick, Arts and Buster +10%',
+            effects: [{ type: 'cardUp', card: 'quick', value: 10 }, { type: 'cardUp', card: 'arts', value: 10 }, { type: 'cardUp', card: 'buster', value: 10 }] },
+          { name: 'Romeo and Juliet', weight: 10, desc: 'When either servant falls, a 10% chance the other falls too (a draw)',
+            effects: [{ type: 'starCrossed', value: 10 }] },
+          { name: 'Othello', weight: 20, desc: "3 times per battle, see the opponent's locked-in action first, but there's a 40% chance what you see is a lie",
+            effects: [{ type: 'foresight', charges: 3, deceive: 40 }] },
+          { name: "A Midsummer Night's Dream", weight: 20, desc: "A landed regular attack has a 10% chance to Charm: next turn, if both attack, the enemy's card becomes the one that loses to his",
+            effects: [{ type: 'debuffOnHit', value: 10, inflict: { type: 'charm', value: 1, turns: 2 } }] },
+        ],
+      }]),
+    ],
+    skills: [
+      { id: 'enchant', name: 'Enchant A', cost: 4,
+        desc: 'Buster +30% for 3 turns',
+        effects: [{ type: 'cardUp', card: 'buster', value: 30, turns: 3 }] },
+      { id: 'iambic_pentameter', name: 'Iambic Pentameter A+', cost: 6,
+        desc: 'Invincible this turn; heal 20% HP; NP +20% now; NP damage +20% for 3 turns',
+        effects: [{ type: 'invincible' }, { type: 'heal', value: 20 }, { type: 'npCharge', value: 20 }, { type: 'npUp', value: 20, turns: 3 }] },
+      { id: 'the_globe', name: "The Globe: The King's Men C", cost: 4,
+        desc: 'NP +20% now; NP gain +30% for 3 turns',
+        effects: [{ type: 'npCharge', value: 20 }, { type: 'npGainUp', value: 30, turns: 3 }] },
+    ],
+    np: { name: 'First Folio', card: 'buster', mult: 2.85, desc: 'Heavy Buster damage' },
+  },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
+  avicebron: {
+    id: 'avicebron', name: 'Avicebron', class: 'Caster',
+    fgoHp: 9981, fgoAtk: 6376, fgoNpAtk: 0.61, fgoNpDef: 3,
+    favoredCard: 'arts', maxAp: 10,
+    passives: [
+      classPassive('territoryCreation', 'B'),
+      unique("Golem's Support", 'A landed Buster attack has a 40% chance of a Golem strike for 30% of its damage',
+        [{ type: 'extraHitChance', card: 'buster', value: 40, ratio: 30 }]),
+    ],
+    skills: [
+      { id: 'numerology', name: 'Numerology B', cost: 5,
+        desc: 'Arts +25% and Buster +25% for 3 turns',
+        effects: [{ type: 'cardUp', card: 'arts', value: 25, turns: 3 }, { type: 'cardUp', card: 'buster', value: 25, turns: 3 }] },
+      { id: 'high_speed_avi', name: 'High-Speed Incantation B+', cost: 4,
+        desc: 'NP +40% now',
+        effects: [{ type: 'npCharge', value: 40 }] },
+      { id: 'fig_tree', name: 'Fig Tree of Tranquility EX', cost: 5,
+        desc: 'Heal 30% HP; below 30% HP it grants Invincible this turn instead',
+        effects: [{ type: 'heal', value: 30, condition: 'hpAtLeast', threshold: 30 },
+                  { type: 'invincible', condition: 'hpBelow', threshold: 30 }] },
+    ],
+    np: { name: 'Golem Keter Malkuth', card: 'buster', mult: 2.7,
+          desc: 'NP damage +30% for this NP, heavy Buster damage, then NP gain +30% for 3 turns',
+          preEffects: [{ type: 'npUp', value: 30, turns: 1 }],
+          postEffects: [{ type: 'npGainUp', value: 30, turns: 4 }] },
+  },
 };
 
 export const ROSTER = Object.values(SERVANTS);

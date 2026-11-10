@@ -3,7 +3,7 @@
 // Usage: node tools/simulate.js [gamesPerPairing=2000] [seed=1] [--out reports/]
 //   --out writes winrates.csv, matchups.csv and run.csv for the win-rate dashboard.
 
-import { createMatch, resolveTurn, getLegalActions } from '../src/engine/engine.js';
+import { createMatch, resolveTurn, getLegalActions, foresightView } from '../src/engine/engine.js';
 import { ROSTER } from '../src/data/servants.js';
 import { TUNING as T } from '../src/engine/constants.js';
 import { writeFileSync, mkdirSync } from 'node:fs';
@@ -72,7 +72,7 @@ function botTurn(state) {
     && rand() < (state.players[1 - i].np >= T.npMax ? 0.8 : 0.2));
   if (readers.length !== 1) return [bot(state, 0), bot(state, 1)];
   const r = readers[0], other = bot(state, 1 - r);
-  const mine = { ...counterTo(state, r, other), foresight: true };
+  const mine = { ...counterTo(state, r, foresightView(state, r, other, rand)), foresight: true };  // Othello may lie
   return r === 0 ? [mine, other] : [other, mine];
 }
 
