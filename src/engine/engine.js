@@ -54,6 +54,7 @@ function createPlayer(servant, { blockUniques = false } = {}) {
   }
   const all = passives.flatMap(pas => pas.effects);
   for (const e of all.filter(e => e.type === 'maxApUp')) p.maxAp += e.value;
+  p.baseMaxAp = p.maxAp; // skill-granted max AP (Cigarette Lion) sits on top and expires
   for (const pas of passives) {
     for (const e of pas.effects) if (e.type !== 'maxApUp') applyEffect(p, { ...e, turns: null }, pas.name);
   }
@@ -164,7 +165,7 @@ const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', '
 // Lasting positive effects a servant puts on itself (what Breaker Gorgon can make fail).
 const BUFF_TYPES = new Set(['ignoreDamageCut', 'buffSuccessUp', 'apRecoveryUp', 'atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
   'cardNpGainUp', 'debuffResist', 'guts', 'apRegen', 'busterConvert', 'flatDamage', 'sureHit',
-  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance']);
+  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit']);
 const hasStatus = (p, status) => p.buffs.some(b => b.status === status);
 
 function resistScale(target, e, user) {
@@ -178,7 +179,19 @@ function resistScale(target, e, user) {
   return Math.min(1, Math.max(0, 1 - resist / 100)) * (1 + up / 100);
 }
 
+// Max AP = base (incl. passives) + temporary maxApUp buffs; AP is trimmed when they end.
+function syncMaxAp(p) {
+  if (p.baseMaxAp == null) return;
+  p.maxAp = p.baseMaxAp + sumBuff(p, 'maxApUp');
+  p.ap = Math.min(p.ap, p.maxAp);
+}
+
 function applyEffect(target, e, source, user) {
+  applyEffectRaw(target, e, source, user);
+  syncMaxAp(target);
+}
+
+function applyEffectRaw(target, e, source, user) {
   switch (e.type) {
     case 'heal':
       target.hp = Math.min(target.maxHp, target.hp + Math.round(target.maxHp * e.value / 100));
@@ -227,6 +240,7 @@ function applyEffect(target, e, source, user) {
         copiedFrom: e.copiedFrom,
         npName: e.npName,
         ratio: e.ratio,
+        markTurns: e.markTurns,
         debuff: DEBUFFS.includes(e.type),
         source,
       });
@@ -313,8 +327,12 @@ function defend(defender, raw, { isNp, ignoreDefense, sureHit, ignoreCut = false
   return { amount: Math.round(raw * vuln * (1 - cut / 100)), blocked: null };
 }
 
+// dmgVsStatus (Dragon Slayer): +X% damage against an enemy with a status, for the buff's whole duration
+const vsStatusPct = (att, def) => att.buffs.filter(b => b.type === 'dmgVsStatus' && hasStatus(def, b.status))
+  .reduce((a, b) => a + b.value, 0);
+
 function attackPacket(att, def, card, { counter, empowered, nextHit = 0, vsBonus = 0 }) {
-  let raw = att.atk * T.cards[card].mult * atkMultiplier(att, card, nextHit) * (1 + vsBonus / 100);
+  let raw = att.atk * T.cards[card].mult * atkMultiplier(att, card, nextHit) * (1 + vsBonus / 100) * (1 + vsStatusPct(att, def) / 100);
   if (hasAffinity(att, card)) raw *= 1 + T.affinityBonus[card];
   if (counter) raw *= 1 + T.counterBonus;
   if (empowered) raw *= 1 + T.seals.empowerBonus;
@@ -330,7 +348,9 @@ function attackPacket(att, def, card, { counter, empowered, nextHit = 0, vsBonus
 function npPacket(att, def, np, { empowered = false, nextHit = 0, vsBonus = 0 } = {}) {
   let mult = np.mult * (empowered ? 1 + T.seals.empowerBonus : 1);
   if (np.missingHpBonus) mult *= 1 + np.missingHpBonus * (1 - def.hp / def.maxHp);
-  const raw = att.atk * mult * atkMultiplier(att, np.card, nextHit) * (1 + vsBonus / 100) * (1 + sumBuff(att, 'npUp') / 100)
+  if (np.vsStatus && hasStatus(def, np.vsStatus.status)) mult *= 1 + np.vsStatus.value / 100; // Balmung vs Dragon
+  const raw = att.atk * mult * atkMultiplier(att, np.card, nextHit) * (1 + vsBonus / 100) * (1 + vsStatusPct(att, def) / 100)
+    * (1 + sumBuff(att, 'npUp') / 100)
     + sumBuff(att, 'flatDamage');
   return defend(def, raw, { isNp: true, ignoreDefense: !!np.ignoreDefense, ignoreCut: hasBuff(att, 'ignoreDamageCut'), card: np.card });
 }
@@ -494,6 +514,13 @@ export function resolveTurn(prev, actions) {
     if (pk.nextHit) att.buffs = att.buffs.filter(b => b.type !== 'nextHitUp'); // consumed on a landed attack or NP
     if (pk.vsBonus) att.buffs = att.buffs.filter(b => b.type !== 'bonusVsStatus'); // one hit only
     say(`${att.name} hits ${def.name} for ${pk.amount}${pk.hitAs && pk.hitAs !== pk.card ? ` (${CARD_NAME[pk.card]} → Buster)` : ''}${pk.reason === 'counter' ? ' (counter!)' : ''}.`, { type: 'hit', ...pk });
+    // Fafnir's Blood: a landed regular attack may mark the enemy with a status (e.g. Dragon) for the next turn
+    if (pk.kind === 'attack') for (const b of att.buffs.filter(b => b.type === 'statusOnHit')) {
+      if (roll(state) * 100 >= b.value) continue;
+      def.buffs = def.buffs.filter(x => !(x.type === 'statusMark' && x.status === b.status));
+      def.buffs.push({ type: 'statusMark', status: b.status, value: 0, turns: b.markTurns ?? 2, debuff: true, source: b.source });
+      say(`${def.name} is marked: ${b.status[0].toUpperCase() + b.status.slice(1)}!`, { type: 'status', player: pk.to, status: b.status });
+    }
     // Summoning: Sea Demons — a landed Arts attack may bring a follow-up hit for a share of its damage
     if (pk.kind === 'attack' && !pk.instantKill) for (const b of att.buffs.filter(b => b.type === 'extraHitChance' && b.card === pk.hitAs)) {
       if (roll(state) * 100 >= b.value) continue;
@@ -532,6 +559,7 @@ export function resolveTurn(prev, actions) {
     const regen = sumBuff(p, 'apRegen');
     if (regen) p.ap = Math.min(p.maxAp, p.ap + regen);
     p.buffs = p.buffs.filter(b => b.turns === null || --b.turns > 0);
+    syncMaxAp(p);
     p.hp = Math.max(0, p.hp);
   }
 

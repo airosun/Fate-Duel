@@ -71,11 +71,11 @@ footer { color: var(--muted); font-size: .8rem; }
 <div class="wrap">
   <header>
     <h1>Fate<span>/</span>Duel Roster</h1>
-    <p class="intro">14 servants and their complete kits, generated from the game's own data. HP and ATK are the in-game values; NP gain is relative to an average servant (1.00×).</p>
+    <p class="intro">16 servants and their complete kits, generated from the game's own data. HP and ATK are the in-game values; NP gain is relative to an average servant (1.00×).</p>
   </header>
   <nav class="filters" aria-label="Filter by class">
-    <button type="button" data-filter="all" aria-pressed="true">All (14)</button>
-    <button type="button" data-filter="Saber" aria-pressed="false">Saber (1)</button>
+    <button type="button" data-filter="all" aria-pressed="true">All (16)</button>
+    <button type="button" data-filter="Saber" aria-pressed="false">Saber (3)</button>
     <button type="button" data-filter="Archer" aria-pressed="false">Archer (2)</button>
     <button type="button" data-filter="Lancer" aria-pressed="false">Lancer (2)</button>
     <button type="button" data-filter="Rider" aria-pressed="false">Rider (2)</button>
@@ -251,7 +251,7 @@ footer { color: var(--muted); font-size: .8rem; }
     <div class="np">
       <div class="np-head"><span class="label">Noble Phantasm</span><h4>Unlimited Blade Works</h4><span class="card modes">Modes</span></div>
       <ul class="modes-list">
-        <li><span class="mode-name">Buster Mode <em>(default)</em></span><span class="card buster">Buster</span><span class="mult">4×</span><span>Heavy Buster damage</span></li>
+        <li><span class="mode-name">Buster Mode <em>(default)</em></span><span class="card buster">Buster</span><span class="mult">4.1×</span><span>Heavy Buster damage</span></li>
         <li><span class="mode-name">Arts Mode</span><span class="card arts">Arts</span><span class="mult">3.2×</span><span>Good Arts damage, then NP +20%</span></li>
         <li><span class="mode-name">Quick Mode</span><span class="card quick">Quick</span><span class="mult">2.6×</span><span>Light Quick damage, then enemy ATK -20% for 3 turns</span></li>
       </ul></div>
@@ -562,6 +562,73 @@ footer { color: var(--muted); font-size: .8rem; }
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Gáe Dearg &amp; Gáe Buidhe</h4><span class="card quick">Quick</span><span class="mult">3.1×</span></div>
     <p>Heavy Quick damage, then Curse the enemy (30 damage per turn for 3 turns)</p></div>
     <p class="fgo">FGO stats: 10,098 HP · 6,877 ATK · NP 0.79% / 4%</p>
+  </article>
+
+  <article class="servant" id="mordred" data-class="Saber">
+    <header>
+      <div class="badge" aria-hidden="true">M</div>
+      <div class="title"><span class="cls">Saber</span><h3>Mordred</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>1,281</dd></div>
+      <div><dt>ATK</dt><dd>123</dd></div>
+      <div><dt>Max AP</dt><dd>10</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>0.84× <small>atk</small> · 1.00× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card buster">Buster</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Magic Resistance B</span><span>Enemy debuffs on self 15% weaker</span></li>
+        <li><span class="name">Riding B</span><span>Quick attacks +10% damage</span></li>
+        <li><span class="name">Clarent<span class="tag">Unique</span></span><span>Starts the battle with 50% NP</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">Knight of Crimson Thunder A+<span class="ap">5 AP</span></span><span>Buster +25% and ATK +15% for 3 turns</span></li>
+        <li><span class="name">Cigarette Lion B+<span class="ap">3 AP</span></span><span>Max AP +2 for 3 turns, AP +2 now, and +1 AP at the end of each turn for 3 turns</span></li>
+        <li><span class="name">Secret of Pedigree EX<span class="ap">5 AP</span></span><span>Remove her debuffs; damage cut 20% for 2 turns; NP +20%</span></li>
+      </ul>
+    </section>
+    <div class="np">
+    <div class="np-head"><span class="label">Noble Phantasm</span><h4>Clarent Blood Arthur</h4><span class="card buster">Buster</span><span class="mult">3.6×</span></div>
+    <p>Heavy Buster damage, then NP +15%</p></div>
+    <p class="fgo">FGO stats: 14,680 HP · 11,723 ATK · NP 0.56% / 3%</p>
+  </article>
+
+  <article class="servant" id="siegfried" data-class="Saber">
+    <header>
+      <div class="badge" aria-hidden="true">S</div>
+      <div class="title"><span class="cls">Saber</span><h3>Siegfried</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>1,276</dd></div>
+      <div><dt>ATK</dt><dd>119</dd></div>
+      <div><dt>Max AP</dt><dd>10</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>1.02× <small>atk</small> · 1.00× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card buster">Buster</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Riding B</span><span>Quick attacks +10% damage</span></li>
+        <li><span class="name">Fafnir&#39;s Blood<span class="tag">Unique</span></span><span>A landed regular attack has a 25% chance to mark the enemy as Dragon for the next turn</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">Avaricious Gold A<span class="ap">5 AP</span></span><span>NP +20% now; NP gain +30% and ATK +15% for 3 turns</span></li>
+        <li><span class="name">Disengage A<span class="ap">4 AP</span></span><span>Remove his debuffs and heal 20% HP</span></li>
+        <li><span class="name">Dragon Slayer A++<span class="ap">5 AP</span></span><span>+30% damage vs Dragon and Buster +20% for 3 turns; damage cut 20% for 2 turns</span></li>
+      </ul>
+    </section>
+    <div class="np">
+    <div class="np-head"><span class="label">Noble Phantasm</span><h4>Balmung</h4><span class="card buster">Buster</span><span class="mult">3.5×</span></div>
+    <p>Heavy Buster damage; +40% damage to a Dragon</p></div>
+    <p class="fgo">FGO stats: 14,165 HP · 8,181 ATK · NP 0.83% / 3%</p>
   </article>
   </main>
   <footer>Generated from src/data/servants.js on 2026-11-10. Kits are rebuilt whenever a servant is added or rebalanced.</footer>

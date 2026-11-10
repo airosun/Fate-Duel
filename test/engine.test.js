@@ -661,3 +661,41 @@ test('Gilles: Mental Pollution makes his debuffs 30% stronger', () => {
   assert.equal(v.value, 19.5);                 // 15 × 1.3
   assert.equal(s.players[1].np, 50 - Math.round(15 * 1.3)); // drains 20 instead of 15
 });
+
+test('Mordred: Clarent starts her at 50% NP; Cigarette Lion raises max AP and it drops back when it ends', () => {
+  let s = createMatch(SERVANTS.mordred, dummy('B'), { seed: 1 });
+  assert.equal(s.players[0].np, 50);
+  const base = s.players[0].maxAp;
+  s.players[0].ap = base;
+  s = resolveTurn(s, [skill('cigarette_lion'), atk('quick')]).state;
+  assert.equal(s.players[0].maxAp, base + 2);
+  assert.ok(s.players[0].ap > base - 3);            // paid 3, gained 2 (+regen), above the old cap is allowed
+  for (let t = 0; t < 3; t++) s = resolveTurn(s, [atk('quick'), atk('quick')]).state;
+  assert.equal(s.players[0].maxAp, base);
+  assert.ok(s.players[0].ap <= base);
+  const g = createMatch(SERVANTS.gilgamesh, SERVANTS.mordred, { seed: 1 });   // Ea switches Clarent off
+  assert.equal(g.players[1].np, 0);
+});
+
+test("Siegfried: Fafnir's Blood marks Dragon ~25% of landed attacks; Dragon Slayer and Balmung hit Dragons harder", () => {
+  let marks = 0, n = 400;
+  for (let seed = 1; seed <= n; seed++) {
+    const r = resolveTurn(createMatch(SERVANTS.siegfried, dummy('B'), { seed }), [atk('buster'), atk('quick')]).state;
+    const m = r.players[1].buffs.find(b => b.type === 'statusMark' && b.status === 'dragon');
+    if (m) { marks++; assert.equal(m.turns, 1); }   // lasts through the next turn
+  }
+  assert.ok(marks / n > 0.19 && marks / n < 0.31, `mark rate ${marks / n}`);
+  const npDmg = (dragon, slayer) => {
+    const s = createMatch(SERVANTS.siegfried, dummy('B'), { seed: 2 });
+    s.players[0].np = 100;
+    if (dragon) s.players[1].buffs.push({ type: 'statusMark', status: 'dragon', value: 0, turns: 2, debuff: true });
+    if (slayer) s.players[0].buffs.push({ type: 'dmgVsStatus', status: 'dragon', value: 30, turns: 3 });
+    const r = resolveTurn(s, [np(), atk('quick')]).state;
+    return s.players[1].hp - r.players[1].hp;
+  };
+  const plain = npDmg(false, false), sp = SERVANTS.siegfried;
+  assert.ok(Math.abs(npDmg(true, false) - plain * 1.4) <= 1);
+  assert.ok(Math.abs(npDmg(true, true) - plain * 1.4 * 1.3) <= 2);
+  assert.equal(npDmg(false, true), plain);
+  assert.equal(sp.np.vsStatus.value, 40);
+});

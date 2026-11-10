@@ -169,7 +169,7 @@ export const SERVANTS = {
     ],
     np: { name: 'Unlimited Blade Works', defaultMode: 'buster',
           modes: {
-            buster: { label: 'Buster Mode', card: 'buster', mult: 4.0, desc: 'Heavy Buster damage' },
+            buster: { label: 'Buster Mode', card: 'buster', mult: 4.1, desc: 'Heavy Buster damage' },
             arts: { label: 'Arts Mode', card: 'arts', mult: 3.2, desc: 'Good Arts damage, then NP +20%',
                     postEffects: [{ type: 'npCharge', value: 20 }] },
             quick: { label: 'Quick Mode', card: 'quick', mult: 2.6, desc: 'Light Quick damage, then enemy ATK -20% for 3 turns',
@@ -435,6 +435,58 @@ export const SERVANTS = {
     np: { name: 'Gáe Dearg & Gáe Buidhe', card: 'quick', mult: 3.1,
           desc: 'Heavy Quick damage, then Curse the enemy (30 damage per turn for 3 turns)',
           postEffects: [{ type: 'curse', value: 30, turns: 3, status: 'cursed', target: 'enemy' }] },
+  },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
+  mordred: {
+    id: 'mordred', name: 'Mordred', class: 'Saber',
+    fgoHp: 14680, fgoAtk: 11723, fgoNpAtk: 0.56, fgoNpDef: 3,
+    favoredCard: 'buster', maxAp: 10,
+    passives: [
+      classPassive('magicResistance', 'B'),
+      classPassive('riding', 'B'),
+      unique('Clarent', 'Starts the battle with 50% NP', [{ type: 'npCharge', value: 50 }]),
+    ],
+    skills: [
+      { id: 'crimson_thunder', name: 'Knight of Crimson Thunder A+', cost: 5,
+        desc: 'Buster +25% and ATK +15% for 3 turns',
+        effects: [{ type: 'cardUp', card: 'buster', value: 25, turns: 3 }, { type: 'atkUp', value: 15, turns: 3 }] },
+      { id: 'cigarette_lion', name: 'Cigarette Lion B+', cost: 3,
+        desc: 'Max AP +2 for 3 turns, AP +2 now, and +1 AP at the end of each turn for 3 turns',
+        effects: [{ type: 'maxApUp', value: 2, turns: 3 }, { type: 'apGain', value: 2 }, { type: 'apRegen', value: 1, turns: 3 }] },
+      { id: 'secret_of_pedigree', name: 'Secret of Pedigree EX', cost: 5,
+        desc: 'Remove her debuffs; damage cut 20% for 2 turns; NP +20%',
+        effects: [{ type: 'cleanse' }, { type: 'damageCut', value: 20, turns: 2 }, { type: 'npCharge', value: 20 }] },
+    ],
+    np: { name: 'Clarent Blood Arthur', card: 'buster', mult: 3.6,
+          desc: 'Heavy Buster damage, then NP +15%',
+          postEffects: [{ type: 'npCharge', value: 15 }] },
+  },
+
+  // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
+  siegfried: {
+    id: 'siegfried', name: 'Siegfried', class: 'Saber',
+    fgoHp: 14165, fgoAtk: 8181, fgoNpAtk: 0.83, fgoNpDef: 3,
+    favoredCard: 'buster', maxAp: 10,
+    passives: [
+      classPassive('riding', 'B'),
+      unique("Fafnir's Blood", 'A landed regular attack has a 25% chance to mark the enemy as Dragon for the next turn',
+        [{ type: 'statusOnHit', status: 'dragon', value: 25, markTurns: 2 }]),
+    ],
+    skills: [
+      { id: 'avaricious_gold', name: 'Avaricious Gold A', cost: 5,
+        desc: 'NP +20% now; NP gain +30% and ATK +15% for 3 turns',
+        effects: [{ type: 'npCharge', value: 20 }, { type: 'npGainUp', value: 30, turns: 3 }, { type: 'atkUp', value: 15, turns: 3 }] },
+      { id: 'disengage', name: 'Disengage A', cost: 4,
+        desc: 'Remove his debuffs and heal 20% HP',
+        effects: [{ type: 'cleanse' }, { type: 'heal', value: 20 }] },
+      { id: 'dragon_slayer', name: 'Dragon Slayer A++', cost: 5,
+        desc: '+30% damage vs Dragon and Buster +20% for 3 turns; damage cut 20% for 2 turns',
+        effects: [{ type: 'dmgVsStatus', status: 'dragon', value: 30, turns: 3 }, { type: 'cardUp', card: 'buster', value: 20, turns: 3 },
+                  { type: 'damageCut', value: 20, turns: 2 }] },
+    ],
+    np: { name: 'Balmung', card: 'buster', mult: 3.5, vsStatus: { status: 'dragon', value: 40 },
+          desc: 'Heavy Buster damage; +40% damage to a Dragon' },
   },
 };
 

@@ -19,6 +19,8 @@ The game tries `.png`, then `.jpg`, then `.webp`, and falls back to a class-colo
 | Lancelot | `lancelot.png` |
 | Gilles de Rais | `gilles.png` |
 | Diarmuid Ua Duibhne | `diarmuid.png` |
+| Mordred | `mordred.png` |
+| Siegfried | `siegfried.png` |
 
 Tips
 - Portrait-oriented full art works best (e.g. Final Ascension stage art). Images are cropped with
