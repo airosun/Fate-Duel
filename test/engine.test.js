@@ -773,7 +773,7 @@ test("Chiron: Teacher's Wisdom has 3 uses, Ea switches it off; Eternal Consecrat
   c.players[0].hp = 10; c.players[0].ap = 3;
   c = resolveTurn(c, [skill('eternal_consecration'), skill('charge')]).state;
   assert.equal(c.players[0].hp, 1);
-  assert.equal(c.players[0].ap, 3 - 3 + 5);
+  assert.equal(c.players[0].ap, 3 - 3 + 6);
 
   const npDmg = defBuffs => {
     const x = createMatch(SERVANTS.chiron, dummy('B'), { seed: 3 });
