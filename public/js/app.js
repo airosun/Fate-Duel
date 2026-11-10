@@ -87,7 +87,10 @@ function masterLabel(i) {
 
 function show(screen) {
   if (screen !== 'end') ui.statsOpen = false; // a new match starts with the summary view
+  const changed = ui.screen !== screen;
+  if (changed) ui.miniShown = false;
   ui.screen = screen; render();
+  if (changed) window.scrollTo(0, 0); // don't carry the last screen's scroll (e.g. a long roster) into the next
 }
 
 function render() {
@@ -529,7 +532,15 @@ function renderSelect() {
           ${vsCpu() && ui.selecting === 1 ? '<button class="btn ghost" id="randomCpu">Random Servant</button>' : ''}
         </aside>
       </div>
+      <div class="summon-bar">
+        <div class="summon-who"><b>${esc(focus.name)}</b><span class="class-badge" data-class="${esc(focus.class)}">${esc(focus.class)}</span></div>
+        <button class="btn ghost small" id="kitJump">Kit ↓</button>
+        <button class="btn gold" id="confirm2">${vsCpu() && ui.selecting === 1 ? 'CPU summons' : 'Summon'}</button>
+      </div>
     </div>`;
+  // Phones: the kit sits below the roster, so the pinned bar summons or jumps to it.
+  app.querySelector('#confirm2').onclick = () => app.querySelector('#confirm').click();
+  app.querySelector('#kitJump').onclick = () => app.querySelector('.detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
   const search = app.querySelector('#rosterSearch');
   search.oninput = () => { ui.search = search.value; applyRosterFilter(); };
   search.onfocus = () => { ui.searchFocused = true; };
@@ -812,8 +823,38 @@ function logHtml() {
     </section>`;
 }
 
+// Compact HP / NP / AP strip. Pinned to the top of the screen whenever the
+// servant panels are scrolled out of view (always the case on phones while choosing).
+function miniStatusHtml() {
+  const m = ui.match;
+  return `<div class="mini-status ${ui.miniShown ? 'show' : ''}" aria-hidden="true">${[0, 1].map(i => {
+    const p = m.players[i], s = m.servants[i], hp = Math.max(0, (p.hp / p.maxHp) * 100);
+    return `<div class="mini side-${i}">
+      <b>${esc(s.name)}</b>
+      <div class="mini-bar ${hp < 25 ? 'low' : ''}"><i style="width:${hp}%"></i><span>${Math.max(0, p.hp)} / ${p.maxHp}</span></div>
+      <span class="mini-np ${p.np >= T.npMax ? 'full' : ''}">NP ${p.np}%</span><span class="mini-ap">AP ${p.ap}</span>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function watchMiniStatus() {
+  ui.miniObs?.disconnect();
+  const field = app.querySelector('.field'), strip = app.querySelector('.mini-status');
+  if (!field || !strip || !('IntersectionObserver' in window)) return;
+  // Show the strip once less than ~35% of the panels' HP area is on screen.
+  // Shown while neither servant's HP bar is on screen; remembered across re-renders so it doesn't flicker.
+  const seen = new Map();
+  ui.miniObs = new IntersectionObserver(entries => {
+    for (const e of entries) seen.set(e.target, e.isIntersecting);
+    ui.miniShown = ![...seen.values()].some(Boolean);
+    strip.classList.toggle('show', ui.miniShown);
+  }, { threshold: 0 });
+  app.querySelectorAll('.panel .bar.hp').forEach(b => ui.miniObs.observe(b));
+}
+
 function renderBattle() {
   app.innerHTML = `
+    ${miniStatusHtml()}
     <div class="battle">
       ${online() ? `<div class="room-tag">${isDuelist() ? '' : '<span class="spec-badge">Spectating</span>'} Room ${esc(ui.net.code)} <button class="btn ghost small" id="leaveBattle">Leave</button></div>` : ''}
       <div class="field">
@@ -827,6 +868,7 @@ function renderBattle() {
       </div>
     </div>`;
   bindControls();
+  watchMiniStatus();
 }
 
 // A skill draft; skills with options start on the servant's current NP mode.
@@ -843,6 +885,7 @@ function setDraft(patch) {
   const scroll = window.scrollY;
   render();
   window.scrollTo(0, scroll);
+  requestAnimationFrame(() => window.scrollTo(0, scroll)); // again once images have laid out
 }
 
 function bindControls() {
@@ -923,6 +966,23 @@ function revealSide(i, action, servants) {
     </div>`;
 }
 
+// HP before -> after this turn for both servants, so it stays visible while the overlay covers the field.
+function revealHp(state) {
+  const h = state.history ?? [];
+  const after = h.at(-1)?.hp;
+  if (!after) return '';
+  const before = h.at(-2)?.hp ?? state.players.map(p => p.maxHp);
+  return `<div class="reveal-hp">${[0, 1].map(i => {
+    const p = state.players[i], d = after[i] - before[i];
+    const pctB = (100 * before[i]) / p.maxHp, pctA = (100 * after[i]) / p.maxHp;
+    return `<div class="rh side-${i}">
+      <span class="rh-name">${esc(state.servants[i].name)}</span>
+      <div class="mini-bar ${pctA < 25 ? 'low' : ''}"><em style="width:${Math.max(pctA, pctB)}%"></em><i style="width:${pctA}%"></i><span>${after[i]} / ${p.maxHp}</span></div>
+      <span class="rh-delta ${d < 0 ? 'down' : d > 0 ? 'up' : ''}">${d === 0 ? '±0' : d > 0 ? `+${d}` : d}</span>
+    </div>`;
+  }).join('')}</div>`;
+}
+
 function showReveal({ turn, actions, log }, state, onContinue) {
   ui.revealing = true;
   const banner = clashBanner(actions, state.servants);
@@ -932,6 +992,7 @@ function showReveal({ turn, actions, log }, state, onContinue) {
       <div class="reveal-row">${revealSide(0, actions[0], state.servants)}<div class="versus">VS</div>${revealSide(1, actions[1], state.servants)}</div>
       <div class="clash-banner ${banner.cls}">${esc(banner.text)}</div>
       <div class="reveal-log">${log.map((l, k) => `<p class="log-${l.type}" style="animation-delay:${0.25 + k * 0.35}s">${esc(l.msg)}</p>`).join('')}</div>
+      ${revealHp(state)}
       <button class="btn gold" id="cont">${state.over ? 'See result' : 'Continue'}</button>
     </div>`, o => o.querySelector('#cont').onclick = () => { ui.revealing = false; onContinue(); });
 }
