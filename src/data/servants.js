@@ -900,7 +900,7 @@ export const SERVANTS = {
       classPassive('avenger', 'A'),
       classPassive('oblivionCorrection', 'A'),
       classPassive('selfReplenishMagic', 'E'),
-      unique("All the World's Evils", "Every effect with a % chance always lands on him, except Instant Kill, Breaker Gorgon and effects that stop him acting (Blind, Trap). Gains a Power Boost for each debuff on him", [{ type: 'worldsEvils', value: 10, scale: 20 }]),
+      unique("All the World's Evils", "Every effect with a % chance always lands on him, except Instant Kill, Breaker Gorgon, Terror and effects that stop him acting (Blind, Trap). Gains a Power Boost for each debuff on him", [{ type: 'worldsEvils', value: 10, scale: 20 }]),
     ],
     skills: [
       { id: 'zarich', name: 'Zarich: Right Fang Grinder C', cost: 4,

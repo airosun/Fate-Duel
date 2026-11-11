@@ -236,7 +236,7 @@ const BUFF_TYPES = new Set(['ignoreDamageCut', 'buffSuccessUp', 'apRecoveryUp', 
   'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight', 'npOnlyKo', 'debuffOnHit', 'apChance', 'rpsOverride', 'randomWork', 'starCrossed', 'lastStand', 'hpRegen', 'divineIntervention', 'battleChoice', 'buffDurationUp', 'debuffDurationUp', 'npRegen', 'npGainDefUp', 'worldsEvils']);
 const hasStatus = (p, status) => p.buffs.some(b => b.status === status);
 // All the World's Evils (Angra Mainyu): every chance-based effect on him lands (not instant kill, Breaker Gorgon,
-// or effects that stop him acting: Blind and Trap roll normally)
+// Terror, or effects that stop him acting: Blind, Trap and Terror roll normally)
 const evilsLand = p => p.buffs.some(b => b.type === 'worldsEvils');
 // ...and a Power Boost per debuff on him: value% + up to scale% more as his HP falls
 function powerBoostPct(p) {
@@ -648,7 +648,7 @@ function resolveTurnInner(prev, actions, opts) {
       if (e.target !== 'enemy') return false;
       if (e.chance == null) return true;
       // chance-based debuffs (Lament of the Falsely Living): roll once per cast
-      const ok = (e.type !== 'stun' && evilsLand(P[1 - i])) || roll(state) * 100 < e.chance;
+      const ok = (!['stun', 'terror'].includes(e.type) && evilsLand(P[1 - i])) || roll(state) * 100 < e.chance;
       proc(P[i], `${skill.name} (${e.type[0].toUpperCase() + e.type.slice(1)} landed)`, ok);
       if (!ok) {
         say(`${skill.name}: the ${e.type === 'stun' ? 'Holy Light' : e.type} misses.`, { type: 'buffFail', player: i });
@@ -798,7 +798,7 @@ function resolveTurnInner(prev, actions, opts) {
     }
     // Terror: a frightened servant may not follow through on a regular attack. Ends once it triggers.
     const terror = pk.kind === 'attack' && !pk.secondArrow ? att.buffs.find(b => b.type === 'terror') : null;
-    const frozen = terror && (evilsLand(att) || roll(state) * 100 < terror.value);
+    const frozen = terror && roll(state) * 100 < terror.value;   // All the World's Evils doesn't cover Terror
     if (terror) proc(def, `${sourceLabel(S[pk.to], terror.source)} (Terror freezes)`, frozen);
     if (frozen) {
       att.stats.combo = 0;
@@ -846,7 +846,7 @@ function resolveTurnInner(prev, actions, opts) {
     }
     // La Black Luna: a landed regular attack may inflict a debuff
     if (pk.kind === 'attack' && !pk.secondArrow) for (const b of att.buffs.filter(b => b.type === 'debuffOnHit')) {
-      const got = evilsLand(def) || roll(state) * 100 < b.value;
+      const got = (b.inflict.type !== 'terror' && evilsLand(def)) || roll(state) * 100 < b.value;
       const nm = b.inflict.type[0].toUpperCase() + b.inflict.type.slice(1);
       proc(att, `${b.source} (${nm} inflicted)`, got);
       if (got) {

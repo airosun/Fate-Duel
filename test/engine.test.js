@@ -1314,3 +1314,21 @@ test("Angra: All the World's Evils — chance effects always land; Power Boost p
   const plain = Math.round(T.npGainOnHit * s.players[0].npGainDef);
   assert.ok(t.players[0].np >= Math.round(T.npGainOnHit * s.players[0].npGainDef * 1.25) && t.players[0].np > plain);
 });
+
+test("Angra: Terror rolls its normal chance against him (inflicting and freezing)", () => {
+  let frozen = 0, n = 200;
+  for (let seed = 1; seed <= n; seed++) {
+    const s = createMatch(SERVANTS.angra, dummy('B'), { seed });
+    s.players[0].buffs.push({ type: 'terror', value: 40, turns: 3, debuff: true, source: 'test' });
+    const r = resolveTurn(s, [atk('quick'), atk('quick')]);
+    if (r.log.some(l => l.blocked === 'terror')) frozen++;
+  }
+  assert.ok(frozen > n * 0.25 && frozen < n * 0.55, `frozen ${frozen}`);
+  let inflicted = 0;
+  for (let seed = 1; seed <= n; seed++) {
+    const s = createMatch(SERVANTS.astolfo, SERVANTS.angra, { seed });
+    const r = resolveTurn(s, [atk('buster'), atk('quick')]);   // Buster beats Quick: Astolfo's attack lands
+    if (r.state.players[1].buffs.some(b => b.type === 'terror')) inflicted++;
+  }
+  assert.ok(inflicted < n * 0.3, `inflicted ${inflicted}`);   // 10% proc, not 100%
+});
