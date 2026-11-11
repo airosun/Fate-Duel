@@ -235,7 +235,8 @@ const BUFF_TYPES = new Set(['ignoreDamageCut', 'buffSuccessUp', 'apRecoveryUp', 
   'cardNpGainUp', 'debuffResist', 'guts', 'apRegen', 'busterConvert', 'flatDamage', 'sureHit', 'pierceEvade',
   'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight', 'npOnlyKo', 'debuffOnHit', 'apChance', 'rpsOverride', 'randomWork', 'starCrossed', 'lastStand', 'hpRegen', 'divineIntervention', 'battleChoice', 'buffDurationUp', 'debuffDurationUp', 'npRegen', 'npGainDefUp', 'worldsEvils']);
 const hasStatus = (p, status) => p.buffs.some(b => b.status === status);
-// All the World's Evils (Angra Mainyu): every chance-based effect on him lands (not instant kill or Breaker Gorgon)
+// All the World's Evils (Angra Mainyu): every chance-based effect on him lands (not instant kill, Breaker Gorgon,
+// or effects that stop him acting: Blind and Trap roll normally)
 const evilsLand = p => p.buffs.some(b => b.type === 'worldsEvils');
 // ...and a Power Boost per debuff on him: value% + up to scale% more as his HP falls
 function powerBoostPct(p) {
@@ -572,7 +573,7 @@ function resolveTurnInner(prev, actions, opts) {
     const stun = P[i].buffs.find(b => b.type === 'stun' && b.armed);
     if (!stun) continue;
     P[i].buffs.splice(P[i].buffs.indexOf(stun), 1);
-    const down = evilsLand(P[i]) || roll(state) * 100 < stun.value;
+    const down = roll(state) * 100 < stun.value;   // All the World's Evils doesn't cover losing a turn
     proc(P[1 - i], `${sourceLabel(S[1 - i], stun.source)} (turns skipped)`, down);
     if (down) {
       mains[i] = { type: 'stunned' };
@@ -647,7 +648,7 @@ function resolveTurnInner(prev, actions, opts) {
       if (e.target !== 'enemy') return false;
       if (e.chance == null) return true;
       // chance-based debuffs (Lament of the Falsely Living): roll once per cast
-      const ok = evilsLand(P[1 - i]) || roll(state) * 100 < e.chance;
+      const ok = (e.type !== 'stun' && evilsLand(P[1 - i])) || roll(state) * 100 < e.chance;
       proc(P[i], `${skill.name} (${e.type[0].toUpperCase() + e.type.slice(1)} landed)`, ok);
       if (!ok) {
         say(`${skill.name}: the ${e.type === 'stun' ? 'Holy Light' : e.type} misses.`, { type: 'buffFail', player: i });

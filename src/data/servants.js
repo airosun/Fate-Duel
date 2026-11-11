@@ -86,7 +86,7 @@ export const SERVANTS = {
   medea: {
     id: 'medea', name: 'Medea', class: 'Caster', pronouns: 'she/her',
     fgoHp: 8643, fgoAtk: 7418, fgoNpAtk: 1.64, fgoNpDef: 3,
-    favoredCard: 'arts', maxAp: 12,
+    favoredCard: 'arts', hpMult: 1.006, maxAp: 12,
     passives: [
       classPassive('territoryCreation', 'A'),
       unique("Hecate's Staff", "Her debuffs ignore up to 25% of the enemy's Debuff Resist",
@@ -117,7 +117,7 @@ export const SERVANTS = {
   kojirou: {
     id: 'kojirou', name: 'Sasaki Kojirou', class: 'Assassin', pronouns: 'he/him',
     fgoHp: 6220, fgoAtk: 5735, fgoNpAtk: 1.05, fgoNpDef: 4,
-    favoredCard: 'quick', maxAp: 10,
+    favoredCard: 'quick', hpMult: 1.012, maxAp: 10,
     passives: [
       classPassive('presenceConcealment', 'D'),
       unique('Heaven Among the Mountains', "His Quick attacks Pierce Evade",
@@ -143,7 +143,7 @@ export const SERVANTS = {
   emiya: {
     id: 'emiya', name: 'EMIYA', class: 'Archer', pronouns: 'he/him',
     fgoHp: 11521, fgoAtk: 9398, fgoNpAtk: 0.51, fgoNpDef: 3,
-    favoredCard: 'arts', maxAp: 10,
+    favoredCard: 'arts', hpMult: 0.975, maxAp: 10,
     passives: [
       classPassive('magicResistance', 'D'),
       classPassive('independentAction', 'B'),
@@ -383,7 +383,7 @@ export const SERVANTS = {
   gilles: {
     id: 'gilles', name: 'Gilles de Rais', class: 'Caster', pronouns: 'he/him',
     fgoHp: 9506, fgoAtk: 6514, fgoNpAtk: 1.58, fgoNpDef: 3,
-    favoredCard: 'arts', maxAp: 10,
+    favoredCard: 'arts', hpMult: 1.006, maxAp: 10,
     passives: [
       classPassive('territoryCreation', 'B'),
       unique('Summoning: Sea Demons', "A landed Arts attack has a 40% chance of a Sea Demon follow-up hit for 30% of its damage",
@@ -414,7 +414,7 @@ export const SERVANTS = {
   diarmuid: {
     id: 'diarmuid', name: 'Diarmuid Ua Duibhne', class: 'Lancer', pronouns: 'he/him',
     fgoHp: 10098, fgoAtk: 6877, fgoNpAtk: 0.79, fgoNpDef: 4,
-    favoredCard: 'quick', maxAp: 10,
+    favoredCard: 'quick', hpMult: 1.02, maxAp: 10,
     passives: [
       classPassive('magicResistance', 'B'),
       unique("Knight's Oath", "Quick +10% and Arts +10%",
@@ -467,7 +467,7 @@ export const SERVANTS = {
   siegfried: {
     id: 'siegfried', name: 'Siegfried', class: 'Saber', pronouns: 'he/him',
     fgoHp: 14165, fgoAtk: 8181, fgoNpAtk: 0.83, fgoNpDef: 3,
-    favoredCard: 'buster', maxAp: 10,
+    favoredCard: 'buster', hpMult: 1.012, maxAp: 10,
     passives: [
       classPassive('riding', 'B'),
       unique("Fafnir's Blood", "A landed regular attack has a 35% chance to mark the enemy as a Dragon (2 turns)",
@@ -521,7 +521,7 @@ export const SERVANTS = {
   chiron: {
     id: 'chiron', name: 'Chiron', class: 'Archer', pronouns: 'he/him',
     fgoHp: 12250, fgoAtk: 9294, fgoNpAtk: 0.68, fgoNpDef: 3,
-    favoredCard: 'arts', maxAp: 10,
+    favoredCard: 'arts', hpMult: 0.99, maxAp: 10,
     passives: [
       classPassive('magicResistance', 'B'),
       classPassive('independentAction', 'A'),
@@ -636,7 +636,7 @@ export const SERVANTS = {
   astolfo: {
     id: 'astolfo', name: 'Astolfo', class: 'Rider', pronouns: 'they/them',
     fgoHp: 11172, fgoAtk: 8937, fgoNpAtk: 0.66, fgoNpDef: 1,
-    favoredCard: 'quick', maxAp: 10,
+    favoredCard: 'quick', hpMult: 0.985, maxAp: 10,
     passives: [
       classPassive('magicResistance', 'A'),
       classPassive('riding', 'A+'),
@@ -665,7 +665,7 @@ export const SERVANTS = {
   jack: {
     id: 'jack', name: 'Jack the Ripper', class: 'Assassin', pronouns: 'she/her',
     fgoHp: 12696, fgoAtk: 11557, fgoNpAtk: 1.07, fgoNpDef: 4,
-    favoredCard: 'quick', maxAp: 10,
+    favoredCard: 'quick', hpMult: 0.99, maxAp: 10,
     passives: [
       classPassive('presenceConcealment', 'A+'),
       unique('The Misty Night of London', "When her Quick attack meets a Buster attack, a 20% chance her Quick wins the clash instead",
@@ -837,7 +837,7 @@ export const SERVANTS = {
   jeanne: {
     id: 'jeanne', name: "Jeanne d'Arc", class: 'Ruler', pronouns: 'she/her',
     fgoHp: 16500, fgoAtk: 9593, fgoNpAtk: 0.76, fgoNpDef: 3,
-    favoredCard: 'arts', maxAp: 10, hpMult: 0.735, // 26.5% below FGO-derived HP: regen, Divine Intervention and Magic Resistance EX
+    favoredCard: 'arts', maxAp: 10, hpMult: 0.728, // 27% below FGO-derived HP: regen, Divine Intervention and Magic Resistance EX
     passives: [
       classPassive('magicResistance', 'EX'),
       unique('Revelation from Heaven', "Heal 3% HP at the end of each turn", [{ type: 'hpRegen', value: 3 }]),
@@ -895,22 +895,23 @@ export const SERVANTS = {
   angra: {
     id: 'angra', name: 'Angra Mainyu', class: 'Avenger', pronouns: 'he/him',
     fgoHp: 7981, fgoAtk: 5683, fgoNpAtk: 0.79, fgoNpDef: 5,
-    favoredCard: 'quick', maxAp: 10, hpMult: 1.6, atk: 160, // well above FGO-derived stats: his NP deals no damage of its own
+    favoredCard: 'quick', maxAp: 10, atk: 200, // ATK well above FGO-derived (115): his NP deals no damage of its own. HP stays FGO-derived (user)
     passives: [
       classPassive('avenger', 'A'),
+      classPassive('oblivionCorrection', 'A'),
       classPassive('selfReplenishMagic', 'E'),
-      unique("All the World's Evils", "Every effect with a % chance always lands on him (except Instant Kill and Breaker Gorgon). Gains a Power Boost for each debuff on him", [{ type: 'worldsEvils', value: 10, scale: 20 }]),
+      unique("All the World's Evils", "Every effect with a % chance always lands on him, except Instant Kill, Breaker Gorgon and effects that stop him acting (Blind, Trap). Gains a Power Boost for each debuff on him", [{ type: 'worldsEvils', value: 10, scale: 20 }]),
     ],
     skills: [
       { id: 'zarich', name: 'Zarich: Right Fang Grinder C', cost: 4,
-        desc: "Enemy AP −4",
-        effects: [{ type: 'apDrain', value: 4, target: 'enemy' }] },
+        desc: "Enemy AP −5; Applies Sure Hit (3 turns)",
+        effects: [{ type: 'apDrain', value: 5, target: 'enemy' }, { type: 'sureHit', value: 0, turns: 3 }] },
       { id: 'tawrich', name: 'Tawrich: Left Fang Grinder C', cost: 5,
-        desc: "Enemy NP −30%; Enemy ATK −30% (3 turns)",
-        effects: [{ type: 'npDrain', value: 30, target: 'enemy' }, { type: 'atkDown', value: 30, turns: 3, target: 'enemy' }] },
+        desc: "Enemy NP −40%; Enemy ATK −40% (3 turns)",
+        effects: [{ type: 'npDrain', value: 40, target: 'enemy' }, { type: 'atkDown', value: 40, turns: 3, target: 'enemy' }] },
       { id: 'fourth_night', name: 'The End of the Fourth Night EX', cost: 6,
-        desc: "Quick +40% and Arts +40% (3 turns); NP +40%",
-        effects: [{ type: 'cardUp', card: 'quick', value: 40, turns: 3 }, { type: 'cardUp', card: 'arts', value: 40, turns: 3 }, { type: 'npCharge', value: 40 }] },
+        desc: "Quick +50% and Arts +50% (3 turns); NP +50%",
+        effects: [{ type: 'cardUp', card: 'quick', value: 50, turns: 3 }, { type: 'cardUp', card: 'arts', value: 50, turns: 3 }, { type: 'npCharge', value: 50 }] },
     ],
     np: { name: 'Verg Avesta', subtitle: 'False Copy of Inscribed Creation', card: 'arts', mult: 0, equalize: true,
           desc: "Equalizes HP %: if his is lower, the enemy's HP drops to match (can't be blocked); if his is higher, his own HP drops to match" },

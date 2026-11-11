@@ -1283,13 +1283,19 @@ test('Angra: Verg Avesta drags the enemy down to his HP % (unblockable), or lowe
 });
 
 test("Angra: All the World's Evils — chance effects always land; Power Boost per debuff grows as HP falls; Avenger NP gain", () => {
-  // God's Resolution (80% Blind) always lands on him
-  for (let seed = 1; seed <= 40; seed++) {
+  // Lament's 60% Shock always lands on him; God's Resolution's Blind (stops him acting) still rolls 80%
+  let blinded = 0;
+  for (let seed = 1; seed <= 60; seed++) {
+    const f = createMatch(SERVANTS.frankenstein, SERVANTS.angra, { seed });
+    f.players[0].ap = 10;
+    const ft = resolveTurn(f, [skill('lament'), atk('quick')]).state;
+    assert.ok(ft.players[1].buffs.some(b => b.type === 'shock'), `seed ${seed}`);
     const s = createMatch(SERVANTS.jeanne, SERVANTS.angra, { seed });
     s.players[0].ap = 6;
     const t = resolveTurn(s, [skill('gods_resolution'), atk('quick')]).state;
-    assert.ok(t.players[1].buffs.some(b => b.type === 'stun'), `seed ${seed}`);
+    if (t.players[1].buffs.some(b => b.type === 'stun')) blinded++;
   }
+  assert.ok(blinded > 35 && blinded < 60, `blinded ${blinded}`);
   // Power Boost: each debuff adds 10% + 20% x missing HP to his damage
   const dmg = (debuffs, hpPct) => {
     const s = createMatch(SERVANTS.angra, dummy('B'), { seed: 2 });
@@ -1299,8 +1305,9 @@ test("Angra: All the World's Evils — chance effects always land; Power Boost p
     return r.log.find(l => l.type === 'hit' && l.from === 0).amount;
   };
   const base = dmg(0, 1), two = dmg(2, 1), twoLow = dmg(2, 0.25);
-  assert.ok(Math.abs(two / base - 1.2) < 0.03, `${two}/${base}`);
-  assert.ok(Math.abs(twoLow / base - 1.5) < 0.03, `${twoLow}/${base}`);
+  // Power Boost adds to his ATK up (Oblivion Correction A: +10%)
+  assert.ok(Math.abs(two / base - 1.3 / 1.1) < 0.03, `${two}/${base}`);
+  assert.ok(Math.abs(twoLow / base - 1.6 / 1.1) < 0.03, `${twoLow}/${base}`);
   // Avenger A: +25% NP when hit
   const s = createMatch(SERVANTS.angra, dummy('B'), { seed: 2 });
   const t = resolveTurn(s, [atk('arts'), atk('quick')]).state;   // Quick beats Arts: he's hit

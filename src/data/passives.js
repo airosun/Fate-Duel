@@ -24,6 +24,9 @@ const TABLES = {
   // flat damage added to every hit (attacks and NPs), at game scale (~120 ATK)
   divinity:         { name: 'Divinity', values: [12, 11, 10, 9, 8, 6, 4, 2, 1],
     make: v => [{ type: 'flatDamage', value: v }], desc: v => `+${v} damage on every hit` },
+  // Oblivion Correction: stronger attacks (ATK up)
+  oblivionCorrection: { name: 'Oblivion Correction', values: [12, 11, 10, 9, 8, 6, 4, 2, 1],
+    make: v => [{ type: 'atkUp', value: v }], desc: v => `ATK +${v}%` },
   // Avenger: more NP from taking damage (multiplies the defending NP gain)
   avenger:          { name: 'Avenger', values: [30, 27, 25, 22, 20, 15, 10, 5, 3],
     make: v => [{ type: 'npGainDefUp', value: v }], desc: v => `NP gain when hit +${v}%` },

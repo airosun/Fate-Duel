@@ -98,7 +98,7 @@ function describeEffectCore(e) {
     case 'npGainDefUp': return `Gains ${v}% more NP when hit.`;
     case 'worldsEvils': {
       const hpPct = owner?.hp != null ? owner.hp / owner.maxHp : 1;
-      return `Every effect with a % chance always lands on ${P.them} (except Instant Kill and Breaker Gorgon). Power Boost: +${Math.round((b.value + (b.scale ?? 0) * (1 - hpPct)) * 10) / 10}% damage for each debuff on ${P.them} right now (${b.value}% + ${b.scale ?? 0}% × missing HP).`;
+      return `Every effect with a % chance always lands on ${P.them}, except Instant Kill, Breaker Gorgon and effects that stop ${P.them} acting (Blind, Trap). Power Boost: +${Math.round((b.value + (b.scale ?? 0) * (1 - hpPct)) * 10) / 10}% damage for each debuff on ${P.them} right now (${b.value}% + ${b.scale ?? 0}% × missing HP).`;
     }
     case 'instantKillChance': return `NP ${v}% chance to kill outright`;
     case 'affinityAll': return `Every favored-card bonus`;
@@ -227,7 +227,7 @@ export function explainBuff(b, owner) {
     case 'npGainDefUp': return `Gains ${v}% more NP when hit.`;
     case 'worldsEvils': {
       const hpPct = owner?.hp != null ? owner.hp / owner.maxHp : 1;
-      return `Every effect with a % chance always lands on ${P.them} (except Instant Kill and Breaker Gorgon). Power Boost: +${Math.round((b.value + (b.scale ?? 0) * (1 - hpPct)) * 10) / 10}% damage for each debuff on ${P.them} right now (${b.value}% + ${b.scale ?? 0}% × missing HP).`;
+      return `Every effect with a % chance always lands on ${P.them}, except Instant Kill, Breaker Gorgon and effects that stop ${P.them} acting (Blind, Trap). Power Boost: +${Math.round((b.value + (b.scale ?? 0) * (1 - hpPct)) * 10) / 10}% damage for each debuff on ${P.them} right now (${b.value}% + ${b.scale ?? 0}% × missing HP).`;
     }
     case 'instantKillChance': return b.npName
       ? `${b.npName} has a ${v}% chance to kill outright when it connects. Revives don't trigger.${b.copiedFrom ? ` Only works with ${b.npName}, so it has no effect here.` : ''}`
