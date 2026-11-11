@@ -18,6 +18,9 @@
 [data-class="Saber"] { --cls: #3a74c9; } [data-class="Archer"] { --cls: #c9453a; } [data-class="Lancer"] { --cls: #2c9c8a; }
 [data-class="Rider"] { --cls: #c98b2c; } [data-class="Caster"] { --cls: #7b4cc9; } [data-class="Assassin"] { --cls: #5d6380; }
 [data-class="Berserker"] { --cls: #9c2c4f; }
+.term { text-decoration: underline dotted; text-underline-offset: 2px; cursor: help; }
+[data-class="Ruler"] { --cls: #b8963a; }
+[data-class="Avenger"] { --cls: #3d2350; }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); }
 .wrap { max-width: 1280px; margin: 0 auto; padding: 28px clamp(16px, 3vw, 32px) 48px; display: flex; flex-direction: column; gap: 20px; }
@@ -71,10 +74,10 @@ footer { color: var(--muted); font-size: .8rem; }
 <div class="wrap">
   <header>
     <h1>Fate<span>/</span>Duel Roster</h1>
-    <p class="intro">30 servants and their complete kits, generated from the game's own data. HP and ATK are the in-game values; NP gain is relative to an average servant (1.00×).</p>
+    <p class="intro">31 servants and their complete kits, generated from the game's own data. HP and ATK are the in-game values; NP gain is relative to an average servant (1.00×).</p>
   </header>
   <nav class="filters" aria-label="Filter by class">
-    <button type="button" data-filter="all" aria-pressed="true">All (30)</button>
+    <button type="button" data-filter="all" aria-pressed="true">All (31)</button>
     <button type="button" data-filter="Saber" aria-pressed="false">Saber (3)</button>
     <button type="button" data-filter="Archer" aria-pressed="false">Archer (4)</button>
     <button type="button" data-filter="Lancer" aria-pressed="false">Lancer (4)</button>
@@ -82,6 +85,8 @@ footer { color: var(--muted); font-size: .8rem; }
     <button type="button" data-filter="Caster" aria-pressed="false">Caster (4)</button>
     <button type="button" data-filter="Assassin" aria-pressed="false">Assassin (5)</button>
     <button type="button" data-filter="Berserker" aria-pressed="false">Berserker (4)</button>
+    <button type="button" data-filter="Ruler" aria-pressed="false">Ruler (2)</button>
+    <button type="button" data-filter="Avenger" aria-pressed="false">Avenger (1)</button>
   </nav>
   <main class="grid">
 
@@ -100,22 +105,22 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Magic Resistance A</span><span>Enemy debuffs on self 20% weaker</span></li>
-        <li><span class="name">Riding B</span><span>Quick attacks +10% damage</span></li>
-        <li><span class="name">Invisible Air<span class="tag">Unique</span></span><span>Permanent 5% damage cut</span></li>
+        <li><span class="name">Magic Resistance A</span><span><span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> +20%</span></li>
+        <li><span class="name">Riding B</span><span>Quick +10%</span></li>
+        <li><span class="name">Invisible Air<span class="tag">Unique</span></span><span><span class="term" tabindex="0" title="Takes this % less damage from attacks and Noble Phantasms. Stacks up to 90%.">Damage Cut</span> 5% (permanent)</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Knight of Utopia EX<span class="ap">4 AP</span></span><span>ATK +20% and Buster NP gain +100% for 3 turns</span></li>
-        <li><span class="name">Dragon Reactor Core B<span class="ap">5 AP</span></span><span>Buster +25% and NP damage +15% for 3 turns; next attack hits as Buster (keeps its chosen card for the clash)</span></li>
-        <li><span class="name">Radiant Road EX<span class="ap">3 AP</span></span><span>NP gauge +25% and 15% damage cut for 2 turns</span></li>
+        <li><span class="name">Knight of Utopia EX<span class="ap">4 AP</span></span><span>ATK +20% and Buster NP gain +100% (3 turns)</span></li>
+        <li><span class="name">Dragon Reactor Core B<span class="ap">5 AP</span></span><span>Buster +25% and NP damage +15% (3 turns); her next attack hits as Buster (it still clashes as the card she picked)</span></li>
+        <li><span class="name">Radiant Road EX<span class="ap">3 AP</span></span><span>NP +25%; <span class="term" tabindex="0" title="Takes this % less damage from attacks and Noble Phantasms. Stacks up to 90%.">Damage Cut</span> 15% (2 turns)</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Excalibur</h4><span class="card buster">Buster</span><span class="mult">3.5×</span></div>
-    <p>Heavy Buster damage, then refunds 15% NP</p></div>
+    <p>Heavy Buster damage; NP +15%</p></div>
     <p class="fgo">FGO stats: 15,150 HP · 11,221 ATK · NP 0.86% / 3%</p>
   </article>
 
@@ -134,22 +139,22 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Mad Enhancement B</span><span>Buster attacks +10% damage</span></li>
-        <li><span class="name">Divinity A</span><span>+10 flat damage on every hit</span></li>
-        <li><span class="name">12 Labors<span class="tag">Unique</span></span><span>Revives once at 25% HP, but his NP gauge and AP reset to 0</span></li>
+        <li><span class="name">Mad Enhancement B</span><span>Buster +10%</span></li>
+        <li><span class="name">Divinity A</span><span>+10 damage on every hit</span></li>
+        <li><span class="name">12 Labors<span class="tag">Unique</span></span><span><span class="term" tabindex="0" title="Survives one killing blow and revives.">Guts</span> once: revives at 25% HP, but his NP gauge and AP reset to 0</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Bravery A+<span class="ap">4 AP</span></span><span>ATK +20% and debuffs on self 30% weaker for 3 turns</span></li>
-        <li><span class="name">Eye of the Mind (False) B<span class="ap">4 AP</span></span><span>Evade regular attacks for 2 turns</span></li>
-        <li><span class="name">Indomitable A<span class="ap">5 AP</span></span><span>Buster +20% for 3 turns; +40% instead after 12 Labors has revived him</span></li>
+        <li><span class="name">Bravery A+<span class="ap">4 AP</span></span><span>ATK +20% and <span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> +30% (3 turns)</span></li>
+        <li><span class="name">Eye of the Mind (False) B<span class="ap">4 AP</span></span><span>Applies <span class="term" tabindex="0" title="Dodges regular attacks. Noble Phantasms still hit, and Sure Hit and Pierce Evade go through it.">Evade</span> (2 turns)</span></li>
+        <li><span class="name">Indomitable A<span class="ap">5 AP</span></span><span>Buster +20% (3 turns); +40% instead once 12 Labors has revived him</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Nine Lives</h4><span class="card buster">Buster</span><span class="mult">3.6×</span></div>
-    <p>Heavy Buster damage, then the enemy takes 20% more damage for 2 turns</p></div>
+    <p>Heavy Buster damage; Enemy <span class="term" tabindex="0" title="DEF down: takes this % more damage from attacks and Noble Phantasms.">DEF</span> −20% (2 turns)</p></div>
     <p class="fgo">FGO stats: 10,327 HP · 10,655 ATK · NP 1.07% / 5%</p>
   </article>
 
@@ -168,21 +173,21 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Territory Creation A</span><span>Arts attacks +12% damage</span></li>
-        <li><span class="name">Hecate&#39;s Staff<span class="tag">Unique</span></span><span>Her debuffs ignore up to 25% of enemy debuff resistance</span></li>
+        <li><span class="name">Territory Creation A</span><span>Arts +12%</span></li>
+        <li><span class="name">Hecate&#39;s Staff<span class="tag">Unique</span></span><span>Her debuffs ignore up to 25% of the enemy&#39;s <span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span></span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">High-Speed Divine Words A<span class="ap">4 AP</span></span><span>NP gauge +50%</span></li>
-        <li><span class="name">Argon Coin: The Golden Fleece<span class="ap">3 AP</span></span><span>Heal 20% HP and gain 2 AP</span></li>
-        <li><span class="name">Witch of Colchis A<span class="ap">6 AP</span></span><span>Cleanse own debuffs; Arts +25%, NP damage +20% and NP gain +30% for 3 turns</span></li>
+        <li><span class="name">High-Speed Divine Words A<span class="ap">4 AP</span></span><span>NP +50%</span></li>
+        <li><span class="name">Argon Coin: The Golden Fleece<span class="ap">3 AP</span></span><span>Heal 20% HP; AP +2</span></li>
+        <li><span class="name">Witch of Colchis A<span class="ap">6 AP</span></span><span><span class="term" tabindex="0" title="Removes all debuffs.">Cleanses</span> her debuffs; Arts +25%, NP damage +20% and NP gain +30% (3 turns)</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Rule Breaker</h4><span class="card arts">Arts</span><span class="mult">2.6×</span></div>
-    <p>Removes all enemy buffs (passives stay), deals light Arts damage, then enemy ATK -20% for 3 turns</p></div>
+    <p>Removes the enemy&#39;s buffs (passives stay); Light Arts damage; Enemy ATK −20% (3 turns)</p></div>
     <p class="fgo">FGO stats: 8,643 HP · 7,418 ATK · NP 1.64% / 3%</p>
   </article>
 
@@ -202,20 +207,20 @@ footer { color: var(--muted); font-size: .8rem; }
       <h5>Passives</h5>
       <ul class="rows">
         <li><span class="name">Presence Concealment D</span><span>NP gain +4%</span></li>
-        <li><span class="name">Heaven Among the Mountains<span class="tag">Unique</span></span><span>Quick attacks pierce Evade and decoys (not Sure Hit)</span></li>
+        <li><span class="name">Heaven Among the Mountains<span class="tag">Unique</span></span><span>His Quick attacks <span class="term" tabindex="0" title="Attacks go through Evade and decoys. This is not Sure Hit, so effects that need Sure Hit do not trigger.">Pierce Evade</span></span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Eye of the Mind (False) A<span class="ap">4 AP</span></span><span>Evade regular attacks and 10% damage cut for 2 turns</span></li>
-        <li><span class="name">Fade Out A+<span class="ap">4 AP</span></span><span>Cleanse own debuffs; Quick +40% for 3 turns</span></li>
-        <li><span class="name">Knowledge of the Souwa B++<span class="ap">5 AP</span></span><span>Sure Hit for 3 turns (all attacks pierce Evade and decoys)</span></li>
+        <li><span class="name">Eye of the Mind (False) A<span class="ap">4 AP</span></span><span>Applies <span class="term" tabindex="0" title="Dodges regular attacks. Noble Phantasms still hit, and Sure Hit and Pierce Evade go through it.">Evade</span> and <span class="term" tabindex="0" title="Takes this % less damage from attacks and Noble Phantasms. Stacks up to 90%.">Damage Cut</span> 10% (2 turns)</span></li>
+        <li><span class="name">Fade Out A+<span class="ap">4 AP</span></span><span><span class="term" tabindex="0" title="Removes all debuffs.">Cleanses</span> his debuffs; Quick +40% (3 turns)</span></li>
+        <li><span class="name">Knowledge of the Souwa B++<span class="ap">5 AP</span></span><span>Applies <span class="term" tabindex="0" title="Attacks always hit: they go through Evade and can't be dodged by decoys. Invincible still blocks them. Some effects react to Sure Hit specifically (Akhilleus Kosmos).">Sure Hit</span> (3 turns)</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Tsubame Gaeshi</h4><span class="card quick">Quick</span><span class="mult">3.8×</span></div>
-    <p>Quick +20% for 3 turns (boosts this NP too), then heavy Quick damage</p></div>
+    <p>Quick +20% (3 turns, boosts this NP too); Heavy Quick damage</p></div>
     <p class="fgo">FGO stats: 6,220 HP · 5,735 ATK · NP 1.05% / 4%</p>
   </article>
 
@@ -234,26 +239,26 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Magic Resistance D</span><span>Enemy debuffs on self 5% weaker</span></li>
-        <li><span class="name">Independent Action B</span><span>+1 max AP and +1 starting AP</span></li>
-        <li><span class="name">Reality Marble<span class="tag">Unique</span></span><span>Has every favored-card bonus (Quick, Arts and Buster)</span></li>
-        <li><span class="name">Trace On<span class="tag">Unique</span></span><span>Copies the opponent&#39;s unique passive for the match (revives can&#39;t be copied)</span></li>
+        <li><span class="name">Magic Resistance D</span><span><span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> +5%</span></li>
+        <li><span class="name">Independent Action B</span><span>Max AP +1; starting AP +1</span></li>
+        <li><span class="name">Reality Marble<span class="tag">Unique</span></span><span>Gets the favored-card bonus on Quick, Arts and Buster</span></li>
+        <li><span class="name">Trace On<span class="tag">Unique</span></span><span>Copies the opponent&#39;s unique passive for the battle (revives can&#39;t be copied)</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Eye of the Mind (True) EX<span class="ap">5 AP</span></span><span>Evade and 10% damage cut for 2 turns; ATK +20% for 3 turns</span></li>
-        <li><span class="name">Hawkeye B+<span class="ap">3 AP</span></span><span>NP +20% now and NP gain +50% for 3 turns</span></li>
-        <li><span class="name">Circuit Connect EX<span class="ap">6 AP</span></span><span>Next landed attack is 50% more effective; set Unlimited Blade Works to a mode <em>Options: Buster Mode / Arts Mode / Quick Mode</em></span></li>
+        <li><span class="name">Eye of the Mind (True) EX<span class="ap">5 AP</span></span><span>Applies <span class="term" tabindex="0" title="Dodges regular attacks. Noble Phantasms still hit, and Sure Hit and Pierce Evade go through it.">Evade</span> and <span class="term" tabindex="0" title="Takes this % less damage from attacks and Noble Phantasms. Stacks up to 90%.">Damage Cut</span> 10% (2 turns); ATK +20% (3 turns)</span></li>
+        <li><span class="name">Hawkeye B+<span class="ap">3 AP</span></span><span>NP +20%; NP gain +50% (3 turns)</span></li>
+        <li><span class="name">Circuit Connect EX<span class="ap">6 AP</span></span><span>His next landed attack is 50% more effective; sets Unlimited Blade Works to the chosen mode <em>Options: Buster Mode / Arts Mode / Quick Mode</em></span></li>
       </ul>
     </section>
     <div class="np">
       <div class="np-head"><span class="label">Noble Phantasm</span><h4>Unlimited Blade Works</h4><span class="card modes">Modes</span></div>
       <ul class="modes-list">
         <li><span class="mode-name">Buster Mode <em>(default)</em></span><span class="card buster">Buster</span><span class="mult">4.1×</span><span>Heavy Buster damage</span></li>
-        <li><span class="mode-name">Arts Mode</span><span class="card arts">Arts</span><span class="mult">3.2×</span><span>Good Arts damage, then NP +20%</span></li>
-        <li><span class="mode-name">Quick Mode</span><span class="card quick">Quick</span><span class="mult">2.6×</span><span>Light Quick damage, then enemy ATK -20% for 3 turns</span></li>
+        <li><span class="mode-name">Arts Mode</span><span class="card arts">Arts</span><span class="mult">3.2×</span><span>Medium Arts damage; NP +20%</span></li>
+        <li><span class="mode-name">Quick Mode</span><span class="card quick">Quick</span><span class="mult">2.6×</span><span>Light Quick damage; Enemy ATK −20% (3 turns)</span></li>
       </ul></div>
     <p class="fgo">FGO stats: 11,521 HP · 9,398 ATK · NP 0.51% / 3%</p>
   </article>
@@ -273,22 +278,22 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Magic Resistance C</span><span>Enemy debuffs on self 10% weaker</span></li>
-        <li><span class="name">Divinity B</span><span>+8 flat damage on every hit</span></li>
-        <li><span class="name">Battle Continuation<span class="tag">Unique</span></span><span>Revives once at 1 HP (keeps his AP and NP gauge)</span></li>
+        <li><span class="name">Magic Resistance C</span><span><span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> +10%</span></li>
+        <li><span class="name">Divinity B</span><span>+8 damage on every hit</span></li>
+        <li><span class="name">Battle Continuation<span class="tag">Unique</span></span><span><span class="term" tabindex="0" title="Survives one killing blow and revives.">Guts</span> once: revives at 1 HP (keeps his AP and NP gauge)</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Ath nGabla A<span class="ap">4 AP</span></span><span>ATK +20% to +50% for 3 turns (20% + 30% × missing HP when used)</span></li>
-        <li><span class="name">Protection from Arrows B<span class="ap">4 AP</span></span><span>Evade and 10% damage cut for 2 turns</span></li>
-        <li><span class="name">Disengage C<span class="ap">4 AP</span></span><span>Cleanse own debuffs and heal 15% HP</span></li>
+        <li><span class="name">Ath nGabla A<span class="ap">4 AP</span></span><span>ATK +20% to +50% (3 turns): +20%, plus up to +30% more the lower his HP is when used</span></li>
+        <li><span class="name">Protection from Arrows B<span class="ap">4 AP</span></span><span>Applies <span class="term" tabindex="0" title="Dodges regular attacks. Noble Phantasms still hit, and Sure Hit and Pierce Evade go through it.">Evade</span> and <span class="term" tabindex="0" title="Takes this % less damage from attacks and Noble Phantasms. Stacks up to 90%.">Damage Cut</span> 10% (2 turns)</span></li>
+        <li><span class="name">Disengage C<span class="ap">4 AP</span></span><span><span class="term" tabindex="0" title="Removes all debuffs.">Cleanses</span> his debuffs; Heal 15% HP</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Gáe Bolg</h4><span class="card quick">Quick</span><span class="mult">3.4×</span></div>
-    <p>Sure Hit for 2 turns, heavy Quick damage, then the enemy takes 20% more damage for 2 turns</p></div>
+    <p>Applies <span class="term" tabindex="0" title="Attacks always hit: they go through Evade and can't be dodged by decoys. Invincible still blocks them. Some effects react to Sure Hit specifically (Akhilleus Kosmos).">Sure Hit</span> (2 turns); Heavy Quick damage; Enemy <span class="term" tabindex="0" title="DEF down: takes this % more damage from attacks and Noble Phantasms.">DEF</span> −20% (2 turns)</p></div>
     <p class="fgo">FGO stats: 9,593 HP · 7,239 ATK · NP 1.07% / 4%</p>
   </article>
 
@@ -307,24 +312,24 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Magic Resistance B</span><span>Enemy debuffs on self 15% weaker</span></li>
-        <li><span class="name">Independent Action C</span><span>+1 max AP and +1 starting AP</span></li>
-        <li><span class="name">Riding A+</span><span>Quick attacks +13% damage</span></li>
-        <li><span class="name">Divinity E-</span><span>+1 flat damage on every hit</span></li>
-        <li><span class="name">Breaker Gorgon<span class="tag">Unique</span></span><span>Each buff the opponent gives themselves has a 10% chance to fail</span></li>
+        <li><span class="name">Magic Resistance B</span><span><span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> +15%</span></li>
+        <li><span class="name">Independent Action C</span><span>Max AP +1; starting AP +1</span></li>
+        <li><span class="name">Riding A+</span><span>Quick +13%</span></li>
+        <li><span class="name">Divinity E-</span><span>+1 damage on every hit</span></li>
+        <li><span class="name">Breaker Gorgon<span class="tag">Unique</span></span><span>Each buff the enemy gives themself has a 10% chance to fail</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Mystic Eyes A+<span class="ap">4 AP</span></span><span>Petrify the enemy: AP -3 now, and -2 AP from each attack for 3 turns</span></li>
-        <li><span class="name">Monstrous Snake Metamorphosis B<span class="ap">5 AP</span></span><span>ATK +20% for 3 turns; her next attack on a Petrified enemy deals +50% damage</span></li>
-        <li><span class="name">Blood Fort Andromeda B<span class="ap">4 AP</span></span><span>NP +35% now and NP gain +50% for 3 turns</span></li>
+        <li><span class="name">Mystic Eyes A+<span class="ap">4 AP</span></span><span>Inflicts <span class="term" tabindex="0" title="Drains AP now, and the servant gains less AP from each attack while it lasts.">Petrify</span>: Enemy AP −3, and −2 AP from each of their attacks (3 turns)</span></li>
+        <li><span class="name">Monstrous Snake Metamorphosis B<span class="ap">5 AP</span></span><span>ATK +20% (3 turns); her next attack on a <span class="term" tabindex="0" title="Drains AP now, and the servant gains less AP from each attack while it lasts.">Petrified</span> enemy deals +50% damage</span></li>
+        <li><span class="name">Blood Fort Andromeda B<span class="ap">4 AP</span></span><span>NP +35%; NP gain +50% (3 turns)</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Bellerophon</h4><span class="card quick">Quick</span><span class="mult">4.4×</span></div>
-    <p>Heavy Quick damage, then the enemy gets -1 AP from each attack for 2 turns</p></div>
+    <p>Heavy Quick damage; Enemy gets −1 AP from each attack (2 turns)</p></div>
     <p class="fgo">FGO stats: 8,937 HP · 7,200 ATK · NP 0.58% / 3%</p>
   </article>
 
@@ -344,20 +349,20 @@ footer { color: var(--muted); font-size: .8rem; }
       <h5>Passives</h5>
       <ul class="rows">
         <li><span class="name">Presence Concealment A+</span><span>NP gain +11%</span></li>
-        <li><span class="name">Shaytan&#39;s Arm<span class="tag">Unique</span></span><span>Zabaniya has a 5% chance to kill outright. Revives do not trigger</span></li>
+        <li><span class="name">Shaytan&#39;s Arm<span class="tag">Unique</span></span><span>Zabaniya has a 5% chance of <span class="term" tabindex="0" title="Kills outright when it lands. Revives don't trigger.">Instant Kill</span> (revives don&#39;t trigger)</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Throwing/Retrieval A<span class="ap">3 AP</span></span><span>AP +2 now, then +2 AP at the end of this turn and the next</span></li>
-        <li><span class="name">Self-Modification C<span class="ap">3 AP</span></span><span>Quick +45% for 3 turns</span></li>
-        <li><span class="name">Protection from Wind A<span class="ap">4 AP</span></span><span>Evade for 2 turns and NP gain +30% for 3 turns</span></li>
+        <li><span class="name">Throwing/Retrieval A<span class="ap">3 AP</span></span><span>AP +2; AP +2 at the end of this turn and the next</span></li>
+        <li><span class="name">Self-Modification C<span class="ap">3 AP</span></span><span>Quick +45% (3 turns)</span></li>
+        <li><span class="name">Protection from Wind A<span class="ap">4 AP</span></span><span>Applies <span class="term" tabindex="0" title="Dodges regular attacks. Noble Phantasms still hit, and Sure Hit and Pierce Evade go through it.">Evade</span> (2 turns); NP gain +30% (3 turns)</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Zabaniya</h4><span class="card quick">Quick</span><span class="mult">4.1×</span></div>
-    <p>Heavy Quick damage, then ATK +20% for 3 turns</p></div>
+    <p>Heavy Quick damage; ATK +20% (3 turns)</p></div>
     <p class="fgo">FGO stats: 7,594 HP · 6,280 ATK · NP 1.07% / 4%</p>
   </article>
 
@@ -376,23 +381,23 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Independent Action A+</span><span>+2 max AP and +2 starting AP</span></li>
-        <li><span class="name">Magic Resistance E</span><span>Enemy debuffs on self 3% weaker</span></li>
-        <li><span class="name">Divinity B</span><span>+8 flat damage on every hit</span></li>
-        <li><span class="name">Ea<span class="tag">Unique</span></span><span>Neutralizes the opponent&#39;s unique passives for the whole match</span></li>
+        <li><span class="name">Independent Action A+</span><span>Max AP +2; starting AP +2</span></li>
+        <li><span class="name">Magic Resistance E</span><span><span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> +3%</span></li>
+        <li><span class="name">Divinity B</span><span>+8 damage on every hit</span></li>
+        <li><span class="name">Ea<span class="tag">Unique</span></span><span>Neutralizes the opponent&#39;s unique passives for the whole battle</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">The One Who Saw It All EX<span class="ap">5 AP</span></span><span>ATK +20% and NP damage +20% for 3 turns</span></li>
-        <li><span class="name">Golden Rule A<span class="ap">3 AP</span></span><span>NP gain +50% for 3 turns and 10% damage cut for 2 turns</span></li>
-        <li><span class="name">Treasury of Babylon EX<span class="ap">6 AP</span></span><span>NP +30% and AP +3 now; Buster +25% for 3 turns</span></li>
+        <li><span class="name">The One Who Saw It All EX<span class="ap">5 AP</span></span><span>ATK +20% and NP damage +20% (3 turns)</span></li>
+        <li><span class="name">Golden Rule A<span class="ap">3 AP</span></span><span>NP gain +50% (3 turns); <span class="term" tabindex="0" title="Takes this % less damage from attacks and Noble Phantasms. Stacks up to 90%.">Damage Cut</span> 10% (2 turns)</span></li>
+        <li><span class="name">Treasury of Babylon EX<span class="ap">6 AP</span></span><span>NP +30%; AP +3; Buster +25% (3 turns)</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Enuma Elish</h4><span class="card buster">Buster</span><span class="mult">3×</span></div>
-    <p>NP damage +30% for this NP, then heavy Buster damage</p></div>
+    <p>NP damage +30% for this NP; Heavy Buster damage</p></div>
     <p class="fgo">FGO stats: 13,097 HP · 12,280 ATK · NP 0.34% / 3%</p>
   </article>
 
@@ -411,23 +416,23 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Magic Resistance D</span><span>Enemy debuffs on self 5% weaker</span></li>
-        <li><span class="name">Riding A+</span><span>Quick attacks +13% damage</span></li>
-        <li><span class="name">Divinity C</span><span>+6 flat damage on every hit</span></li>
-        <li><span class="name">Bucephalus<span class="tag">Unique</span></span><span>Quick and Buster attacks are 10% more effective</span></li>
+        <li><span class="name">Magic Resistance D</span><span><span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> +5%</span></li>
+        <li><span class="name">Riding A+</span><span>Quick +13%</span></li>
+        <li><span class="name">Divinity C</span><span>+6 damage on every hit</span></li>
+        <li><span class="name">Bucephalus<span class="tag">Unique</span></span><span>Quick +10% and Buster +10%</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Those Who Go Towards the Beyond A<span class="ap">6 AP</span></span><span>NP +30% now; ATK +25% and attacks and NP ignore damage cut for 3 turns</span></li>
-        <li><span class="name">Conquest Tactics A<span class="ap">4 AP</span></span><span>NP damage +25% and NP gain +30% for 3 turns</span></li>
-        <li><span class="name">Lightning Conqueror EX<span class="ap">5 AP</span></span><span>Buster +30% for 3 turns and AP +1 now</span></li>
+        <li><span class="name">Those Who Go Towards the Beyond A<span class="ap">6 AP</span></span><span>NP +30%; ATK +25% and <span class="term" tabindex="0" title="Goes straight through the target's Damage Cut. Evade and Invincible still work.">Ignores Damage Cut</span> (3 turns)</span></li>
+        <li><span class="name">Conquest Tactics A<span class="ap">4 AP</span></span><span>NP damage +25% and NP gain +30% (3 turns)</span></li>
+        <li><span class="name">Lightning Conqueror EX<span class="ap">5 AP</span></span><span>Buster +30% (3 turns); AP +1</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Ionioi Hetairoi</h4><span class="card buster">Buster</span><span class="mult">3.4×</span></div>
-    <p>Heavy Buster damage, then the enemy takes 20% more damage for 2 turns</p></div>
+    <p>Heavy Buster damage; Enemy <span class="term" tabindex="0" title="DEF down: takes this % more damage from attacks and Noble Phantasms.">DEF</span> −20% (2 turns)</p></div>
     <p class="fgo">FGO stats: 13,219 HP · 11,560 ATK · NP 0.86% / 3%</p>
   </article>
 
@@ -447,20 +452,20 @@ footer { color: var(--muted); font-size: .8rem; }
       <h5>Passives</h5>
       <ul class="rows">
         <li><span class="name">Presence Concealment A</span><span>NP gain +10%</span></li>
-        <li><span class="name">One Hundred Personas<span class="tag">Unique</span></span><span>Regular attacks against him have a 10% chance to miss (Sure Hit ignores this)</span></li>
+        <li><span class="name">One Hundred Personas<span class="tag">Unique</span></span><span>Regular attacks against them have a 10% chance to miss (<span class="term" tabindex="0" title="Attacks always hit: they go through Evade and can't be dodged by decoys. Invincible still blocks them. Some effects react to Sure Hit specifically (Akhilleus Kosmos).">Sure Hit</span> ignores this)</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Library of Stored Information B<span class="ap">6 AP</span></span><span>NP +30% now; NP gain +30% and buff success +20% for 3 turns</span></li>
-        <li><span class="name">Expert of Many Specializations A+<span class="ap">4 AP</span></span><span>Evade for 2 turns; Quick, Arts and Buster +25% for 3 turns, each with an 80% chance</span></li>
-        <li><span class="name">Battle Retreat B<span class="ap">3 AP</span></span><span>Heal 30% HP, but remove all of his own buffs (passives stay)</span></li>
+        <li><span class="name">Library of Stored Information B<span class="ap">6 AP</span></span><span>NP +30%; NP gain +30% and <span class="term" tabindex="0" title="Chance-based buffs are this much more likely to land, and enemy buff-failure effects (Breaker Gorgon) are this much weaker.">Buff success</span> +20% (3 turns)</span></li>
+        <li><span class="name">Expert of Many Specializations A+<span class="ap">4 AP</span></span><span>Applies <span class="term" tabindex="0" title="Dodges regular attacks. Noble Phantasms still hit, and Sure Hit and Pierce Evade go through it.">Evade</span> (2 turns); Quick +25%, Arts +25% and Buster +25% (3 turns), each with an 80% chance</span></li>
+        <li><span class="name">Battle Retreat B<span class="ap">3 AP</span></span><span>Heal 30% HP; removes all of their own buffs (passives stay)</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Zabaniya (Delusional Illusion)</h4><span class="card arts">Arts</span><span class="mult">3.5×</span></div>
-    <p>Heavy Arts damage, then the enemy takes 20% more damage from Arts for 2 turns</p></div>
+    <p>Heavy Arts damage; Enemy <span class="term" tabindex="0" title="Card resist down: takes this % more damage from that card's attacks and Noble Phantasms.">Arts resist</span> −20% (2 turns)</p></div>
     <p class="fgo">FGO stats: 9,310 HP · 6,686 ATK · NP 0.48% / 4%</p>
   </article>
 
@@ -479,22 +484,22 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Magic Resistance E</span><span>Enemy debuffs on self 3% weaker</span></li>
-        <li><span class="name">Mad Enhancement C</span><span>Buster attacks +8% damage</span></li>
-        <li><span class="name">Eternal Arms Mastery<span class="tag">Unique</span></span><span>When the enemy raises its own ATK, he gains half as much for the same duration</span></li>
+        <li><span class="name">Magic Resistance E</span><span><span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> +3%</span></li>
+        <li><span class="name">Mad Enhancement C</span><span>Buster +8%</span></li>
+        <li><span class="name">Eternal Arms Mastery<span class="tag">Unique</span></span><span>When the enemy raises their own ATK, he gains half as much for the same duration</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Arondight A++<span class="ap">3 AP</span></span><span>+2 AP from each attack for 3 turns</span></li>
-        <li><span class="name">Protection of the Spirits A<span class="ap">4 AP</span></span><span>NP +30% and AP +3 now</span></li>
-        <li><span class="name">Mana Reversal A<span class="ap">4 AP</span></span><span>NP gain +30% and Quick +40% (attacks and NP) for 3 turns</span></li>
+        <li><span class="name">Arondight A++<span class="ap">3 AP</span></span><span>+2 AP from each attack (3 turns)</span></li>
+        <li><span class="name">Protection of the Spirits A<span class="ap">4 AP</span></span><span>NP +30%; AP +3</span></li>
+        <li><span class="name">Mana Reversal A<span class="ap">4 AP</span></span><span>NP gain +30% and Quick +40% (3 turns)</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Knight of Owner</h4><span class="card quick">Quick</span><span class="mult">4.1×</span></div>
-    <p>Heavy Quick damage, then ATK +30% for 3 turns</p></div>
+    <p>Heavy Quick damage; ATK +30% (3 turns)</p></div>
     <p class="fgo">FGO stats: 10,327 HP · 10,477 ATK · NP 0.5% / 5%</p>
   </article>
 
@@ -513,21 +518,21 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Territory Creation B</span><span>Arts attacks +10% damage</span></li>
-        <li><span class="name">Summoning: Sea Demons<span class="tag">Unique</span></span><span>A landed Arts attack has a 40% chance to bring a Sea Demon follow-up hit for 30% of its damage</span></li>
+        <li><span class="name">Territory Creation B</span><span>Arts +10%</span></li>
+        <li><span class="name">Summoning: Sea Demons<span class="tag">Unique</span></span><span>A landed Arts attack has a 40% chance of a Sea Demon follow-up hit for 30% of its damage</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Mental Pollution A<span class="ap">4 AP</span></span><span>Debuff effectiveness +30% and debuff resist +30% for 3 turns</span></li>
-        <li><span class="name">Blasphemy Aesthetic C+++<span class="ap">5 AP</span></span><span>Drain 15% enemy NP; enemy takes +15% Arts and +15% Buster damage for 3 turns</span></li>
-        <li><span class="name">Evil Eye of the Abyss B+++<span class="ap">6 AP</span></span><span>Terror (40%) and Curse (30/turn) on the enemy and DEF -15% for 3 turns; his next attack on a Cursed enemy +30%</span></li>
+        <li><span class="name">Mental Pollution A<span class="ap">4 AP</span></span><span><span class="term" tabindex="0" title="Debuffs this servant inflicts are stronger by this %: bigger stat drops and drains, more damage over time, higher Terror chance.">Debuff effectiveness</span> +30% and <span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> +30% (3 turns)</span></li>
+        <li><span class="name">Blasphemy Aesthetic C+++<span class="ap">5 AP</span></span><span>Enemy NP −15%; Enemy <span class="term" tabindex="0" title="Card resist down: takes this % more damage from that card's attacks and Noble Phantasms.">Arts resist</span> −15% and <span class="term" tabindex="0" title="Card resist down: takes this % more damage from that card's attacks and Noble Phantasms.">Buster resist</span> −15% (3 turns)</span></li>
+        <li><span class="name">Evil Eye of the Abyss B+++<span class="ap">6 AP</span></span><span>Inflicts <span class="term" tabindex="0" title="A chance not to follow through on a regular attack. Ends once it triggers.">Terror</span> (40%), <span class="term" tabindex="0" title="Takes fixed damage at the end of each turn.">Curse</span> (30 per turn) and Enemy <span class="term" tabindex="0" title="DEF down: takes this % more damage from attacks and Noble Phantasms.">DEF</span> −15% (3 turns); his next attack on a <span class="term" tabindex="0" title="Takes fixed damage at the end of each turn.">Cursed</span> enemy deals +30% damage</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Prelati&#39;s Spellbook</h4><span class="card buster">Buster</span><span class="mult">3.8×</span></div>
-    <p>Heavy Buster damage, then enemy ATK -20% for 3 turns</p></div>
+    <p>Heavy Buster damage; Enemy ATK −20% (3 turns)</p></div>
     <p class="fgo">FGO stats: 9,506 HP · 6,514 ATK · NP 1.58% / 3%</p>
   </article>
 
@@ -546,21 +551,21 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Magic Resistance B</span><span>Enemy debuffs on self 15% weaker</span></li>
-        <li><span class="name">Knight&#39;s Oath<span class="tag">Unique</span></span><span>Quick and Arts +10% (attacks and NP)</span></li>
+        <li><span class="name">Magic Resistance B</span><span><span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> +15%</span></li>
+        <li><span class="name">Knight&#39;s Oath<span class="tag">Unique</span></span><span>Quick +10% and Arts +10%</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Eye of the Mind (True) B<span class="ap">4 AP</span></span><span>Evade and damage cut 20% for 2 turns</span></li>
-        <li><span class="name">Love Spot C<span class="ap">4 AP</span></span><span>Enemy ATK -20% for 3 turns; NP +15%</span></li>
-        <li><span class="name">Blighted Love Flowing in Profusion A<span class="ap">5 AP</span></span><span>Quick +25%, Arts +25% and NP gain +25% for 3 turns; AP +2</span></li>
+        <li><span class="name">Eye of the Mind (True) B<span class="ap">4 AP</span></span><span>Applies <span class="term" tabindex="0" title="Dodges regular attacks. Noble Phantasms still hit, and Sure Hit and Pierce Evade go through it.">Evade</span> and <span class="term" tabindex="0" title="Takes this % less damage from attacks and Noble Phantasms. Stacks up to 90%.">Damage Cut</span> 20% (2 turns)</span></li>
+        <li><span class="name">Love Spot C<span class="ap">4 AP</span></span><span>Enemy ATK −20% (3 turns); NP +15%</span></li>
+        <li><span class="name">Blighted Love Flowing in Profusion A<span class="ap">5 AP</span></span><span>Quick +25%, Arts +25% and NP gain +25% (3 turns); AP +2</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Gáe Dearg &amp; Gáe Buidhe</h4><span class="card quick">Quick</span><span class="mult">3.1×</span></div>
-    <p>Heavy Quick damage, then Curse the enemy (30 damage per turn for 3 turns)</p></div>
+    <p>Heavy Quick damage; Inflicts <span class="term" tabindex="0" title="Takes fixed damage at the end of each turn.">Curse</span> (30 per turn, 3 turns)</p></div>
     <p class="fgo">FGO stats: 10,098 HP · 6,877 ATK · NP 0.79% / 4%</p>
   </article>
 
@@ -579,22 +584,22 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Magic Resistance B</span><span>Enemy debuffs on self 15% weaker</span></li>
-        <li><span class="name">Riding B</span><span>Quick attacks +10% damage</span></li>
+        <li><span class="name">Magic Resistance B</span><span><span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> +15%</span></li>
+        <li><span class="name">Riding B</span><span>Quick +10%</span></li>
         <li><span class="name">Clarent<span class="tag">Unique</span></span><span>Starts the battle with 50% NP</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Knight of Crimson Thunder A+<span class="ap">5 AP</span></span><span>Buster +30% and ATK +15% for 3 turns</span></li>
-        <li><span class="name">Cigarette Lion B+<span class="ap">3 AP</span></span><span>Max AP +2 for 3 turns, AP +2 now, and +1 AP at the end of each turn for 3 turns</span></li>
-        <li><span class="name">Secret of Pedigree EX<span class="ap">5 AP</span></span><span>Remove her debuffs; damage cut 20% for 2 turns; NP +20%</span></li>
+        <li><span class="name">Knight of Crimson Thunder A+<span class="ap">5 AP</span></span><span>Buster +30% and ATK +15% (3 turns)</span></li>
+        <li><span class="name">Cigarette Lion B+<span class="ap">3 AP</span></span><span>Max AP +2 (3 turns); AP +2; AP +1 at the end of each turn (3 turns)</span></li>
+        <li><span class="name">Secret of Pedigree EX<span class="ap">5 AP</span></span><span><span class="term" tabindex="0" title="Removes all debuffs.">Cleanses</span> her debuffs; <span class="term" tabindex="0" title="Takes this % less damage from attacks and Noble Phantasms. Stacks up to 90%.">Damage Cut</span> 20% (2 turns); NP +20%</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Clarent Blood Arthur</h4><span class="card buster">Buster</span><span class="mult">3.6×</span></div>
-    <p>Heavy Buster damage, then NP +20%</p></div>
+    <p>Heavy Buster damage; NP +20%</p></div>
     <p class="fgo">FGO stats: 14,680 HP · 11,723 ATK · NP 0.56% / 3%</p>
   </article>
 
@@ -613,21 +618,21 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Riding B</span><span>Quick attacks +10% damage</span></li>
-        <li><span class="name">Fafnir&#39;s Blood<span class="tag">Unique</span></span><span>A landed regular attack has a 35% chance to mark the enemy as Dragon for the next turn</span></li>
+        <li><span class="name">Riding B</span><span>Quick +10%</span></li>
+        <li><span class="name">Fafnir&#39;s Blood<span class="tag">Unique</span></span><span>A landed regular attack has a 35% chance to mark the enemy as a <span class="term" tabindex="0" title="A mark with no effect on its own. Anti-Dragon effects (Dragon Slayer, Balmung) deal extra damage to it.">Dragon</span> (2 turns)</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Avaricious Gold A<span class="ap">5 AP</span></span><span>NP +20% now; NP gain +30% and ATK +15% for 3 turns</span></li>
-        <li><span class="name">Disengage A<span class="ap">4 AP</span></span><span>Remove his debuffs and heal 20% HP</span></li>
-        <li><span class="name">Dragon Slayer A++<span class="ap">5 AP</span></span><span>+30% damage vs Dragon and Buster +20% for 3 turns; damage cut 20% for 2 turns</span></li>
+        <li><span class="name">Avaricious Gold A<span class="ap">5 AP</span></span><span>NP +20%; NP gain +30% and ATK +15% (3 turns)</span></li>
+        <li><span class="name">Disengage A<span class="ap">4 AP</span></span><span><span class="term" tabindex="0" title="Removes all debuffs.">Cleanses</span> his debuffs; Heal 20% HP</span></li>
+        <li><span class="name">Dragon Slayer A++<span class="ap">5 AP</span></span><span>+30% damage vs a <span class="term" tabindex="0" title="A mark with no effect on its own. Anti-Dragon effects (Dragon Slayer, Balmung) deal extra damage to it.">Dragon</span> and Buster +20% (3 turns); <span class="term" tabindex="0" title="Takes this % less damage from attacks and Noble Phantasms. Stacks up to 90%.">Damage Cut</span> 20% (2 turns)</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Balmung</h4><span class="card buster">Buster</span><span class="mult">3.5×</span></div>
-    <p>Heavy Buster damage; +40% damage to a Dragon</p></div>
+    <p>Heavy Buster damage; +40% damage to a <span class="term" tabindex="0" title="A mark with no effect on its own. Anti-Dragon effects (Dragon Slayer, Balmung) deal extra damage to it.">Dragon</span></p></div>
     <p class="fgo">FGO stats: 14,165 HP · 8,181 ATK · NP 0.83% / 3%</p>
   </article>
 
@@ -646,22 +651,22 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Magic Resistance D</span><span>Enemy debuffs on self 5% weaker</span></li>
-        <li><span class="name">Independent Action A</span><span>+2 max AP and +2 starting AP</span></li>
-        <li><span class="name">Golden Apple<span class="tag">Unique</span></span><span>Quick attacks have a 35% chance to loose a second arrow: +50% damage if the attack landed, or a full-damage hit if it was beaten (Evade and Invincible still stop it)</span></li>
+        <li><span class="name">Magic Resistance D</span><span><span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> +5%</span></li>
+        <li><span class="name">Independent Action A</span><span>Max AP +2; starting AP +2</span></li>
+        <li><span class="name">Golden Apple<span class="tag">Unique</span></span><span>Her Quick attacks have a 35% chance to loose a second arrow: +50% damage if the attack landed, or a full-damage hit if it was beaten (<span class="term" tabindex="0" title="Dodges regular attacks. Noble Phantasms still hit, and Sure Hit and Pierce Evade go through it.">Evade</span> and <span class="term" tabindex="0" title="Takes no damage from anything this turn, Noble Phantasms included.">Invincible</span> still stop it)</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Crossing Arcadia<span class="ap">3 AP</span></span><span>Quick +40% for 3 turns</span></li>
-        <li><span class="name">Art of the Hunt C<span class="ap">3 AP</span></span><span>AP +2 now; Sure Hit for 3 turns</span></li>
-        <li><span class="name">Calydonian Hunt EX<span class="ap">6 AP</span></span><span>Evade for 2 turns; NP +30% now; NP gain +30% and ATK +15% for 3 turns</span></li>
+        <li><span class="name">Crossing Arcadia<span class="ap">3 AP</span></span><span>Quick +40% (3 turns)</span></li>
+        <li><span class="name">Art of the Hunt C<span class="ap">3 AP</span></span><span>AP +2; Applies <span class="term" tabindex="0" title="Attacks always hit: they go through Evade and can't be dodged by decoys. Invincible still blocks them. Some effects react to Sure Hit specifically (Akhilleus Kosmos).">Sure Hit</span> (3 turns)</span></li>
+        <li><span class="name">Calydonian Hunt EX<span class="ap">6 AP</span></span><span>Applies <span class="term" tabindex="0" title="Dodges regular attacks. Noble Phantasms still hit, and Sure Hit and Pierce Evade go through it.">Evade</span> (2 turns); NP +30%; NP gain +30% and ATK +15% (3 turns)</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Phoebus Catastrophe</h4><span class="card quick">Quick</span><span class="mult">4.3×</span></div>
-    <p>Heavy Quick damage, then AP +3</p></div>
+    <p>Heavy Quick damage; AP +3</p></div>
     <p class="fgo">FGO stats: 12,476 HP · 8,633 ATK · NP 0.5% / 3%</p>
   </article>
 
@@ -680,23 +685,23 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Magic Resistance B</span><span>Enemy debuffs on self 15% weaker</span></li>
-        <li><span class="name">Independent Action A</span><span>+2 max AP and +2 starting AP</span></li>
-        <li><span class="name">Divinity C</span><span>+6 flat damage on every hit</span></li>
-        <li><span class="name">Teacher&#39;s Wisdom<span class="tag">Unique</span></span><span>3 times per battle, see the opponent&#39;s locked-in action before choosing his own</span></li>
+        <li><span class="name">Magic Resistance B</span><span><span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> +15%</span></li>
+        <li><span class="name">Independent Action A</span><span>Max AP +2; starting AP +2</span></li>
+        <li><span class="name">Divinity C</span><span>+6 damage on every hit</span></li>
+        <li><span class="name">Teacher&#39;s Wisdom<span class="tag">Unique</span></span><span><span class="term" tabindex="0" title="See the opponent's locked-in action before choosing. The opponent is told and can't change it that turn.">Foresight</span> 3 times per battle: he sees the opponent&#39;s locked-in action before choosing his own</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Eye of the Mind (True) A<span class="ap">4 AP</span></span><span>Evade and damage cut 20% for 2 turns</span></li>
-        <li><span class="name">Eternal Consecration EX<span class="ap">3 AP</span></span><span>AP +6 now; lose 5% HP (cannot KO him)</span></li>
-        <li><span class="name">Wisdom of Divine A+<span class="ap">6 AP</span></span><span>Quick, Arts and Buster +25%, ATK +15% and Sure Hit for 3 turns</span></li>
+        <li><span class="name">Eye of the Mind (True) A<span class="ap">4 AP</span></span><span>Applies <span class="term" tabindex="0" title="Dodges regular attacks. Noble Phantasms still hit, and Sure Hit and Pierce Evade go through it.">Evade</span> and <span class="term" tabindex="0" title="Takes this % less damage from attacks and Noble Phantasms. Stacks up to 90%.">Damage Cut</span> 20% (2 turns)</span></li>
+        <li><span class="name">Eternal Consecration EX<span class="ap">3 AP</span></span><span>AP +6; lose 5% HP (can&#39;t KO him)</span></li>
+        <li><span class="name">Wisdom of Divine A+<span class="ap">6 AP</span></span><span>Quick +25%, Arts +25%, Buster +25% and ATK +15% (3 turns); Applies <span class="term" tabindex="0" title="Attacks always hit: they go through Evade and can't be dodged by decoys. Invincible still blocks them. Some effects react to Sure Hit specifically (Akhilleus Kosmos).">Sure Hit</span> (3 turns)</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Antares Snipe</h4><span class="card arts">Arts</span><span class="mult">3.5×</span></div>
-    <p>Strip the enemy&#39;s Evade, Invincible and damage cut, then heavy Arts damage</p></div>
+    <p>Removes the enemy&#39;s <span class="term" tabindex="0" title="Dodges regular attacks. Noble Phantasms still hit, and Sure Hit and Pierce Evade go through it.">Evade</span>, <span class="term" tabindex="0" title="Takes no damage from anything this turn, Noble Phantasms included.">Invincible</span> and <span class="term" tabindex="0" title="Takes this % less damage from attacks and Noble Phantasms. Stacks up to 90%.">Damage Cut</span>; Heavy Arts damage</p></div>
     <p class="fgo">FGO stats: 12,250 HP · 9,294 ATK · NP 0.68% / 3%</p>
   </article>
 
@@ -715,21 +720,21 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Mad Enhancement EX</span><span>Buster attacks +15% damage</span></li>
-        <li><span class="name">Protection of Faith<span class="tag">Unique</span></span><span>Revives once with 15% HP; on revival, NP gain +30% for the rest of the battle (a normal buff, so it can be removed)</span></li>
+        <li><span class="name">Mad Enhancement EX</span><span>Buster +15%</span></li>
+        <li><span class="name">Protection of Faith<span class="tag">Unique</span></span><span><span class="term" tabindex="0" title="Survives one killing blow and revives.">Guts</span> once: revives at 15% HP; on revival, NP gain +30% for the rest of the battle (a normal buff, so it can be removed)</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Bloodsucker A<span class="ap">5 AP</span></span><span>Drain 20% of the enemy&#39;s NP and gain what was drained</span></li>
-        <li><span class="name">Legend of Dracula A+<span class="ap">4 AP</span></span><span>ATK +20% for 3 turns; damage cut 20% for 2 turns</span></li>
-        <li><span class="name">Fearsome Immortal A+<span class="ap">4 AP</span></span><span>Arts +30% and NP gain +30% for 3 turns</span></li>
+        <li><span class="name">Bloodsucker A<span class="ap">5 AP</span></span><span>Enemy NP −20%; he gains what was drained</span></li>
+        <li><span class="name">Legend of Dracula A+<span class="ap">4 AP</span></span><span>ATK +20% (3 turns); <span class="term" tabindex="0" title="Takes this % less damage from attacks and Noble Phantasms. Stacks up to 90%.">Damage Cut</span> 20% (2 turns)</span></li>
+        <li><span class="name">Fearsome Immortal A+<span class="ap">4 AP</span></span><span>Arts +30% and NP gain +30% (3 turns)</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Kazikli Bey</h4><span class="card arts">Arts</span><span class="mult">3.4×</span></div>
-    <p>Heavy Arts damage, then the enemy takes +20% Arts damage for 2 turns</p></div>
+    <p>Heavy Arts damage; Enemy <span class="term" tabindex="0" title="Card resist down: takes this % more damage from that card's attacks and Noble Phantasms.">Arts resist</span> −20% (2 turns)</p></div>
     <p class="fgo">FGO stats: 15,086 HP · 11,499 ATK · NP 0.5% / 5%</p>
   </article>
 
@@ -748,23 +753,23 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Magic Resistance C</span><span>Enemy debuffs on self 10% weaker</span></li>
-        <li><span class="name">Riding A</span><span>Quick attacks +12% damage</span></li>
-        <li><span class="name">Divinity A</span><span>+10 flat damage on every hit</span></li>
+        <li><span class="name">Magic Resistance C</span><span><span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> +10%</span></li>
+        <li><span class="name">Riding A</span><span>Quick +12%</span></li>
+        <li><span class="name">Divinity A</span><span>+10 damage on every hit</span></li>
         <li><span class="name">Son of the Sun God<span class="tag">Unique</span></span><span>Buster +10% and NP damage +10%</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Knowledge of the Deprived A<span class="ap">5 AP</span></span><span>Enemy debuff resist -20% for 3 turns; NP Seal this turn: if the enemy uses its NP now, it fizzles and the gauge drops 20%</span></li>
-        <li><span class="name">Flash of the Sun God EX<span class="ap">5 AP</span></span><span>Quick +20%, Buster +20% and NP damage +20% for 3 turns</span></li>
-        <li><span class="name">Almsgiver&#39;s End<span class="ap">4 AP</span></span><span>NP +30% now; NP gain +30% for 3 turns</span></li>
+        <li><span class="name">Knowledge of the Deprived A<span class="ap">5 AP</span></span><span>Enemy <span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> −20% (3 turns); Inflicts <span class="term" tabindex="0" title="If the servant fires its Noble Phantasm this turn, it fizzles and the gauge drops.">NP Seal</span> this turn (gauge −20% if it fizzles)</span></li>
+        <li><span class="name">Flash of the Sun God EX<span class="ap">5 AP</span></span><span>Quick +20%, Buster +20% and NP damage +20% (3 turns)</span></li>
+        <li><span class="name">Almsgiver&#39;s End<span class="ap">4 AP</span></span><span>NP +30%; NP gain +30% (3 turns)</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Vasavi Shakti</h4><span class="card buster">Buster</span><span class="mult">3.2×</span></div>
-    <p>Heavy Buster damage, then the enemy takes +20% Buster damage for 2 turns</p></div>
+    <p>Heavy Buster damage; Enemy <span class="term" tabindex="0" title="Card resist down: takes this % more damage from that card's attacks and Noble Phantasms.">Buster resist</span> −20% (2 turns)</p></div>
     <p class="fgo">FGO stats: 13,632 HP · 11,976 ATK · NP 0.72% / 4%</p>
   </article>
 
@@ -783,23 +788,23 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Magic Resistance C</span><span>Enemy debuffs on self 10% weaker</span></li>
-        <li><span class="name">Riding A+</span><span>Quick attacks +13% damage</span></li>
-        <li><span class="name">Divinity C</span><span>+6 flat damage on every hit</span></li>
-        <li><span class="name">Akhilleus Kosmos<span class="tag">Unique</span></span><span>Can only be downed by a Noble Phantasm (anything else leaves him at 1 HP). A landed Sure Hit attack strikes his heel and removes this</span></li>
+        <li><span class="name">Magic Resistance C</span><span><span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> +10%</span></li>
+        <li><span class="name">Riding A+</span><span>Quick +13%</span></li>
+        <li><span class="name">Divinity C</span><span>+6 damage on every hit</span></li>
+        <li><span class="name">Akhilleus Kosmos<span class="tag">Unique</span></span><span>Only a Noble Phantasm can down him (anything else leaves him at 1 HP). A landed <span class="term" tabindex="0" title="Attacks always hit: they go through Evade and can't be dodged by decoys. Invincible still blocks them. Some effects react to Sure Hit specifically (Akhilleus Kosmos).">Sure Hit</span> attack strikes his heel and removes this</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Drómos Komḗtēs A+<span class="ap">5 AP</span></span><span>Quick +30% and Sure Hit for 3 turns</span></li>
-        <li><span class="name">Andreíos Amárantos B<span class="ap">5 AP</span></span><span>Invincible this turn; damage cut 20% for 2 turns</span></li>
-        <li><span class="name">Diatrekhōn Astēr Lonkhē B+<span class="ap">5 AP</span></span><span>NP +20% now; NP gain +30% for 3 turns; Taunt: next turn the enemy can only attack (no skills or NP)</span></li>
+        <li><span class="name">Drómos Komḗtēs A+<span class="ap">5 AP</span></span><span>Quick +30% (3 turns); Applies <span class="term" tabindex="0" title="Attacks always hit: they go through Evade and can't be dodged by decoys. Invincible still blocks them. Some effects react to Sure Hit specifically (Akhilleus Kosmos).">Sure Hit</span> (3 turns)</span></li>
+        <li><span class="name">Andreíos Amárantos B<span class="ap">5 AP</span></span><span>Applies <span class="term" tabindex="0" title="Takes no damage from anything this turn, Noble Phantasms included.">Invincible</span> (this turn); <span class="term" tabindex="0" title="Takes this % less damage from attacks and Noble Phantasms. Stacks up to 90%.">Damage Cut</span> 20% (2 turns)</span></li>
+        <li><span class="name">Diatrekhōn Astēr Lonkhē B+<span class="ap">5 AP</span></span><span>NP +20%; NP gain +30% (3 turns); Inflicts <span class="term" tabindex="0" title="Next turn the servant can only attack: no skills, no Noble Phantasm.">Taunt</span> (next turn)</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Troias Tragōidia</h4><span class="card quick">Quick</span><span class="mult">3.4×</span></div>
-    <p>Quick +30% for this NP, heavy Quick damage, then Confusion on the enemy (40% chance a skill fizzles) for 3 turns</p></div>
+    <p>Quick +30% for this NP; Heavy Quick damage; Inflicts <span class="term" tabindex="0" title="A chance that a skill fizzles (its AP is still spent). Ends once it triggers.">Confusion</span> (40%, 3 turns)</p></div>
     <p class="fgo">FGO stats: 13,219 HP · 11,883 ATK · NP 0.57% / 3%</p>
   </article>
 
@@ -818,23 +823,23 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Magic Resistance A</span><span>Enemy debuffs on self 20% weaker</span></li>
-        <li><span class="name">Riding A+</span><span>Quick attacks +13% damage</span></li>
-        <li><span class="name">Independent Action B</span><span>+1 max AP and +1 starting AP</span></li>
-        <li><span class="name">La Black Luna<span class="tag">Unique</span></span><span>A landed regular attack has a 10% chance to strike the enemy with Terror (40%) for 3 turns</span></li>
+        <li><span class="name">Magic Resistance A</span><span><span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> +20%</span></li>
+        <li><span class="name">Riding A+</span><span>Quick +13%</span></li>
+        <li><span class="name">Independent Action B</span><span>Max AP +1; starting AP +1</span></li>
+        <li><span class="name">La Black Luna<span class="tag">Unique</span></span><span>A landed regular attack has a 10% chance to inflict <span class="term" tabindex="0" title="A chance not to follow through on a regular attack. Ends once it triggers.">Terror</span> (40%, 3 turns)</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Monstrous Strength C-<span class="ap">3 AP</span></span><span>ATK +30% for 3 turns</span></li>
-        <li><span class="name">Trap of Argalia D<span class="ap">5 AP</span></span><span>50% chance the enemy loses its next turn (rolled when that turn resolves)</span></li>
-        <li><span class="name">Evaporation of Sanity D+<span class="ap">4 AP</span></span><span>NP +20% now; NP gain +30% for 3 turns; each turn, a 50% chance of +2 AP</span></li>
+        <li><span class="name">Monstrous Strength C-<span class="ap">3 AP</span></span><span>ATK +30% (3 turns)</span></li>
+        <li><span class="name">Trap of Argalia D<span class="ap">5 AP</span></span><span>Inflicts <span class="term" tabindex="0" title="A chance to lose the whole next action, rolled when that turn resolves.">Trap</span> (50% chance the enemy loses their next turn)</span></li>
+        <li><span class="name">Evaporation of Sanity D+<span class="ap">4 AP</span></span><span>NP +20%; NP gain +30% (3 turns); a 50% chance of AP +2 at the end of each turn (3 turns)</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Hippogriff</h4><span class="card quick">Quick</span><span class="mult">4.2×</span></div>
-    <p>Heavy Quick damage that ignores damage cut, then Evade for 2 turns</p></div>
+    <p>Heavy Quick damage (<span class="term" tabindex="0" title="Goes straight through the target's Damage Cut. Evade and Invincible still work.">Ignores Damage Cut</span>); Applies <span class="term" tabindex="0" title="Dodges regular attacks. Noble Phantasms still hit, and Sure Hit and Pierce Evade go through it.">Evade</span> (2 turns)</p></div>
     <p class="fgo">FGO stats: 11,172 HP · 8,937 ATK · NP 0.66% / 1%</p>
   </article>
 
@@ -860,14 +865,14 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Murderer of the Misty Night EX<span class="ap">6 AP</span></span><span>Evade for 2 turns; NP +20% now; Quick +25% and NP damage +20% for 3 turns</span></li>
-        <li><span class="name">Information Erasure B<span class="ap">5 AP</span></span><span>Remove the enemy&#39;s buffs (passives stay); drain 2 AP</span></li>
+        <li><span class="name">Murderer of the Misty Night EX<span class="ap">6 AP</span></span><span>Applies <span class="term" tabindex="0" title="Dodges regular attacks. Noble Phantasms still hit, and Sure Hit and Pierce Evade go through it.">Evade</span> (2 turns); NP +20%; Quick +25% and NP damage +20% (3 turns)</span></li>
+        <li><span class="name">Information Erasure B<span class="ap">5 AP</span></span><span>Removes the enemy&#39;s buffs (passives stay); Enemy AP −2</span></li>
         <li><span class="name">Surgery E<span class="ap">4 AP</span></span><span>Heal 20% HP; AP +2</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Maria the Ripper</h4><span class="card quick">Quick</span><span class="mult">3.25×</span></div>
-    <p>Heavy Quick damage that ignores damage cut</p></div>
+    <p>Heavy Quick damage (<span class="term" tabindex="0" title="Goes straight through the target's Damage Cut. Evade and Invincible still work.">Ignores Damage Cut</span>)</p></div>
     <p class="fgo">FGO stats: 12,696 HP · 11,557 ATK · NP 1.07% / 4%</p>
   </article>
 
@@ -887,22 +892,22 @@ footer { color: var(--muted); font-size: .8rem; }
       <h5>Passives</h5>
       <ul class="rows">
         <li><span class="name">Presence Concealment C+</span><span>NP gain +7%</span></li>
-        <li><span class="name">Territory Creation EX</span><span>Arts attacks +15% damage</span></li>
-        <li><span class="name">Divinity C</span><span>+6 flat damage on every hit</span></li>
-        <li><span class="name">Ambiguous Chalice<span class="tag">Unique</span></span><span>A landed regular attack has a 30% chance to Poison the enemy (20 damage per turn for 3 turns; stacks)</span></li>
+        <li><span class="name">Territory Creation EX</span><span>Arts +15%</span></li>
+        <li><span class="name">Divinity C</span><span>+6 damage on every hit</span></li>
+        <li><span class="name">Ambiguous Chalice<span class="tag">Unique</span></span><span>A landed regular attack has a 30% chance to inflict <span class="term" tabindex="0" title="Takes fixed damage at the end of each turn. Each Poison is a separate stack.">Poison</span> (20 per turn, 3 turns)</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Familiar (Pigeon) D<span class="ap">4 AP</span></span><span>NP +20% now; enemy debuff resist -20% for 3 turns</span></li>
-        <li><span class="name">Double Summon B<span class="ap">4 AP</span></span><span>NP gain +30% for 3 turns; for 3 turns the enemy deals base damage: all its damage boosts (passives too) are ignored</span></li>
-        <li><span class="name">Sikera Ušum A<span class="ap">5 AP</span></span><span>Poison the enemy (30 per turn for 3 turns) and it takes +20% Buster damage for 3 turns; +30% damage vs Poisoned for 3 turns</span></li>
+        <li><span class="name">Familiar (Pigeon) D<span class="ap">4 AP</span></span><span>NP +20%; Enemy <span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> −20% (3 turns)</span></li>
+        <li><span class="name">Double Summon B<span class="ap">4 AP</span></span><span>NP gain +30% (3 turns); Inflicts <span class="term" tabindex="0" title="Deals base damage: ATK up, card effectiveness, NP damage up, flat damage and other boosts (passives too) are ignored. Debuffs still apply.">No Boosts</span> (3 turns)</span></li>
+        <li><span class="name">Sikera Ušum A<span class="ap">5 AP</span></span><span>Inflicts <span class="term" tabindex="0" title="Takes fixed damage at the end of each turn. Each Poison is a separate stack.">Poison</span> (30 per turn) and Enemy <span class="term" tabindex="0" title="Card resist down: takes this % more damage from that card's attacks and Noble Phantasms.">Buster resist</span> −20% (3 turns); +30% damage vs a <span class="term" tabindex="0" title="Takes fixed damage at the end of each turn. Each Poison is a separate stack.">Poisoned</span> enemy (3 turns)</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Hanging Gardens of Babylon</h4><span class="card buster">Buster</span><span class="mult">2.65×</span></div>
-    <p>NP damage +30% for this NP, heavy Buster damage, then damage cut 20% for 2 turns</p></div>
+    <p>NP damage +30% for this NP; Heavy Buster damage; <span class="term" tabindex="0" title="Takes this % less damage from attacks and Noble Phantasms. Stacks up to 90%.">Damage Cut</span> 20% (2 turns)</p></div>
     <p class="fgo">FGO stats: 13,266 HP · 11,309 ATK · NP 0.39% / 4%</p>
   </article>
 
@@ -921,16 +926,16 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Territory Creation C</span><span>Arts attacks +8% damage</span></li>
-        <li><span class="name">Works of Art<span class="tag">Unique</span></span><span>At the start of each battle, one of his works takes the stage (see the badge for which)</span></li>
+        <li><span class="name">Territory Creation C</span><span>Arts +8%</span></li>
+        <li><span class="name">Works of Art<span class="tag">Unique</span></span><span>At the start of each battle, one of his works takes the stage (its badge says which)</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Enchant A<span class="ap">4 AP</span></span><span>Buster +30% for 3 turns</span></li>
-        <li><span class="name">Iambic Pentameter A+<span class="ap">6 AP</span></span><span>Invincible this turn; heal 20% HP; NP +20% now; NP damage +20% for 3 turns</span></li>
-        <li><span class="name">The Globe: The King&#39;s Men C<span class="ap">4 AP</span></span><span>NP +20% now; NP gain +30% for 3 turns</span></li>
+        <li><span class="name">Enchant A<span class="ap">4 AP</span></span><span>Buster +30% (3 turns)</span></li>
+        <li><span class="name">Iambic Pentameter A+<span class="ap">6 AP</span></span><span>Applies <span class="term" tabindex="0" title="Takes no damage from anything this turn, Noble Phantasms included.">Invincible</span> (this turn); Heal 20% HP; NP +20%; NP damage +20% (3 turns)</span></li>
+        <li><span class="name">The Globe: The King&#39;s Men C<span class="ap">4 AP</span></span><span>NP +20%; NP gain +30% (3 turns)</span></li>
       </ul>
     </section>
     <div class="np">
@@ -954,21 +959,21 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Territory Creation B</span><span>Arts attacks +10% damage</span></li>
+        <li><span class="name">Territory Creation B</span><span>Arts +10%</span></li>
         <li><span class="name">Golem&#39;s Support<span class="tag">Unique</span></span><span>A landed Buster attack has a 40% chance of a Golem strike for 30% of its damage</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Numerology B<span class="ap">5 AP</span></span><span>Arts +25% and Buster +25% for 3 turns</span></li>
-        <li><span class="name">High-Speed Incantation B+<span class="ap">4 AP</span></span><span>NP +40% now</span></li>
-        <li><span class="name">Fig Tree of Tranquility EX<span class="ap">5 AP</span></span><span>Heal 30% HP; below 30% HP it grants Invincible this turn instead</span></li>
+        <li><span class="name">Numerology B<span class="ap">5 AP</span></span><span>Arts +25% and Buster +25% (3 turns)</span></li>
+        <li><span class="name">High-Speed Incantation B+<span class="ap">4 AP</span></span><span>NP +40%</span></li>
+        <li><span class="name">Fig Tree of Tranquility EX<span class="ap">5 AP</span></span><span>Heal 30% HP; below 30% HP, Applies <span class="term" tabindex="0" title="Takes no damage from anything this turn, Noble Phantasms included.">Invincible</span> (this turn) instead of the heal</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Golem Keter Malkuth</h4><span class="card buster">Buster</span><span class="mult">2.7×</span></div>
-    <p>NP damage +30% for this NP, heavy Buster damage, then NP gain +30% for 3 turns</p></div>
+    <p>NP damage +30% for this NP; Heavy Buster damage; NP gain +30% (3 turns)</p></div>
     <p class="fgo">FGO stats: 9,981 HP · 6,376 ATK · NP 0.61% / 3%</p>
   </article>
 
@@ -987,21 +992,21 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Mad Enhancement D</span><span>Buster attacks +6% damage</span></li>
-        <li><span class="name">Procedure to Humanity<span class="tag">Unique</span></span><span>A landed regular attack has a 20% chance to Shock the enemy (20 damage per turn for 3 turns; stacks)</span></li>
+        <li><span class="name">Mad Enhancement D</span><span>Buster +6%</span></li>
+        <li><span class="name">Procedure to Humanity<span class="tag">Unique</span></span><span>A landed regular attack has a 20% chance to inflict <span class="term" tabindex="0" title="Takes fixed damage at the end of each turn. Each Shock is a separate stack.">Shock</span> (20 per turn, 3 turns)</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Galvanism B<span class="ap">3 AP</span></span><span>NP gain +40% for 3 turns</span></li>
-        <li><span class="name">Lament of the Falsely Living C<span class="ap">5 AP</span></span><span>60% chance to Shock the enemy (30 per turn for 3 turns); enemy DEF -20% for 3 turns</span></li>
-        <li><span class="name">Overload C<span class="ap">4 AP</span></span><span>NP damage +30% for 3 turns; Burn herself (20 per turn for 3 turns; recasting refreshes it rather than stacking)</span></li>
+        <li><span class="name">Galvanism B<span class="ap">3 AP</span></span><span>NP gain +40% (3 turns)</span></li>
+        <li><span class="name">Lament of the Falsely Living C<span class="ap">5 AP</span></span><span>60% chance to inflict <span class="term" tabindex="0" title="Takes fixed damage at the end of each turn. Each Shock is a separate stack.">Shock</span> (30 per turn, 3 turns); Enemy <span class="term" tabindex="0" title="DEF down: takes this % more damage from attacks and Noble Phantasms.">DEF</span> −20% (3 turns)</span></li>
+        <li><span class="name">Overload C<span class="ap">4 AP</span></span><span>NP damage +30% (3 turns); <span class="term" tabindex="0" title="Takes fixed damage at the end of each turn. Recasting refreshes it instead of stacking.">Burn</span> on herself (20 per turn, 3 turns)</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Blasted Tree</h4><span class="card quick">Quick</span><span class="mult">3.95×</span></div>
-    <p>Heavy Quick damage, then Shock the enemy (30 per turn for 3 turns)</p></div>
+    <p>Heavy Quick damage; Inflicts <span class="term" tabindex="0" title="Takes fixed damage at the end of each turn. Each Shock is a separate stack.">Shock</span> (30 per turn, 3 turns)</p></div>
     <p class="fgo">FGO stats: 10,687 HP · 9,441 ATK · NP 0.83% / 5%</p>
   </article>
 
@@ -1020,21 +1025,21 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Mad Enhancement EX</span><span>Buster attacks +15% damage</span></li>
+        <li><span class="name">Mad Enhancement EX</span><span>Buster +15%</span></li>
         <li><span class="name">Unyielding Will<span class="tag">Unique</span></span><span>Once, a lethal blow leaves him at 1 HP with a full NP gauge. Next turn he must fire his NP and can&#39;t fall before it lands; then he falls unless it took the enemy down</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Honor of the Battered B+<span class="ap">5 AP</span></span><span>Heal 8% HP at the end of each turn for 3 turns</span></li>
-        <li><span class="name">Insurrection A<span class="ap">4 AP</span></span><span>NP +30% now; NP gain +30% for 3 turns</span></li>
-        <li><span class="name">Triumphant Return of the Sword B<span class="ap">5 AP</span></span><span>Buster +30% for 3 turns; heal 25% HP</span></li>
+        <li><span class="name">Honor of the Battered B+<span class="ap">5 AP</span></span><span>Heal 8% HP at the end of each turn (3 turns)</span></li>
+        <li><span class="name">Insurrection A<span class="ap">4 AP</span></span><span>NP +30%; NP gain +30% (3 turns)</span></li>
+        <li><span class="name">Triumphant Return of the Sword B<span class="ap">5 AP</span></span><span>Buster +30% (3 turns); Heal 25% HP</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Crying Warmonger</h4><span class="card buster">Buster</span><span class="mult">3.15×</span></div>
-    <p>Heavy Buster damage that ignores damage cut</p></div>
+    <p>Heavy Buster damage (<span class="term" tabindex="0" title="Goes straight through the target's Damage Cut. Evade and Invincible still work.">Ignores Damage Cut</span>)</p></div>
     <p class="fgo">FGO stats: 7,722 HP · 5,073 ATK · NP 1.01% / 5%</p>
   </article>
 
@@ -1044,7 +1049,7 @@ footer { color: var(--muted); font-size: .8rem; }
       <div class="title"><span class="cls">Ruler</span><h3>Jeanne d&#39;Arc</h3></div>
     </header>
     <dl class="stats">
-      <div><dt>HP</dt><dd>998<small>×0.77</small></dd></div>
+      <div><dt>HP</dt><dd>953<small>×0.735</small></dd></div>
       <div><dt>ATK</dt><dd>121</dd></div>
       <div><dt>Max AP</dt><dd>10</dd></div>
       <div class="wide"><dt>NP gain</dt><dd>0.97× <small>atk</small> · 1.00× <small>def</small></dd></div>
@@ -1053,21 +1058,21 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Magic Resistance EX</span><span>Enemy debuffs on self 25% weaker</span></li>
+        <li><span class="name">Magic Resistance EX</span><span><span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> +25%</span></li>
         <li><span class="name">Revelation from Heaven<span class="tag">Unique</span></span><span>Heal 3% HP at the end of each turn</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">At the End of the Pure and Clear Players EX<span class="ap">5 AP</span></span><span>Arts +30% for 3 turns; NP +20% now</span></li>
-        <li><span class="name">Restoration of the Brilliant Holy Light A<span class="ap">5 AP</span></span><span>Enemy NP damage -20% and DEF -15% for 3 turns, plus a further DEF -15% next turn only</span></li>
-        <li><span class="name">God&#39;s Resolution A<span class="ap">6 AP</span></span><span>Damage cut 40% for 2 turns; 80% chance the enemy is Blinded by Holy Light and can&#39;t act next turn (if it misses, AP +3)</span></li>
+        <li><span class="name">At the End of the Pure and Clear Players EX<span class="ap">5 AP</span></span><span>Arts +30% (3 turns); NP +20%</span></li>
+        <li><span class="name">Restoration of the Brilliant Holy Light A<span class="ap">5 AP</span></span><span>Enemy NP damage −20% and <span class="term" tabindex="0" title="DEF down: takes this % more damage from attacks and Noble Phantasms.">DEF</span> −15% (3 turns); a further Enemy <span class="term" tabindex="0" title="DEF down: takes this % more damage from attacks and Noble Phantasms.">DEF</span> −15% (2 turns)</span></li>
+        <li><span class="name">God&#39;s Resolution A<span class="ap">6 AP</span></span><span><span class="term" tabindex="0" title="Takes this % less damage from attacks and Noble Phantasms. Stacks up to 90%.">Damage Cut</span> 40% (2 turns); 80% chance to inflict <span class="term" tabindex="0" title="Loses the whole next action. Chance-based: it can miss when it's applied.">Blind</span> (next turn); on a miss, AP +3</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Luminosité Eternelle</h4><span class="card arts">Arts</span><span class="mult">2.6×</span></div>
-    <p>Arts damage, then Divine Intervention: the next damaging hit on her is negated (not damage over time; one at a time; can be stripped)</p></div>
+    <p>Medium Arts damage; Applies <span class="term" tabindex="0" title="Negates one hit that would deal damage (attack, NP or follow-up). Its master chooses which hit, then it is spent. Damage over time is not stopped. Only one at a time, and buff removal strips it.">Divine Intervention</span></p></div>
     <p class="fgo">FGO stats: 16,500 HP · 9,593 ATK · NP 0.76% / 3%</p>
   </article>
 
@@ -1086,25 +1091,59 @@ footer { color: var(--muted); font-size: .8rem; }
     <section>
       <h5>Passives</h5>
       <ul class="rows">
-        <li><span class="name">Magic Resistance A</span><span>Enemy debuffs on self 20% weaker</span></li>
+        <li><span class="name">Magic Resistance A</span><span><span class="term" tabindex="0" title="Debuffs on this servant are weaker by this %: smaller stat drops and drains, less damage over time. It doesn't stop chance-based effects from landing.">Debuff Resist</span> +20%</span></li>
         <li><span class="name">Left Hand &amp; Right Hand<span class="tag">Unique</span></span><span>With his first action, his master chooses Left Hand (his buffs last 1 turn longer) or Right Hand (his debuffs on the enemy last 1 turn longer)</span></li>
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">
-        <li><span class="name">Prayer for the Long Journey A<span class="ap">4 AP</span></span><span>AP +3 now; NP gain +30% for 3 turns</span></li>
-        <li><span class="name">Grail of Fiery Heavens EX<span class="ap">6 AP</span></span><span>Drain 20% enemy NP; enemy takes +20% Buster damage for 3 turns; NP +20% now and +5% at the end of each turn for 3 turns</span></li>
-        <li><span class="name">God&#39;s Resolution (False) C++<span class="ap">5 AP</span></span><span>Buster +25% for 3 turns; 60% chance the enemy is Blinded by Holy Light and can&#39;t act next turn</span></li>
+        <li><span class="name">Prayer for the Long Journey A<span class="ap">4 AP</span></span><span>AP +3; NP gain +30% (3 turns)</span></li>
+        <li><span class="name">Grail of Fiery Heavens EX<span class="ap">6 AP</span></span><span>Enemy NP −20%; Enemy <span class="term" tabindex="0" title="Card resist down: takes this % more damage from that card's attacks and Noble Phantasms.">Buster resist</span> −20% (3 turns); NP +20%; NP +5% at the end of each turn (3 turns)</span></li>
+        <li><span class="name">God&#39;s Resolution (False) C++<span class="ap">5 AP</span></span><span>Buster +25% (3 turns); 60% chance to inflict <span class="term" tabindex="0" title="Loses the whole next action. Chance-based: it can miss when it's applied.">Blind</span> (next turn)</span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Twin Arm: Big Crunch</h4><span class="card buster">Buster</span><span class="mult">3.75×</span></div>
-    <p>Strip all the enemy&#39;s buffs (passives stay), then heavy Buster damage</p></div>
+    <p>Removes the enemy&#39;s buffs (passives stay); Heavy Buster damage</p></div>
     <p class="fgo">FGO stats: 14,107 HP · 10,972 ATK · NP 0.86% / 3%</p>
   </article>
+
+  <article class="servant" id="angra" data-class="Avenger">
+    <header>
+      <div class="badge" aria-hidden="true">AM</div>
+      <div class="title"><span class="cls">Avenger</span><h3>Angra Mainyu</h3></div>
+    </header>
+    <dl class="stats">
+      <div><dt>HP</dt><dd>1,928<small>×1.6</small></dd></div>
+      <div><dt>ATK</dt><dd>160</dd></div>
+      <div><dt>Max AP</dt><dd>10</dd></div>
+      <div class="wide"><dt>NP gain</dt><dd>0.99× <small>atk</small> · 1.29× <small>def</small></dd></div>
+      <div><dt>Favored</dt><dd><span class="card quick">Quick</span></dd></div>
+    </dl>
+    <section>
+      <h5>Passives</h5>
+      <ul class="rows">
+        <li><span class="name">Avenger A</span><span>NP gain when hit +25%</span></li>
+        <li><span class="name">Self-Replenishment (Magic) E</span><span>NP +2% at the end of each turn</span></li>
+        <li><span class="name">All the World&#39;s Evils<span class="tag">Unique</span></span><span>Every effect with a % chance always lands on him (except <span class="term" tabindex="0" title="Kills outright when it lands. Revives don't trigger.">Instant Kill</span> and Breaker Gorgon). Gains a <span class="term" tabindex="0" title="Extra damage for each debuff on him: Boost = 10% + 20% × (1 − current HP ÷ max HP). At full HP that is +10% per debuff, rising to +30% per debuff near 0 HP.">Power Boost</span> for each debuff on him</span></li>
+      </ul>
+    </section>
+    <section>
+      <h5>Skills</h5>
+      <ul class="rows">
+        <li><span class="name">Zarich: Right Fang Grinder C<span class="ap">4 AP</span></span><span>Enemy AP −4</span></li>
+        <li><span class="name">Tawrich: Left Fang Grinder C<span class="ap">5 AP</span></span><span>Enemy NP −30%; Enemy ATK −30% (3 turns)</span></li>
+        <li><span class="name">The End of the Fourth Night EX<span class="ap">6 AP</span></span><span>Quick +40% and Arts +40% (3 turns); NP +40%</span></li>
+      </ul>
+    </section>
+    <div class="np">
+    <div class="np-head"><span class="label">Noble Phantasm</span><h4>Verg Avesta</h4><span class="card arts">Arts</span><span class="mult">0×</span></div>
+    <p>Equalizes HP %: if his is lower, the enemy&#39;s HP drops to match (can&#39;t be blocked); if his is higher, his own HP drops to match</p></div>
+    <p class="fgo">FGO stats: 7,981 HP · 5,683 ATK · NP 0.79% / 5%</p>
+  </article>
   </main>
-  <footer>Generated from src/data/servants.js on 2026-11-10. Kits are rebuilt whenever a servant is added or rebalanced.</footer>
+  <footer>Generated from src/data/servants.js on 2026-11-11. Kits are rebuilt whenever a servant is added or rebalanced.</footer>
 </div>
 <script>
   const buttons = document.querySelectorAll('.filters button');

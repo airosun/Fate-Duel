@@ -12,6 +12,7 @@
 // turn T with turns: 2 is active on T and T+1. turns: null = permanent.
 // Defaults: evade / damageCut 2 turns; invincible is always 1 turn.
 
+import { pro, verb } from './pronouns.js';
 import { TUNING as T, CARDS, SEALS } from './constants.js';
 
 const CARD_NAME = { quick: 'Quick', arts: 'Arts', buster: 'Buster' };
@@ -232,8 +233,17 @@ const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', '
 // Lasting positive effects a servant puts on itself (what Breaker Gorgon can make fail).
 const BUFF_TYPES = new Set(['ignoreDamageCut', 'buffSuccessUp', 'apRecoveryUp', 'atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
   'cardNpGainUp', 'debuffResist', 'guts', 'apRegen', 'busterConvert', 'flatDamage', 'sureHit', 'pierceEvade',
-  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight', 'npOnlyKo', 'debuffOnHit', 'apChance', 'rpsOverride', 'randomWork', 'starCrossed', 'lastStand', 'hpRegen', 'divineIntervention', 'battleChoice', 'buffDurationUp', 'debuffDurationUp', 'npRegen']);
+  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight', 'npOnlyKo', 'debuffOnHit', 'apChance', 'rpsOverride', 'randomWork', 'starCrossed', 'lastStand', 'hpRegen', 'divineIntervention', 'battleChoice', 'buffDurationUp', 'debuffDurationUp', 'npRegen', 'npGainDefUp', 'worldsEvils']);
 const hasStatus = (p, status) => p.buffs.some(b => b.status === status);
+// All the World's Evils (Angra Mainyu): every chance-based effect on him lands (not instant kill or Breaker Gorgon)
+const evilsLand = p => p.buffs.some(b => b.type === 'worldsEvils');
+// ...and a Power Boost per debuff on him: value% + up to scale% more as his HP falls
+function powerBoostPct(p) {
+  const w = p.buffs.find(b => b.type === 'worldsEvils');
+  if (!w) return 0;
+  const n = p.buffs.filter(b => b.debuff).length;
+  return n * (w.value + (w.scale ?? 0) * (1 - Math.max(0, p.hp) / p.maxHp));
+}
 
 function resistScale(target, e, user) {
   // Debuff resistance is deterministic: it weakens debuffs by X% instead of
@@ -339,6 +349,7 @@ function applyEffectRaw(target, e, source, user) {
         options: e.options,
         deceive: e.deceive,
         amount: e.amount,
+        scale: e.scale,
         debuff: DEBUFFS.includes(e.type),
         source,
       });
@@ -427,7 +438,7 @@ const effectiveness = (p, card) => (card ? sumBuff(p, 'cardUp', card) : 0);
 const boosted = p => !hasBuff(p, 'nullifyBoosts');
 
 function atkMultiplier(p, card, extraPct = 0) {
-  const up = boosted(p) ? sumBuff(p, 'atkUp') + effectiveness(p, card) + extraPct : 0;
+  const up = boosted(p) ? sumBuff(p, 'atkUp') + effectiveness(p, card) + extraPct + powerBoostPct(p) : 0;
   const pct = up - sumBuff(p, 'atkDown');
   return Math.max(0.1, 1 + pct / 100);
 }
@@ -479,7 +490,7 @@ function npPacket(att, def, np, { empowered = false, nextHit = 0, vsBonus = 0 } 
 }
 
 function gainNp(p, base, { defending = false, card, artsEffect = 0 } = {}) {
-  const pct = sumBuff(p, 'npGainUp') + (card ? sumBuff(p, 'cardNpGainUp', card) : 0) + artsEffect;
+  const pct = sumBuff(p, 'npGainUp') + (card ? sumBuff(p, 'cardNpGainUp', card) : 0) + artsEffect + (defending ? sumBuff(p, 'npGainDefUp') : 0);
   const mod = (defending ? p.npGainDef : p.npGainAtk) * (1 + pct / 100);
   p.np = Math.min(T.npMax, p.np + Math.round(base * mod));
 }
@@ -561,12 +572,12 @@ function resolveTurnInner(prev, actions, opts) {
     const stun = P[i].buffs.find(b => b.type === 'stun' && b.armed);
     if (!stun) continue;
     P[i].buffs.splice(P[i].buffs.indexOf(stun), 1);
-    const down = roll(state) * 100 < stun.value;
+    const down = evilsLand(P[i]) || roll(state) * 100 < stun.value;
     proc(P[1 - i], `${sourceLabel(S[1 - i], stun.source)} (turns skipped)`, down);
     if (down) {
       mains[i] = { type: 'stunned' };
       say(String(stun.source).startsWith('gods_resolution') ? `${P[i].name} is Blinded by Holy Light and can't act!` : `${P[i].name} is tripped up and loses this turn!`, { type: 'blocked', player: i, blocked: 'stun' });
-    } else say(`${P[i].name} keeps their footing.`, { type: 'info', player: i });
+    } else say(`${P[i].name} ${verb(S[i], 'keeps', 'keep')} ${pro(S[i]).their} footing.`, { type: 'info', player: i });
   }
 
   // 0c. Madness (Hamlet): the maddened servant's main action is replaced by a random legal one
@@ -614,7 +625,7 @@ function resolveTurnInner(prev, actions, opts) {
     // Confusion (Troias Tragōidia): a chance the skill doesn't go off (AP is still spent). Ends once it triggers.
     const conf = P[i].buffs.find(b => b.type === 'confusion');
     if (conf) {
-      const lost = roll(state) * 100 < conf.value;
+      const lost = evilsLand(P[i]) || roll(state) * 100 < conf.value;
       proc(P[1 - i], `${sourceLabel(S[1 - i], conf.source)} (skills fumbled)`, lost);
       if (lost) {
         P[i].buffs.splice(P[i].buffs.indexOf(conf), 1);
@@ -636,7 +647,7 @@ function resolveTurnInner(prev, actions, opts) {
       if (e.target !== 'enemy') return false;
       if (e.chance == null) return true;
       // chance-based debuffs (Lament of the Falsely Living): roll once per cast
-      const ok = roll(state) * 100 < e.chance;
+      const ok = evilsLand(P[1 - i]) || roll(state) * 100 < e.chance;
       proc(P[i], `${skill.name} (${e.type[0].toUpperCase() + e.type.slice(1)} landed)`, ok);
       if (!ok) {
         say(`${skill.name}: the ${e.type === 'stun' ? 'Holy Light' : e.type} misses.`, { type: 'buffFail', player: i });
@@ -675,6 +686,15 @@ function resolveTurnInner(prev, actions, opts) {
       // a buff-stripping pre-effect (Twin Arm, Rule Breaker) removed Divine Intervention before the hit
       divineStripped: !def.buffs.some(b => b.type === 'divineIntervention'),
       ...npPacket(att, def, nps[i], { empowered: P[i].empower, nextHit, vsBonus }) };
+    // Verg Avesta: equalize HP percentages (worked out from HP before this turn's damage). If he's lower,
+    // the enemy drops to his % and nothing can block it; if he's higher, he drops to theirs.
+    if (nps[i].equalize) {
+      const mine = P[i].hp / P[i].maxHp, theirs = P[1 - i].hp / P[1 - i].maxHp;
+      Object.assign(pk, { blocked: null, unblockable: true, divineStripped: true, nextHit: 0, vsBonus: 0,
+        amount: mine < theirs ? Math.max(0, P[1 - i].hp - Math.round(P[1 - i].maxHp * mine)) : 0,
+        selfLoss: mine > theirs ? Math.max(0, P[i].hp - Math.max(1, Math.round(P[i].maxHp * theirs))) : 0,
+        equalize: true });
+    }
     // Instant kill (Shaytan's Arm): rolled only when the NP connects; ignores revives.
     // npName ties the chance to one NP (Shaytan's Arm only works with Zabaniya).
     const ik = P[i].buffs.filter(b => b.type === 'instantKillChance' && (!b.npName || b.npName === nps[i].name))
@@ -777,7 +797,7 @@ function resolveTurnInner(prev, actions, opts) {
     }
     // Terror: a frightened servant may not follow through on a regular attack. Ends once it triggers.
     const terror = pk.kind === 'attack' && !pk.secondArrow ? att.buffs.find(b => b.type === 'terror') : null;
-    const frozen = terror && roll(state) * 100 < terror.value;
+    const frozen = terror && (evilsLand(att) || roll(state) * 100 < terror.value);
     if (terror) proc(def, `${sourceLabel(S[pk.to], terror.source)} (Terror freezes)`, frozen);
     if (frozen) {
       att.stats.combo = 0;
@@ -792,6 +812,20 @@ function resolveTurnInner(prev, actions, opts) {
     if (decoy) {
       att.stats.combo = 0;
       say(`${att.name}'s ${CARD_NAME[pk.card]} attack strikes a decoy and misses! (${def.name})`, { type: 'blocked', ...pk });
+      continue;
+    }
+    if (pk.equalize) {
+      att.stats.nps.landed++;
+      if (pk.selfLoss) {
+        att.hp -= pk.selfLoss;
+        say(`${S[pk.from].np.name}: ${att.name}'s HP falls to match ${def.name}'s (${Math.round(100 * att.hp / att.maxHp)}%, −${pk.selfLoss}).`, { type: 'hit', ...pk, to: pk.from, amount: pk.selfLoss });
+        continue;
+      }
+      if (!pk.amount) { say(`${S[pk.from].np.name}: their HP is already even. Nothing happens.`, { type: 'info', player: pk.from }); continue; }
+      def.hp -= pk.amount; def.hitByNp = true;
+      dealt(att, 'np', pk.amount, S[pk.from].np.name);
+      gainNp(def, T.npGainOnHit, { defending: true });
+      say(`${S[pk.from].np.name}: ${def.name}'s HP is dragged down to ${att.name}'s level (${Math.round(100 * def.hp / def.maxHp)}%, −${pk.amount}).`, { type: 'hit', ...pk });
       continue;
     }
     // Divine Intervention (Jeanne): her master may negate this hit (not damage over time); then it's spent
@@ -811,7 +845,7 @@ function resolveTurnInner(prev, actions, opts) {
     }
     // La Black Luna: a landed regular attack may inflict a debuff
     if (pk.kind === 'attack' && !pk.secondArrow) for (const b of att.buffs.filter(b => b.type === 'debuffOnHit')) {
-      const got = roll(state) * 100 < b.value;
+      const got = evilsLand(def) || roll(state) * 100 < b.value;
       const nm = b.inflict.type[0].toUpperCase() + b.inflict.type.slice(1);
       proc(att, `${b.source} (${nm} inflicted)`, got);
       if (got) {
@@ -848,7 +882,7 @@ function resolveTurnInner(prev, actions, opts) {
     else say(`${att.name} hits ${def.name} for ${pk.amount}${pk.hitAs && pk.hitAs !== pk.card ? ` (${CARD_NAME[pk.card]} → Buster)` : ''}${pk.reason === 'counter' ? ' (counter!)' : ''}.`, { type: 'hit', ...pk });
     // Fafnir's Blood: a landed regular attack may mark the enemy with a status (e.g. Dragon) for the next turn
     if (pk.kind === 'attack') for (const b of att.buffs.filter(b => b.type === 'statusOnHit')) {
-      const marked = roll(state) * 100 < b.value;
+      const marked = evilsLand(def) || roll(state) * 100 < b.value;
       proc(att, `${b.source} (${b.status[0].toUpperCase() + b.status.slice(1)} marks)`, marked);
       if (!marked) continue;
       def.buffs = def.buffs.filter(x => !(x.type === 'statusMark' && x.status === b.status));
@@ -982,7 +1016,7 @@ function resolveTurnInner(prev, actions, opts) {
   if (dead[0] !== dead[1]) for (const p of P) {
     const sc = p.buffs.find(b => b.type === 'starCrossed');
     if (!sc) continue;
-    const both = roll(state) * 100 < sc.value;
+    const both = evilsLand(P[dead[0] ? 1 : 0]) || roll(state) * 100 < sc.value;
     proc(p, `${sc.source} (shared falls)`, both);
     if (both) {
       const other = P[dead[0] ? 1 : 0];

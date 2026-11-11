@@ -1262,3 +1262,48 @@ test('Divine Intervention is the master\'s choice: the turn pauses at each hit, 
   const cpu = resolveTurn(s, acts);
   assert.ok(cpu.log.some(l => l.blocked === 'divine'));
 });
+
+test('Angra: Verg Avesta drags the enemy down to his HP % (unblockable), or lowers his own to theirs', () => {
+  let s = createMatch(SERVANTS.angra, dummy('B'), { seed: 1 });
+  const A = s.players[0], B = s.players[1];
+  A.hp = Math.round(A.maxHp * 0.3); A.np = 100;
+  B.buffs.push({ type: 'invincible', value: 0, turns: 2 }, { type: 'damageCut', value: 50, turns: 2 });
+  let r = resolveTurn(s, [np(), atk('quick')]);
+  // the dummy's Quick attack is overpowered by the NP; enemy ends at 30% (no end-of-turn effects on the dummy)
+  assert.equal(r.state.players[1].hp, Math.round(B.maxHp * 0.3));
+  assert.ok(r.log.some(l => /dragged down/.test(l.msg)));
+  // higher: his own HP falls instead, enemy untouched
+  s = createMatch(SERVANTS.angra, dummy('B'), { seed: 1 });
+  s.players[1].hp = Math.round(s.players[1].maxHp * 0.4); s.players[0].np = 100;
+  const before = s.players[1].hp;
+  r = resolveTurn(s, [np(), atk('quick')]);
+  assert.equal(r.state.players[1].hp, before);
+  const pct = r.state.players[0].hp / r.state.players[0].maxHp;
+  assert.ok(Math.abs(pct - 0.4) < 0.04, `pct ${pct}`);   // + a little NP-free regen noise only
+});
+
+test("Angra: All the World's Evils — chance effects always land; Power Boost per debuff grows as HP falls; Avenger NP gain", () => {
+  // God's Resolution (80% Blind) always lands on him
+  for (let seed = 1; seed <= 40; seed++) {
+    const s = createMatch(SERVANTS.jeanne, SERVANTS.angra, { seed });
+    s.players[0].ap = 6;
+    const t = resolveTurn(s, [skill('gods_resolution'), atk('quick')]).state;
+    assert.ok(t.players[1].buffs.some(b => b.type === 'stun'), `seed ${seed}`);
+  }
+  // Power Boost: each debuff adds 10% + 20% x missing HP to his damage
+  const dmg = (debuffs, hpPct) => {
+    const s = createMatch(SERVANTS.angra, dummy('B'), { seed: 2 });
+    s.players[0].hp = Math.round(s.players[0].maxHp * hpPct);
+    for (let k = 0; k < debuffs; k++) s.players[0].buffs.push({ type: 'defDown', value: 0, turns: 5, debuff: true });
+    const r = resolveTurn(s, [atk('quick'), atk('arts')]);
+    return r.log.find(l => l.type === 'hit' && l.from === 0).amount;
+  };
+  const base = dmg(0, 1), two = dmg(2, 1), twoLow = dmg(2, 0.25);
+  assert.ok(Math.abs(two / base - 1.2) < 0.03, `${two}/${base}`);
+  assert.ok(Math.abs(twoLow / base - 1.5) < 0.03, `${twoLow}/${base}`);
+  // Avenger A: +25% NP when hit
+  const s = createMatch(SERVANTS.angra, dummy('B'), { seed: 2 });
+  const t = resolveTurn(s, [atk('arts'), atk('quick')]).state;   // Quick beats Arts: he's hit
+  const plain = Math.round(T.npGainOnHit * s.players[0].npGainDef);
+  assert.ok(t.players[0].np >= Math.round(T.npGainOnHit * s.players[0].npGainDef * 1.25) && t.players[0].np > plain);
+});

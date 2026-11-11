@@ -66,6 +66,8 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
 [data-class="Caster"] { --cls: #7b4cc9; }
 [data-class="Assassin"] { --cls: #4a4f63; }
 [data-class="Berserker"] { --cls: #9c2c4f; }
+[data-class="Ruler"] { --cls: #b8963a; }
+[data-class="Avenger"] { --cls: #3d2350; }
 .class-badge {
   font-size: .7rem; text-transform: uppercase; letter-spacing: .15em; padding: .15rem .55rem; border-radius: 99px;
   background: var(--cls); color: #fff; font-weight: 700; white-space: nowrap;
@@ -638,3 +640,7 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
 .divine-prompt .who { color: var(--gold2); font-family: var(--title); margin: 0 0 .6rem; }
 .divine-prompt .lethal { color: #ff8a7a; display: block; margin-top: .3rem; }
 .divine-btns { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; margin-top: 1rem; }
+/* glossary terms in skill / NP / passive text: hover or tap for the definition */
+.term { text-decoration: underline dotted rgba(243, 220, 147, .75); text-underline-offset: 2px; cursor: help; }
+.term:focus-visible { outline: 1px solid var(--gold); outline-offset: 1px; border-radius: 2px; }
+#tipbox { pointer-events: none; }

@@ -9,6 +9,8 @@ import { TUNING as T, CARDS } from '/src/engine/constants.js';
 import { CARD_LABEL, describeSkill, describeNp, describeEffects, buffChip } from './describe.js';
 import { chooseAction, wantsForesight } from '/src/engine/ai.js';
 import { statsHtml } from './stats.js';
+import { pro } from '/src/engine/pronouns.js';
+import { glossify } from './glossary.js';
 import { nextStrength, START_STRENGTH } from '/src/engine/difficulty.js';
 
 const app = document.getElementById('app');
@@ -477,17 +479,17 @@ function kitHtml(s) {
         <div><label>Favored</label>${favoredAll(s) ? '<b class="card-chip all">All</b>' : `<b class="card-chip ${s.favoredCard}">${CARD_LABEL[s.favoredCard] ?? '—'}</b>`}</div>
       </div>
       ${passives.length ? `<h3>Passives</h3>${passives.map(p => `
-        <div class="kit-row"><b>${esc(p.name)}${p.kind === 'unique' ? ' <em class="unique-tag">Unique</em>' : ''}</b><span>${esc(p.desc ?? describeEffects(p.effects))}</span></div>`).join('')}` : ''}
+        <div class="kit-row"><b>${esc(p.name)}${p.kind === 'unique' ? ' <em class="unique-tag">Unique</em>' : ''}</b><span>${glossify(esc(p.desc ?? describeEffects(p.effects)))}</span></div>`).join('')}` : ''}
       <h3>Skills</h3>
       ${s.skills.map(sk => `
-        <div class="kit-row"><b>${esc(sk.name)} <em class="ap-cost">${sk.cost} AP</em></b><span>${esc(describeSkill(sk))}${sk.options ? ` (${sk.options.map(o => o.label).join(' / ')})` : ''}</span></div>`).join('')}
+        <div class="kit-row"><b>${esc(sk.name)} <em class="ap-cost">${sk.cost} AP</em></b><span>${glossify(esc(describeSkill(sk)))}${sk.options ? ` (${sk.options.map(o => o.label).join(' / ')})` : ''}</span></div>`).join('')}
       <h3>Noble Phantasm</h3>
       <div class="kit-row np-row"><b>${esc(s.np.name)} ${s.np.modes ? '<span class="card-chip all">Modes</span>' : `<span class="card-chip ${s.np.card}">${CARD_LABEL[s.np.card]}</span>`}</b>
-        <span>${esc(describeNp(s.np))}</span></div>
+        <span>${glossify(esc(describeNp(s.np)))}</span></div>
     </div>`;
 }
 
-const CLASS_ORDER = ['Saber', 'Archer', 'Lancer', 'Rider', 'Caster', 'Assassin', 'Berserker'];
+const CLASS_ORDER = ['Saber', 'Archer', 'Lancer', 'Rider', 'Caster', 'Assassin', 'Berserker', 'Ruler', 'Avenger'];
 const SORTED = [...ROSTER].sort((a, b) => a.name.localeCompare(b.name));
 const CLASSES = CLASS_ORDER.filter(c => ROSTER.some(s => s.class === c))
   .concat([...new Set(ROSTER.map(s => s.class))].filter(c => !CLASS_ORDER.includes(c)));
@@ -693,7 +695,7 @@ function panelHtml(i) {
           ${p.work ? badge('passive work', `${p.work.chosen ? '✋' : '🎭'} ${p.work.name}`, `${p.work.from}: ${p.work.name}`, `This battle's work: ${p.work.desc}.`, 'Chosen at random when the battle began; lasts the whole battle') : ''}
           ${(p.neutralized ?? []).map(n => badge('passive blocked', `⊘ ${n}`, `Neutralized: ${n}`, "The opponent's Ea switches off this unique passive for the whole match.", '')).join('')}
           ${(p.copyBlocked ?? []).map(n => badge('passive blocked', `✕ ${n}`, `Trace On: ${n}`, "Trace On couldn't copy this passive, because revives can't be copied.", '')).join('')}
-          ${p.buffs.map(b => ({ b, chip: buffChip(b) }))
+          ${p.buffs.map(b => ({ b, chip: buffChip(b, { ...s, hp: p.hp, maxHp: p.maxHp, buffs: p.buffs }) }))
             .sort((x, y) => ({ passive: 0, active: 1, debuff: 2 }[x.chip.kind] - { passive: 0, active: 1, debuff: 2 }[y.chip.kind]))
             .map(({ b, chip }) => badge(chip.kind, chip.label, sourceName(s, b), chip.explain, chip.duration)).join('')}
         </div>
@@ -798,7 +800,7 @@ function controlsHtml() {
           <button class="np-card ${legal.np ? 'ready' : ''} ${sel('np') ? 'selected' : ''}" id="np" ${legal.np ? '' : 'disabled'}>
             <span class="np-label">Noble Phantasm${np.modeName ? ` · ${esc(np.modeName)}` : ''}</span>
             <b>${esc(np.name)}</b>
-            <small>${legal.np ? esc(describeNp(np)) : legal.taunted && p.np >= T.npMax ? 'Taunted: attacks only' : `Gauge ${p.np}%`}</small>
+            <small>${legal.np ? glossify(esc(describeNp(np))) : legal.taunted && p.np >= T.npMax ? 'Taunted: attacks only' : `Gauge ${p.np}%`}</small>
           </button></span>
         </div>
         ${legal.choice ? `
@@ -806,7 +808,7 @@ function controlsHtml() {
           <p><b>${esc(s.passives.find(x => x.kind === 'unique')?.name ?? 'Choose')}</b>: pick one for the whole battle (locked in with your first action)</p>
           <div class="hand-opts">${legal.choice.map(o => `
             <button class="hand-opt ${d.choice === o.id ? 'selected' : ''}" data-choice="${o.id}">
-              <b>${esc(o.name)}</b><small>${esc(o.desc)}</small>
+              <b>${esc(o.name)}</b><small>${glossify(esc(o.desc))}</small>
             </button>`).join('')}</div>
         </div>` : ''}
         ${legal.lastStand ? `<p class="taunt-note">Blaze of Glory: ${esc(s.name)} must fire ${esc(s.np.name)} this turn, and can't fall before it lands.</p>` : ''}
@@ -817,7 +819,7 @@ function controlsHtml() {
             const why = legal.taunted ? 'Taunted: attacks only' : p.lastSkillId === sk.id ? 'Used last turn' : (p.ap < sk.cost ? `Needs ${sk.cost} AP` : '');
             return `<button class="skill ${sel('skill', sk.id) ? 'selected' : ''}" data-skill="${sk.id}" ${ok ? '' : 'disabled'} title="Key: ${k + 1}">
               <span class="skill-top"><b>${esc(sk.name)}</b><em class="ap-cost">${sk.cost} AP</em></span>
-              <small>${esc(why || describeSkill(sk))}</small>
+              <small>${why ? esc(why) : glossify(esc(describeSkill(sk)))}</small>
             </button>`;
           }).join('')}
         </div>
@@ -938,11 +940,11 @@ function refCardHtml(i, kind, id) {
   const m = ui.match, s = m.servants[i];
   if (kind === 'np') {
     const np = npOf(s, m.players[i]);
-    const modes = s.np.modes ? `<p class="ref-modes">All modes: ${esc(describeNp(s.np))}</p>` : '';
-    return `<b>${esc(np.name)}${np.modeName ? ` (${esc(np.modeName)})` : ''}</b><span class="ref-meta">${esc(s.name)} · Noble Phantasm · ${CARD_LABEL[np.card]}</span><p>${esc(describeNp(np))}</p>${modes}`;
+    const modes = s.np.modes ? `<p class="ref-modes">All modes: ${glossify(esc(describeNp(s.np)))}</p>` : '';
+    return `<b>${esc(np.name)}${np.modeName ? ` (${esc(np.modeName)})` : ''}</b><span class="ref-meta">${esc(s.name)} · Noble Phantasm · ${CARD_LABEL[np.card]}</span><p>${glossify(esc(describeNp(np)))}</p>${modes}`;
   }
   const sk = s.skills.find(k => k.id === id);
-  return `<b>${esc(sk.name)}</b><span class="ref-meta">${esc(s.name)} · Skill · ${sk.cost} AP</span><p>${esc(describeSkill(sk))}</p>`;
+  return `<b>${esc(sk.name)}</b><span class="ref-meta">${esc(s.name)} · Skill · ${sk.cost} AP</span><p>${glossify(esc(describeSkill(sk)))}</p>`;
 }
 document.addEventListener('click', e => {
   const btn = e.target.closest?.('.log-ref');
@@ -1104,7 +1106,7 @@ function clashBanner(actions, servants) {
   const [a, b] = actions.map(x => x.main);
   const names = servants.map(s => s.name);
   if (a.type === 'np' && b.type === 'np') return { text: 'Noble Phantasms collide!', cls: 'np' };
-  if (a.type === 'np' || b.type === 'np') return { text: `${names[a.type === 'np' ? 0 : 1]} unleashes their Noble Phantasm!`, cls: 'np' };
+  if (a.type === 'np' || b.type === 'np') return { text: `${names[a.type === 'np' ? 0 : 1]} unleashes ${pro(servants[a.type === 'np' ? 0 : 1]).their} Noble Phantasm!`, cls: 'np' };
   if (a.type === 'attack' && b.type === 'attack') {
     if (a.card === b.card) return { text: `${CARD_LABEL[a.card]} clash. Both strike!`, cls: a.card };
     const w = T.beats[a.card] === b.card ? 0 : 1;
@@ -1175,7 +1177,7 @@ function divinePromptHtml(info, who) {
       <h2>Divine Intervention</h2>
       ${who ? `<p class="who">${esc(who)}</p>` : ''}
       <p>${esc(info.what)} is about to hit ${esc(name)} for <b>${info.amount}</b> damage.
-        ${info.lethal ? '<b class="lethal">This hit would down her.</b>' : `<span class="muted">(${info.hp} HP now)</span>`}</p>
+        ${info.lethal ? `<b class="lethal">This hit would down ${pro(ui.match.servants[info.player]).them}.</b>` : `<span class="muted">(${info.hp} HP now)</span>`}</p>
       <p class="muted">Divine Intervention negates this hit and is then spent. If you take the hit, you keep it for later.</p>
       <div class="divine-btns">
         <button class="btn gold" id="diUse">Use Divine Intervention</button>
@@ -1320,9 +1322,21 @@ function showTip(el) {
   tipBox.style.top = `${top}px`;
 }
 const hideTip = () => { tipBox.hidden = true; };
-document.addEventListener('mouseover', e => { const el = e.target.closest?.('[data-tip]'); if (el) showTip(el); else hideTip(); });
+let lastPointer = 'mouse';
+document.addEventListener('pointerdown', e => { lastPointer = e.pointerType; }, true);
+// touch screens fire stray mouseovers after a tap; there the tip follows taps and focus instead
+document.addEventListener('mouseover', e => { if (lastPointer !== 'mouse') return; const el = e.target.closest?.('[data-tip]'); if (el) showTip(el); else hideTip(); });
+document.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' && !e.target.closest?.('[data-tip]')) hideTip(); });
 document.addEventListener('focusin', e => { const el = e.target.closest?.('[data-tip]'); if (el) showTip(el); });
 document.addEventListener('focusout', hideTip);
+// Glossary terms: hover shows the definition; on touch, a tap shows it without pressing the button or card around it.
+document.addEventListener('click', e => {
+  const term = e.target.closest?.('.term');
+  if (!term) return;
+  if (lastPointer === 'mouse' && !term.closest('#refcard')) return;
+  e.preventDefault(); e.stopPropagation();
+  showTip(term);
+}, true);
 window.addEventListener('scroll', hideTip, true);
 
 // ---------- keyboard shortcuts (battle) ----------

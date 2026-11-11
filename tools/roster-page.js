@@ -5,10 +5,13 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 import { ROSTER } from '../src/data/servants.js';
 import { deriveStats } from '../src/engine/engine.js';
 import { TUNING as T } from '../src/engine/constants.js';
+import { glossify } from '../public/js/glossary.js';
+// glossary terms get a hover definition (title attribute) on the static page
+const gl = t => glossify(t).replace(/data-tip="/g, 'title="').replace(/ data-tip-title="[^"]*"/g, '');
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const CARD = { quick: 'Quick', arts: 'Arts', buster: 'Buster' };
-const CLASS_ORDER = ['Saber', 'Archer', 'Lancer', 'Rider', 'Caster', 'Assassin', 'Berserker'];
+const CLASS_ORDER = ['Saber', 'Archer', 'Lancer', 'Rider', 'Caster', 'Assassin', 'Berserker', 'Ruler', 'Avenger'];
 const chip = card => `<span class="card ${card}">${CARD[card]}</span>`;
 const npGain = (v, ref) => (v ? Math.sqrt(v / ref) : 1).toFixed(2);
 
@@ -23,12 +26,12 @@ function npHtml(np) {
     return `<div class="np">
       <div class="np-head"><span class="label">Noble Phantasm</span><h4>${esc(np.name)}</h4><span class="card modes">Modes</span></div>
       <ul class="modes-list">${Object.entries(np.modes).map(([id, m]) => `
-        <li><span class="mode-name">${esc(m.label)}${id === np.defaultMode ? ' <em>(default)</em>' : ''}</span>${chip(m.card)}<span class="mult">${m.mult}×</span><span>${esc(m.desc ?? '')}</span></li>`).join('')}
+        <li><span class="mode-name">${esc(m.label)}${id === np.defaultMode ? ' <em>(default)</em>' : ''}</span>${chip(m.card)}<span class="mult">${m.mult}×</span><span>${gl(esc(m.desc ?? ''))}</span></li>`).join('')}
       </ul></div>`;
   }
   return `<div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>${esc(np.name)}</h4>${chip(np.card)}<span class="mult">${np.mult}×</span></div>
-    <p>${esc(np.desc ?? '')}${np.ignoreDefense ? ' Ignores Damage Cut and Evade.' : ''}</p></div>`;
+    <p>${gl(esc(np.desc ?? ''))}${np.ignoreDefense ? ' Ignores Damage Cut and Evade.' : ''}</p></div>`;
 }
 
 function servantHtml(s) {
@@ -51,13 +54,13 @@ function servantHtml(s) {
     <section>
       <h5>Passives</h5>
       <ul class="rows">${passives.map(p => `
-        <li><span class="name">${esc(p.name)}${p.kind === 'unique' ? '<span class="tag">Unique</span>' : ''}</span><span>${esc(p.desc ?? '')}</span></li>`).join('')}
+        <li><span class="name">${esc(p.name)}${p.kind === 'unique' ? '<span class="tag">Unique</span>' : ''}</span><span>${gl(esc(p.desc ?? ''))}</span></li>`).join('')}
       </ul>
     </section>
     <section>
       <h5>Skills</h5>
       <ul class="rows">${s.skills.map(sk => `
-        <li><span class="name">${esc(sk.name)}<span class="ap">${sk.cost} AP</span></span><span>${esc(sk.desc ?? '')}${sk.options ? ` <em>Options: ${sk.options.map(o => esc(o.label)).join(' / ')}</em>` : ''}</span></li>`).join('')}
+        <li><span class="name">${esc(sk.name)}<span class="ap">${sk.cost} AP</span></span><span>${gl(esc(sk.desc ?? ''))}${sk.options ? ` <em>Options: ${sk.options.map(o => esc(o.label)).join(' / ')}</em>` : ''}</span></li>`).join('')}
       </ul>
     </section>
     ${npHtml(s.np)}
@@ -87,6 +90,9 @@ const html = `<!DOCTYPE html>
 [data-class="Saber"] { --cls: #3a74c9; } [data-class="Archer"] { --cls: #c9453a; } [data-class="Lancer"] { --cls: #2c9c8a; }
 [data-class="Rider"] { --cls: #c98b2c; } [data-class="Caster"] { --cls: #7b4cc9; } [data-class="Assassin"] { --cls: #5d6380; }
 [data-class="Berserker"] { --cls: #9c2c4f; }
+.term { text-decoration: underline dotted; text-underline-offset: 2px; cursor: help; }
+[data-class="Ruler"] { --cls: #b8963a; }
+[data-class="Avenger"] { --cls: #3d2350; }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); }
 .wrap { max-width: 1280px; margin: 0 auto; padding: 28px clamp(16px, 3vw, 32px) 48px; display: flex; flex-direction: column; gap: 20px; }

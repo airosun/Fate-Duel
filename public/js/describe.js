@@ -2,6 +2,7 @@
 // A skill's own `desc` wins when present.
 
 import { TUNING as T } from '/src/engine/constants.js';
+import { pro } from '/src/engine/pronouns.js';
 
 export const CARD_LABEL = { quick: 'Quick', arts: 'Arts', buster: 'Buster' };
 
@@ -94,6 +95,11 @@ function describeEffectCore(e) {
     case 'cardVuln': return `${who}takes +${v}% ${c} damage${turnsText(e)}`;
     case 'mirrorAtkUp': return `Copies ${v}% of enemy ATK buffs`;
     case 'apRecoveryUp': return `+${v} AP from attacks${turnsText(e)}`;
+    case 'npGainDefUp': return `Gains ${v}% more NP when hit.`;
+    case 'worldsEvils': {
+      const hpPct = owner?.hp != null ? owner.hp / owner.maxHp : 1;
+      return `Every effect with a % chance always lands on ${P.them} (except Instant Kill and Breaker Gorgon). Power Boost: +${Math.round((b.value + (b.scale ?? 0) * (1 - hpPct)) * 10) / 10}% damage for each debuff on ${P.them} right now (${b.value}% + ${b.scale ?? 0}% × missing HP).`;
+    }
     case 'instantKillChance': return `NP ${v}% chance to kill outright`;
     case 'affinityAll': return `Every favored-card bonus`;
     case 'setNpMode': return `Change NP mode`;
@@ -135,11 +141,12 @@ const BUFF_LABEL = {
   nextHitUp: 'Next Hit↑', affinityAll: 'All Cards Favored', apRecoveryDown: 'AP Recovery↓',
   bonusVsStatus: 'vs Petrified↑', buffFailChance: 'Breaker Gorgon', copyEnemyUnique: 'Trace On',
   instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF', terror: 'Terror', curse: 'Curse', divineIntervention: 'Divine Intervention', npDown: 'NP Dmg↓', buffDurationUp: 'Buffs +1T', debuffDurationUp: 'Debuffs +1T', npRegen: 'NP Regen', shock: 'Shock', burn: 'Burn', lastStand: 'Unyielding Will', lastStandActive: 'Blaze of Glory', hpRegen: 'HP Regen', madness: 'Madness', charm: 'Charm', starCrossed: 'Star-Crossed', rpsOverride: 'Misty Night', poison: 'Poison', nullifyBoosts: 'No Boosts', npOnlyKo: 'Kosmos', taunt: 'Taunted', confusion: 'Confusion', stun: 'Trap', debuffOnHit: 'Black Luna', apChance: 'AP Chance', npSeal: 'NP Seal', debuffResistDown: 'Debuff Res↓', doubleShot: 'Golden Apple', foresight: 'Foresight', maxApUp: 'Max AP↑', statusOnHit: "Fafnir's Blood", dmgVsStatus: 'vs Dragon↑', extraHitChance: 'Sea Demons', missChance: 'Decoys', buffSuccessUp: 'Buff Success↑', cardVuln: '↓ Resist',
-  mirrorAtkUp: 'Arms Mastery', apRecoveryUp: 'AP Recovery↑',
+  mirrorAtkUp: 'Arms Mastery', apRecoveryUp: 'AP Recovery↑', npGainDefUp: 'NP Gain (hit)↑', worldsEvils: 'Power Boost',
 };
 
 // Plain-language explanation of what a buff, debuff or passive does.
-export function explainBuff(b) {
+export function explainBuff(b, owner) {
+  const P = pro(owner), Cap = t => t[0].toUpperCase() + t.slice(1);
   const v = Math.round(b.value * 10) / 10;
   const c = CARD_LABEL[b.card];
   switch (b.type) {
@@ -150,17 +157,17 @@ export function explainBuff(b) {
       return `${c} attacks and ${c} Noble Phantasms deal ${v}% more damage.${extra}`;
     }
     case 'npUp': return `Noble Phantasm deals ${v}% more damage.`;
-    case 'damageCut': return `Takes ${v}% less damage from attacks and Noble Phantasms.`;
-    case 'evade': return 'Dodges regular attacks. Noble Phantasms still hit.';
-    case 'invincible': return 'Takes no damage from anything, Noble Phantasms included.';
+    case 'damageCut': return `Damage Cut: takes ${v}% less damage from attacks and Noble Phantasms.`;
+    case 'evade': return 'Evade: dodges regular attacks. Noble Phantasms still hit.';
+    case 'invincible': return 'Invincible: takes no damage from anything this turn, Noble Phantasms included.';
     case 'npGainUp': return `Gains ${v}% more NP from hits.`;
     case 'cardNpGainUp': return `${c} hits give ${v}% more NP.`;
-    case 'debuffResist': return `Enemy debuffs on this servant are ${v}% weaker.`;
+    case 'debuffResist': return `Debuff Resist +${v}%: enemy debuffs on ${P.them} are ${v}% weaker.`;
     case 'guts': {
       const at = b.value ? `${v}% HP` : '1 HP';
-      const reset = b.resetNp || b.resetAp ? ' Its NP gauge and AP drop to 0 when it revives.' : ' Keeps its AP and NP gauge.';
+      const reset = b.resetNp || b.resetAp ? ` ${Cap(P.their)} NP gauge and AP drop to 0 on revival.` : ` ${Cap(P.they)} ${P.plural ? 'keep' : 'keeps'} ${P.their} AP and NP gauge.`;
       const bonus = b.onRevive?.length ? ` On revival: ${b.onRevive.map(x => describeEffect(x)).join(', ')}.` : '';
-      return `Survives one killing blow and comes back at ${at}.${reset}${bonus}`;
+      return `Guts: survives one killing blow and comes back at ${at}.${reset}${bonus}`;
     }
     case 'atkDown': return `Deals ${v}% less damage.`;
     case 'defDown': return `Takes ${v}% more damage from attacks and Noble Phantasms.`;
@@ -171,16 +178,16 @@ export function explainBuff(b) {
     case 'pierceEvade': return `${c ? `${c} attacks` : 'Attacks'} pierce Evade and can't be dodged by decoys. This is not Sure Hit, so effects that specifically need Sure Hit don't apply.`;
     case 'nextHitUp': return `The next attack or Noble Phantasm that lands is ${v}% more effective.`;
     case 'affinityAll': return 'Gets the favored-card bonus on Quick, Arts and Buster.';
-    case 'debuffPotency': return `This servant's debuffs ignore up to ${v}% of the enemy's debuff resistance.`;
-    case 'debuffUp': return `Debuffs this servant inflicts are ${v}% stronger: bigger stat drops, NP and AP drains, Curse damage and Terror chance.`;
-    case 'buffFailChance': return `Each buff the opponent gives themselves has a ${v}% chance to fail.`;
+    case 'debuffPotency': return `${Cap(P.their)} debuffs ignore up to ${v}% of the enemy's debuff resistance.`;
+    case 'debuffUp': return `Debuffs ${P.they} ${P.plural ? 'inflict' : 'inflicts'} are ${v}% stronger: bigger stat drops, NP and AP drains, Curse damage and Terror chance.`;
+    case 'buffFailChance': return `Each buff the opponent gives themself has a ${v}% chance to fail.`;
     case 'copyEnemyUnique': return "Copies the opponent's unique passive for the match. Revives can't be copied.";
     case 'apRecoveryDown': return `${b.status === 'petrified' ? 'Petrified: g' : 'G'}ains ${Math.round(b.value)} less AP from each attack.`;
     case 'bonusVsStatus': return `The next attack or Noble Phantasm against a ${b.status} enemy deals ${v}% more damage.`;
     case 'divineIntervention': return 'Divine Intervention: the next hit that would deal damage (attack, NP or follow-up) is negated, then this is spent. Damage over time is not stopped. Buff-stripping effects remove it.';
     case 'npDown': return `NP damage -${v}%.`;
-    case 'buffDurationUp': return `Buffs this servant gives itself last ${v} turn${v === 1 ? '' : 's'} longer.`;
-    case 'debuffDurationUp': return `Debuffs this servant puts on the enemy last ${v} turn${v === 1 ? '' : 's'} longer.`;
+    case 'buffDurationUp': return `Buffs ${P.they} ${P.plural ? 'give' : 'gives'} ${P.themself} last ${v} turn${v === 1 ? '' : 's'} longer.`;
+    case 'debuffDurationUp': return `Debuffs ${P.they} ${P.plural ? 'put' : 'puts'} on the enemy last ${v} turn${v === 1 ? '' : 's'} longer.`;
     case 'npRegen': return `Gains ${v}% NP at the end of each turn.`;
     case 'shock': return `Shocked: takes ${Math.round(b.value)} damage at the end of each turn. Each Shock is a separate stack; stacks add up.`;
     case 'burn': return `Burning: takes ${Math.round(b.value)} damage at the end of each turn. Recasting the skill refreshes the Burn instead of stacking it.`;
@@ -189,19 +196,19 @@ export function explainBuff(b) {
     case 'hpRegen': return `Heals ${v}% of max HP at the end of each turn.`;
     case 'rpsOverride': return `When a ${c} attack meets ${b.vs === 'buster' ? 'Buster' : b.vs}, a ${v}% chance the ${c} attack wins the clash instead.`;
     case 'poison': return `Poisoned: takes ${Math.round(b.value)} damage at the end of each turn. Each Poison is a separate stack; stacks add up.`;
-    case 'nullifyBoosts': return "Double Summon: this servant deals base damage. Its ATK up, card effectiveness, NP damage up, flat damage and other boosts (passives too) are ignored. Debuffs still apply.";
-    case 'npOnlyKo': return "Can only be downed by a Noble Phantasm: anything else leaves this servant at 1 HP. A landed Sure Hit attack strikes the heel and removes this.";
-    case 'taunt': return 'Taunted: can only attack (no skills, no Noble Phantasm).';
+    case 'nullifyBoosts': return `No Boosts: deals base damage. ${Cap(P.their)} ATK up, card effectiveness, NP damage up, flat damage and other boosts (passives too) are ignored. Debuffs still apply.`;
+    case 'npOnlyKo': return `Only a Noble Phantasm can down ${P.them}: anything else leaves ${P.them} at 1 HP. A landed Sure Hit attack strikes the heel and removes this.`;
+    case 'taunt': return `Taunted: ${P.they} can only attack (no skills, no Noble Phantasm).`;
     case 'confusion': return `Confused: ${v}% chance a skill fizzles (AP is still spent). Ends once it triggers.`;
     case 'stun': return String(b.source).startsWith('gods_resolution') ? `Blinded by Holy Light: ${v >= 100 ? 'loses' : `${v}% chance to lose`} the whole next action (Magic Resistance can shrink the chance).` : `Trapped: ${v}% chance to lose the whole next action. Rolled once, when that turn resolves.`;
     case 'debuffOnHit': return `A landed regular attack has a ${v}% chance to inflict ${b.inflict?.type === 'terror' ? `Terror (${b.inflict.value}%)` : b.inflict?.type === 'poison' ? `Poison (${b.inflict.value} damage per turn, stacking)` : cap(b.inflict?.type)} on the enemy.`;
     case 'apChance': return `At the end of each turn, a ${v}% chance to gain ${b.amount ?? 2} AP.`;
-    case 'npSeal': return `NP Seal: if this servant uses its Noble Phantasm this turn, it fizzles and the gauge drops ${v}%.`;
-    case 'debuffResistDown': return `Debuff resistance -${v}%: debuffs on this servant are stronger.`;
+    case 'npSeal': return `NP Seal: if ${P.they} ${P.plural ? 'use' : 'uses'} ${P.their} Noble Phantasm this turn, it fizzles and the gauge drops ${v}%.`;
+    case 'debuffResistDown': return `Debuff Resist −${v}%: debuffs on ${P.them} are stronger.`;
     case 'doubleShot': return `${c} attacks have a ${v}% chance to loose a second arrow: +${b.ratio ?? 50}% damage if the attack landed, or a full-damage hit if it was beaten (Evade and Invincible still stop it).`;
     case 'foresight': return `${b.charges ?? 0} use${b.charges === 1 ? '' : 's'} left: see the opponent's locked-in action before choosing.${b.deceive ? ` Othello deceives: a ${b.deceive}% chance what you see is a lie.` : ''}`;
-    case 'madness': return 'Madness: next turn this servant takes a random action instead of the one chosen.';
-    case 'charm': return "Charmed: next turn, if both servants attack, this servant's card becomes the one that loses to the charmer's.";
+    case 'madness': return `Madness: next turn ${P.they} ${P.plural ? 'take' : 'takes'} a random action instead of the one chosen.`;
+    case 'charm': return `Charmed: next turn, if both servants attack, ${P.their} card becomes the one that loses to the charmer's.`;
     case 'starCrossed': return `Romeo and Juliet: when either servant falls, a ${v}% chance the other falls too and the battle ends in a draw.`;
     case 'maxApUp': return `Max AP +${v}. AP above the normal maximum is lost when this ends.`;
     case 'statusMark': return b.status === 'dragon' ? 'Dragon: no effect on its own, but Siegfried\'s Dragon Slayer and Balmung deal extra damage to it.' : `Marked: ${b.status}.`;
@@ -210,13 +217,18 @@ export function explainBuff(b) {
     case 'terror': return `Terrified: ${v}% chance to not follow through on a regular attack. Ends once it triggers.`;
     case 'curse': return `Cursed: takes ${Math.round(b.value)} damage at the end of each turn.`;
     case 'extraHitChance': return `A landed ${c} attack has a ${v}% chance to bring a follow-up hit for ${b.ratio ?? 30}% of its damage.`;
-    case 'missChance': return `Regular attacks against this servant have a ${v}% chance to miss. Sure Hit ignores this.`;
+    case 'missChance': return `Regular attacks against ${P.them} have a ${v}% chance to miss. Sure Hit ignores this.`;
     case 'buffSuccessUp': return `Chance-based buffs are ${v}% more likely to land, and enemy buff-failure effects are ${v}% weaker.`;
-    case 'cardVuln': return `Takes ${v}% more damage from ${c} attacks and ${c} Noble Phantasms. ${c === 'Arts' ? `Arts hits on this servant also give the attacker +${T.artsEffectNpGain}% NP gain.` : ''}`;
-    case 'mirrorAtkUp': return `When the enemy raises its own ATK, this servant gains ${v}% of that boost for the same duration.`;
+    case 'cardVuln': return `Takes ${v}% more damage from ${c} attacks and ${c} Noble Phantasms. ${c === 'Arts' ? `Arts hits on ${P.them} also give the attacker +${T.artsEffectNpGain}% NP gain.` : ''}`;
+    case 'mirrorAtkUp': return `When the enemy raises their own ATK, ${P.they} ${P.plural ? 'gain' : 'gains'} ${v}% of that boost for the same duration.`;
     case 'apRecoveryUp': return `Gains ${Math.round(b.value)} more AP from each attack.`;
     case 'ignoreDamageCut': return "Attacks and Noble Phantasms go straight through the enemy's damage cut. Evade still dodges regular attacks.";
     case 'neutralizeEnemyUnique': return "Switches off all of the opponent's unique passives for the whole match.";
+    case 'npGainDefUp': return `Gains ${v}% more NP when hit.`;
+    case 'worldsEvils': {
+      const hpPct = owner?.hp != null ? owner.hp / owner.maxHp : 1;
+      return `Every effect with a % chance always lands on ${P.them} (except Instant Kill and Breaker Gorgon). Power Boost: +${Math.round((b.value + (b.scale ?? 0) * (1 - hpPct)) * 10) / 10}% damage for each debuff on ${P.them} right now (${b.value}% + ${b.scale ?? 0}% × missing HP).`;
+    }
     case 'instantKillChance': return b.npName
       ? `${b.npName} has a ${v}% chance to kill outright when it connects. Revives don't trigger.${b.copiedFrom ? ` Only works with ${b.npName}, so it has no effect here.` : ''}`
       : `Each Noble Phantasm that connects has a ${v}% chance to kill outright. Revives don't trigger.`;
@@ -224,7 +236,7 @@ export function explainBuff(b) {
   }
 }
 
-export function buffChip(b) {
+export function buffChip(b, owner) {
   let label = BUFF_LABEL[b.type] ?? b.type;
   if (b.type === 'cardUp') label = `${CARD_LABEL[b.card]}↑`;
   if (b.type === 'cardNpGainUp') label = `${CARD_LABEL[b.card]} NP↑`;
@@ -238,10 +250,15 @@ export function buffChip(b) {
   if (b.type === 'doubleShot') label = '2nd Arrow';
   if (b.type === 'statusMark') label = b.status[0].toUpperCase() + b.status.slice(1);
   if (b.type === 'curse') label = 'Curse';
+  if (b.type === 'worldsEvils') {   // live total: debuffs on him x (10% + 20% x missing HP)
+    const n = owner?.buffs?.filter(x => x.debuff).length ?? 0;
+    const per = b.value + (b.scale ?? 0) * (1 - (owner?.hp ?? 1) / (owner?.maxHp ?? 1));
+    label = `Power Boost +${Math.round(n * per)}%`;
+  }
   // Labels never include the value; it's appended once here.
   const val = b.type === 'apRecoveryDown' ? ` −${Math.round(b.value)} AP` : b.type === 'apRecoveryUp' ? ` +${Math.round(b.value)} AP`
     : ['curse', 'poison', 'shock', 'burn'].includes(b.type) ? ` ${Math.round(b.value)}/turn` : ['hpRegen', 'npRegen'].includes(b.type) ? ` ${b.value}%/turn` : ['buffDurationUp', 'debuffDurationUp'].includes(b.type) ? ''
-    : b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage', 'sureHit', 'copyEnemyUnique', 'guts', 'ignoreDamageCut', 'nullifyBoosts', 'madness', 'charm', 'lastStand', 'lastStandActive', 'divineIntervention', 'taunt', 'npOnlyKo', 'pierceEvade', 'statusMark'].includes(b.type)
+    : b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage', 'sureHit', 'copyEnemyUnique', 'guts', 'ignoreDamageCut', 'nullifyBoosts', 'madness', 'charm', 'lastStand', 'lastStandActive', 'divineIntervention', 'taunt', 'npOnlyKo', 'pierceEvade', 'statusMark', 'worldsEvils'].includes(b.type)
       ? ` ${Math.round(b.value)}%` : (['apRegen', 'flatDamage'].includes(b.type) ? ` +${b.value}` : '');
   const kind = b.debuff ? 'debuff' : b.turns === null ? 'passive' : 'active';
   let duration;
@@ -252,5 +269,5 @@ export function buffChip(b) {
   else duration = `${b.turns} turns left, including this one`;
   if (b.type === 'busterConvert') duration += ' · used up by one attack';
   if (b.type === 'nextHitUp' || b.type === 'bonusVsStatus') duration += ' · used up by the next attack or NP';
-  return { label: label + val, kind, duration, explain: explainBuff(b) };
+  return { label: label + val, kind, duration, explain: explainBuff(b, owner) };
 }

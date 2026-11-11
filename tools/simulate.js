@@ -23,9 +23,12 @@ const weighted = w => { // {key: weight}
 };
 
 // Heuristic bot — deliberately simple, a stand-in for "reasonable player".
+// Verg Avesta only helps when he's behind on HP %: bots hold it otherwise
+const npUseful = (state, i) => { const np = state.servants[i].np; if (!np.equalize) return true;
+  const a = state.players[i], b = state.players[1 - i]; return a.hp / a.maxHp < b.hp / b.maxHp - 0.1; };
 function bot(state, i) {
   const me = state.players[i], foe = state.players[1 - i];
-  const legal = getLegalActions(state, i);
+  const legal = { ...getLegalActions(state, i) }; if (!npUseful(state, i)) legal.np = false;
   if (legal.lastStand) return { main: { type: 'np' }, seal: null };   // Unyielding Will: forced NP
   const servant = state.servants[i];
   let seal = null;
@@ -55,7 +58,7 @@ function bot(state, i) {
 // Teacher's Wisdom: a bot with uses left sometimes reads the opponent's action first
 // (more often when the opponent's NP is ready) and answers it with the best counter.
 function counterTo(state, i, other) {
-  const legal = getLegalActions(state, i), servant = state.servants[i];
+  const legal = { ...getLegalActions(state, i) }, servant = state.servants[i]; if (!npUseful(state, i)) legal.np = false;
   const m = other.main;
   if (m.type === 'attack') {
     const card = Object.keys(T.beats).find(c => T.beats[c] === m.card);
