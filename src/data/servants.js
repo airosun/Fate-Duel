@@ -210,7 +210,7 @@ export const SERVANTS = {
   medusa: {
     id: 'medusa', name: 'Medusa', class: 'Rider', pronouns: 'she/her',
     fgoHp: 8937, fgoAtk: 7200, fgoNpAtk: 0.58, fgoNpDef: 3,
-    favoredCard: 'quick', maxAp: 10,
+    favoredCard: 'quick', hpMult: 1.005, maxAp: 10,
     passives: [
       classPassive('magicResistance', 'B'),
       classPassive('independentAction', 'C'),
@@ -241,7 +241,7 @@ export const SERVANTS = {
   hassan: {
     id: 'hassan', name: 'Hassan of the Cursed Arm', class: 'Assassin', pronouns: 'he/him',
     fgoHp: 7594, fgoAtk: 6280, fgoNpAtk: 1.07, fgoNpDef: 4,
-    favoredCard: 'quick', maxAp: 10,
+    favoredCard: 'quick', hpMult: 1.01, maxAp: 10,
     passives: [
       classPassive('presenceConcealment', 'A+'),
       unique("Shaytan's Arm", "Zabaniya has a 5% chance of Instant Kill (revives don't trigger)",
@@ -383,7 +383,7 @@ export const SERVANTS = {
   gilles: {
     id: 'gilles', name: 'Gilles de Rais', class: 'Caster', pronouns: 'he/him',
     fgoHp: 9506, fgoAtk: 6514, fgoNpAtk: 1.58, fgoNpDef: 3,
-    favoredCard: 'arts', hpMult: 1.006, maxAp: 10,
+    favoredCard: 'arts', hpMult: 0.985, maxAp: 10,
     passives: [
       classPassive('territoryCreation', 'B'),
       unique('Summoning: Sea Demons', "A landed Arts attack has a 40% chance of a Sea Demon follow-up hit for 30% of its damage",
@@ -551,7 +551,7 @@ export const SERVANTS = {
   vlad: {
     id: 'vlad', name: 'Vlad III', class: 'Lancer', pronouns: 'he/him',
     fgoHp: 15086, fgoAtk: 11499, fgoNpAtk: 0.5, fgoNpDef: 5,
-    favoredCard: 'arts', maxAp: 10, hpMult: 0.75, // 25% below FGO-derived HP: Protection of Faith is an extra life
+    favoredCard: 'arts', maxAp: 10, hpMult: 0.725, // 25% below FGO-derived HP: Protection of Faith is an extra life
     passives: [
       classPassive('madness', 'EX'),
       unique('Protection of Faith', "Guts once: revives at 15% HP; on revival, NP gain +30% for the rest of the battle (a normal buff, so it can be removed)",
@@ -864,7 +864,7 @@ export const SERVANTS = {
   amakusa: {
     id: 'amakusa', name: 'Amakusa Shirou', class: 'Ruler', pronouns: 'he/him',
     fgoHp: 14107, fgoAtk: 10972, fgoNpAtk: 0.86, fgoNpDef: 3,
-    favoredCard: 'buster', maxAp: 10,
+    favoredCard: 'buster', hpMult: 0.96, maxAp: 10,
     passives: [
       classPassive('magicResistance', 'A'),
       unique('Left Hand & Right Hand', "With his first action, his master chooses Left Hand (his buffs last 1 turn longer) or Right Hand (his debuffs on the enemy last 1 turn longer)", [{

@@ -1332,3 +1332,32 @@ test("Angra: Terror rolls its normal chance against him (inflicting and freezing
   }
   assert.ok(inflicted < n * 0.3, `inflicted ${inflicted}`);   // 10% proc, not 100%
 });
+
+test('NP drain cancels an NP chosen the same turn (Tawrich vs a full Frankenstein)', () => {
+  const s = createMatch(SERVANTS.angra, SERVANTS.frankenstein, { seed: 3 });
+  s.players[0].ap = 10; s.players[1].np = 100;
+  const r = resolveTurn(s, [skill('tawrich'), np()]);
+  assert.equal(r.state.players[0].hp, s.players[0].hp);            // no NP damage (Angra didn't attack either)
+  assert.equal(r.state.players[1].np, 60);
+  assert.ok(r.log.some(l => l.blocked === 'npDrained'));
+  // without the drain the NP fires
+  const s2 = createMatch(SERVANTS.angra, SERVANTS.frankenstein, { seed: 3 });
+  s2.players[1].np = 100;
+  const r2 = resolveTurn(s2, [atk('quick'), np()]);
+  assert.ok(r2.state.players[0].hp < s2.players[0].hp);
+});
+
+test("NP drain beats the attacker's NP gain: Amakusa's Grail vs Iskandar's Arts hit", () => {
+  const s = createMatch(SERVANTS.amakusa, SERVANTS.iskandar, { seed: 4 });
+  s.players[0].ap = 10; s.players[1].np = 60;
+  const r = resolveTurn(s, [{ ...skill('grail_fiery_heavens'), choice: 'left' }, atk('arts')]);
+  const [ama, isk] = r.state.players;
+  assert.ok(r.log.some(l => l.type === 'hit' && l.from === 1), 'Iskandar landed');
+  assert.ok(isk.np >= 40 && isk.np <= 41, `np ${isk.np}`);   // drained 20 (19 after his Magic Resistance), no Arts charge
+  assert.ok(ama.np > s.players[0].np + 20);        // Grail's NP +20% plus charge for being hit
+  // without the drain, the same hit charges Iskandar
+  const s2 = createMatch(SERVANTS.amakusa, SERVANTS.iskandar, { seed: 4 });
+  s2.players[0].ap = 10; s2.players[1].np = 60;
+  const r2 = resolveTurn(s2, [{ ...skill('prayer_long_journey'), choice: 'left' }, atk('arts')]);
+  assert.ok(r2.state.players[1].np > 60);
+});

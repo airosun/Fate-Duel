@@ -642,6 +642,8 @@ function resolveTurnInner(prev, actions, opts) {
     P[i].stats.skills++;
     applyEffects(P[i], P[1 - i], screenBuffs(state, P[i], P[1 - i], effects.filter(e => e.target !== 'enemy'), say, skill.name), skill.id);
   }
+  // A servant whose NP a skill drains this turn gets no NP from their own attacks this turn (the drain wins).
+  const drainedNp = [0, 1].map(i => !!skillUses[1 - i]?.effects.some(e => e.target === 'enemy' && (e.type === 'npDrain' || e.type === 'npSteal')));
   for (const i of [0, 1]) {
     const skill = skillUses[i];
     if (skill) applyEffects(P[i], P[1 - i], skill.effects.filter(e => {
@@ -671,6 +673,14 @@ function resolveTurnInner(prev, actions, opts) {
     P[i].np = Math.max(0, P[i].np - Math.round(seal.value));
     proc(P[1 - i], `${sourceLabel(S[1 - i], seal.source)} (NPs sealed)`, true);
     say(`${P[i].name}'s Noble Phantasm is sealed! It fizzles and the gauge drops to ${P[i].np}%.`, { type: 'blocked', player: i, blocked: 'npSeal' });
+  }
+  // NP drained below full by a skill this turn (Tawrich, Bloodsucker, Grail of Fiery Heavens...): the NP
+  // can't activate. Spartacus' forced Last Stand NP still fires.
+  for (const i of [0, 1]) {
+    if (mains[i].type !== 'np' || P[i].np >= T.npMax) continue;
+    if (P[i].buffs.some(b => b.type === 'lastStandActive')) continue;
+    mains[i] = { type: 'drained' };
+    say(`${P[i].name}'s NP gauge was drained to ${P[i].np}%. The Noble Phantasm fails to activate!`, { type: 'blocked', player: i, blocked: 'npDrained' });
   }
   const npUsers = [0, 1].filter(i => mains[i].type === 'np');
   const nps = [0, 1].map(i => npOf(S[i], P[i]));
@@ -873,7 +883,11 @@ function resolveTurnInner(prev, actions, opts) {
     if (pk.kind === 'attack') {
       const artsBoosted = pk.hitAs === 'arts' && (effectiveness(att, 'arts') > 0 || pk.nextHit > 0 || sumBuff(def, 'cardVuln', 'arts') > 0);
       const artsEffect = artsBoosted ? T.artsEffectNpGain : 0; // flat, once
-      gainNp(att, T.cards[pk.hitAs].npGain, { card: pk.hitAs, artsEffect });
+      if (!drainedNp[pk.from]) gainNp(att, T.cards[pk.hitAs].npGain, { card: pk.hitAs, artsEffect });
+      else if (!drainedNp[`said${pk.from}`]) {
+        drainedNp[`said${pk.from}`] = true;
+        say(`${att.name}'s NP was drained this turn: the hit charges no NP.`, { type: 'info', player: pk.from });
+      }
       const nextHitAp = pk.nextHit && pk.card === 'quick' ? 1 : 0;
       att.ap = Math.min(att.maxAp, att.ap + T.apOnLand + nextHitAp);
     }
