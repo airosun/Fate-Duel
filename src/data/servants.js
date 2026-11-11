@@ -86,7 +86,7 @@ export const SERVANTS = {
   medea: {
     id: 'medea', name: 'Medea', class: 'Caster', pronouns: 'she/her',
     fgoHp: 8643, fgoAtk: 7418, fgoNpAtk: 1.64, fgoNpDef: 3,
-    favoredCard: 'arts', hpMult: 1.006, maxAp: 12,
+    favoredCard: 'arts', hpMult: 1.026, maxAp: 12,
     passives: [
       classPassive('territoryCreation', 'A'),
       unique("Hecate's Staff", "Her debuffs ignore up to 25% of the enemy's Debuff Resist",
@@ -96,7 +96,7 @@ export const SERVANTS = {
       { id: 'high_speed', name: 'High-Speed Divine Words A', cost: 4,
         desc: "NP +50%",
         effects: [{ type: 'npCharge', value: 50 }] },
-      { id: 'argon_coin', name: 'Argon Coin: The Golden Fleece', cost: 3,
+      { id: 'argon_coin', name: 'Argon Coin: The Golden Fleece', cost: 3, costStep: 3,
         desc: "Heal 20% HP; AP +2",
         effects: [{ type: 'heal', value: 20 }, { type: 'apGain', value: 2 }] },
       { id: 'witch_of_colchis', name: 'Witch of Colchis A', cost: 6,
@@ -196,7 +196,7 @@ export const SERVANTS = {
       { id: 'protection_from_arrows', name: 'Protection from Arrows B', cost: 4,
         desc: "Applies Evade and Damage Cut 10% (2 turns)",
         effects: [{ type: 'evade', turns: 2 }, { type: 'damageCut', value: 10, turns: 2 }] },
-      { id: 'disengage', name: 'Disengage C', cost: 4,
+      { id: 'disengage', name: 'Disengage C', cost: 4, costStep: 3,
         desc: "Cleanses his debuffs; Heal 15% HP",
         effects: [{ type: 'cleanse' }, { type: 'heal', value: 15 }] },
     ],
@@ -326,7 +326,7 @@ export const SERVANTS = {
   hundred_faces: {
     id: 'hundred_faces', name: 'Hassan of the Hundred Faces', class: 'Assassin', pronouns: 'they/them',
     fgoHp: 9310, fgoAtk: 6686, fgoNpAtk: 0.48, fgoNpDef: 4,
-    favoredCard: 'arts', maxAp: 10,
+    favoredCard: 'arts', hpMult: 1.03, maxAp: 10,
     passives: [
       classPassive('presenceConcealment', 'A'),
       unique('One Hundred Personas', "Regular attacks against them have a 10% chance to miss (Sure Hit ignores this)",
@@ -343,7 +343,7 @@ export const SERVANTS = {
                   { type: 'cardUp', card: 'quick', value: 25, turns: 3, chance: 80 },
                   { type: 'cardUp', card: 'arts', value: 25, turns: 3, chance: 80 },
                   { type: 'cardUp', card: 'buster', value: 25, turns: 3, chance: 80 }] },
-      { id: 'battle_retreat', name: 'Battle Retreat B', cost: 3,
+      { id: 'battle_retreat', name: 'Battle Retreat B', cost: 3, costStep: 3,
         desc: "Heal 30% HP; removes all of their own buffs (passives stay)",
         effects: [{ type: 'removeBuffs' }, { type: 'heal', value: 30 }] },
     ],
@@ -467,7 +467,7 @@ export const SERVANTS = {
   siegfried: {
     id: 'siegfried', name: 'Siegfried', class: 'Saber', pronouns: 'he/him',
     fgoHp: 14165, fgoAtk: 8181, fgoNpAtk: 0.83, fgoNpDef: 3,
-    favoredCard: 'buster', hpMult: 1.012, maxAp: 10,
+    favoredCard: 'buster', hpMult: 1.027, maxAp: 10,
     passives: [
       classPassive('riding', 'B'),
       unique("Fafnir's Blood", "A landed regular attack has a 35% chance to mark the enemy as a Dragon (2 turns)",
@@ -477,7 +477,7 @@ export const SERVANTS = {
       { id: 'avaricious_gold', name: 'Avaricious Gold A', cost: 5,
         desc: "NP +20%; NP gain +30% and ATK +15% (3 turns)",
         effects: [{ type: 'npCharge', value: 20 }, { type: 'npGainUp', value: 30, turns: 3 }, { type: 'atkUp', value: 15, turns: 3 }] },
-      { id: 'disengage', name: 'Disengage A', cost: 4,
+      { id: 'disengage', name: 'Disengage A', cost: 4, costStep: 3,
         desc: "Cleanses his debuffs; Heal 20% HP",
         effects: [{ type: 'cleanse' }, { type: 'heal', value: 20 }] },
       { id: 'dragon_slayer', name: 'Dragon Slayer A++', cost: 5,
@@ -551,7 +551,7 @@ export const SERVANTS = {
   vlad: {
     id: 'vlad', name: 'Vlad III', class: 'Lancer', pronouns: 'he/him',
     fgoHp: 15086, fgoAtk: 11499, fgoNpAtk: 0.5, fgoNpDef: 5,
-    favoredCard: 'arts', maxAp: 10, hpMult: 0.725, // 25% below FGO-derived HP: Protection of Faith is an extra life
+    favoredCard: 'arts', maxAp: 10, hpMult: 0.732, // 25% below FGO-derived HP: Protection of Faith is an extra life
     passives: [
       classPassive('madness', 'EX'),
       unique('Protection of Faith', "Guts once: revives at 15% HP; on revival, NP gain +30% for the rest of the battle (a normal buff, so it can be removed)",
@@ -636,7 +636,7 @@ export const SERVANTS = {
   astolfo: {
     id: 'astolfo', name: 'Astolfo', class: 'Rider', pronouns: 'they/them',
     fgoHp: 11172, fgoAtk: 8937, fgoNpAtk: 0.66, fgoNpDef: 1,
-    favoredCard: 'quick', hpMult: 0.985, maxAp: 10,
+    favoredCard: 'quick', hpMult: 0.995, maxAp: 10,
     passives: [
       classPassive('magicResistance', 'A'),
       classPassive('riding', 'A+'),
@@ -665,7 +665,7 @@ export const SERVANTS = {
   jack: {
     id: 'jack', name: 'Jack the Ripper', class: 'Assassin', pronouns: 'she/her',
     fgoHp: 12696, fgoAtk: 11557, fgoNpAtk: 1.07, fgoNpDef: 4,
-    favoredCard: 'quick', hpMult: 0.99, maxAp: 10,
+    favoredCard: 'quick', hpMult: 1.015, maxAp: 10,
     passives: [
       classPassive('presenceConcealment', 'A+'),
       unique('The Misty Night of London', "When her Quick attack meets a Buster attack, a 20% chance her Quick wins the clash instead",
@@ -679,7 +679,7 @@ export const SERVANTS = {
       { id: 'information_erasure', name: 'Information Erasure B', cost: 5,
         desc: "Removes the enemy's buffs (passives stay); Enemy AP −2",
         effects: [{ type: 'removeBuffs', target: 'enemy' }, { type: 'apDrain', value: 2, target: 'enemy' }] },
-      { id: 'surgery', name: 'Surgery E', cost: 4,
+      { id: 'surgery', name: 'Surgery E', cost: 4, costStep: 3,
         desc: "Heal 20% HP; AP +2",
         effects: [{ type: 'heal', value: 20 }, { type: 'apGain', value: 2 }] },
     ],
@@ -691,7 +691,7 @@ export const SERVANTS = {
   semiramis: {
     id: 'semiramis', name: 'Semiramis', class: 'Assassin', pronouns: 'she/her',
     fgoHp: 13266, fgoAtk: 11309, fgoNpAtk: 0.39, fgoNpDef: 4,
-    favoredCard: 'arts', maxAp: 10,
+    favoredCard: 'arts', hpMult: 0.99, maxAp: 10,
     passives: [
       classPassive('presenceConcealment', 'C+'),
       classPassive('territoryCreation', 'EX'),
@@ -758,7 +758,7 @@ export const SERVANTS = {
   avicebron: {
     id: 'avicebron', name: 'Avicebron', class: 'Caster', pronouns: 'he/him',
     fgoHp: 9981, fgoAtk: 6376, fgoNpAtk: 0.61, fgoNpDef: 3,
-    favoredCard: 'arts', maxAp: 10,
+    favoredCard: 'arts', hpMult: 1.06, maxAp: 10,
     passives: [
       classPassive('territoryCreation', 'B'),
       unique("Golem's Support", "A landed Buster attack has a 40% chance of a Golem strike for 30% of its damage",
@@ -771,7 +771,7 @@ export const SERVANTS = {
       { id: 'high_speed_avi', name: 'High-Speed Incantation B+', cost: 4,
         desc: "NP +40%",
         effects: [{ type: 'npCharge', value: 40 }] },
-      { id: 'fig_tree', name: 'Fig Tree of Tranquility EX', cost: 5,
+      { id: 'fig_tree', name: 'Fig Tree of Tranquility EX', cost: 5, costStep: 3,
         desc: "Heal 30% HP; below 30% HP, Applies Invincible (this turn) instead of the heal",
         effects: [{ type: 'heal', value: 30, condition: 'hpAtLeast', threshold: 30 },
                   { type: 'invincible', condition: 'hpBelow', threshold: 30 }] },
@@ -812,7 +812,7 @@ export const SERVANTS = {
   spartacus: {
     id: 'spartacus', name: 'Spartacus', class: 'Berserker', pronouns: 'he/him',
     fgoHp: 7722, fgoAtk: 5073, fgoNpAtk: 1.01, fgoNpDef: 5,
-    favoredCard: 'buster', maxAp: 10, hpMult: 0.85, // 15% below FGO-derived HP: Unyielding Will is a guaranteed last NP
+    favoredCard: 'buster', maxAp: 10, hpMult: 0.865, // 15% below FGO-derived HP: Unyielding Will is a guaranteed last NP
     passives: [
       classPassive('madness', 'EX'),
       unique('Unyielding Will', "Once, a lethal blow leaves him at 1 HP with a full NP gauge. Next turn he must fire his NP and can't fall before it lands; then he falls unless it took the enemy down",
@@ -825,7 +825,7 @@ export const SERVANTS = {
       { id: 'insurrection', name: 'Insurrection A', cost: 4,
         desc: "NP +30%; NP gain +30% (3 turns)",
         effects: [{ type: 'npCharge', value: 30 }, { type: 'npGainUp', value: 30, turns: 3 }] },
-      { id: 'triumphant_return', name: 'Triumphant Return of the Sword B', cost: 5,
+      { id: 'triumphant_return', name: 'Triumphant Return of the Sword B', cost: 5, costStep: 3,
         desc: "Buster +30% (3 turns); Heal 25% HP",
         effects: [{ type: 'cardUp', card: 'buster', value: 30, turns: 3 }, { type: 'heal', value: 25 }] },
     ],

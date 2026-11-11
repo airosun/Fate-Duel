@@ -71,6 +71,7 @@ function createPlayer(servant, { blockUniques = false } = {}) {
     revived: false,
     npMode: servant.np?.defaultMode ?? null,
     lastSkillId: null,
+    skillCount: {},
     empower: false,
     buffs: [],
     stats: newStats(),
@@ -182,13 +183,18 @@ const sumBuff = (p, type, card) =>
     .reduce((s, b) => s + b.value, 0);
 const hasBuff = (p, type) => p.buffs.some(b => b.type === type);
 
+// Healing skills with costStep cost that much more AP each time they're used (anti-stall).
+export function skillCost(skill, p) {
+  return skill.cost + (skill.costStep ?? 0) * (p?.skillCount?.[skill.id] ?? 0);
+}
+
 export function getLegalActions(state, idx) {
   const p = state.players[idx];
   const servant = state.servants[idx];
   // Taunt (Achilles' spear): this turn the master may only attack (no skills, no NP)
   const taunted = p.buffs.some(b => b.type === 'taunt');
   const skills = taunted ? [] : servant.skills
-    .filter(s => p.ap >= s.cost && p.lastSkillId !== s.id)
+    .filter(s => p.ap >= skillCost(s, p) && p.lastSkillId !== s.id)
     .map(s => s.id);
   const seals = [];
   if (p.seals >= 1) seals.push('heal', 'recharge');
@@ -622,7 +628,7 @@ function resolveTurnInner(prev, actions, opts) {
     const skill = skillUses[i];
     P[i].lastSkillId = skill ? skill.id : null;
     if (!skill) continue;
-    P[i].ap -= skill.cost;
+    P[i].ap -= skillCost(skill, P[i]);
     // Confusion (Troias Tragōidia): a chance the skill doesn't go off (AP is still spent). Ends once it triggers.
     const conf = P[i].buffs.find(b => b.type === 'confusion');
     if (conf) {
@@ -634,6 +640,10 @@ function resolveTurnInner(prev, actions, opts) {
         say(`${P[i].name} is confused and fumbles ${skill.name}!`, { type: 'blocked', player: i, blocked: 'confusion' });
         continue;
       }
+    }
+    if (skill.costStep) {
+      P[i].skillCount = { ...P[i].skillCount, [skill.id]: (P[i].skillCount?.[skill.id] ?? 0) + 1 };
+      say(`${skill.name} will cost ${skillCost(skill, P[i])} AP next time.`, { type: 'info', player: i });
     }
     const option = skill.options?.find(o => o.id === mains[i].option);
     const effects = skill.effects.map(e => (e.type === 'setNpMode' ? { ...e, value: option.id } : e));

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createMatch, resolveTurn, getLegalActions, validateAction, foresightView } from '../src/engine/engine.js';
+import { createMatch, resolveTurn, getLegalActions, validateAction, foresightView, skillCost } from '../src/engine/engine.js';
 import { SERVANTS } from '../src/data/servants.js';
 import { TUNING as T } from '../src/engine/constants.js';
 
@@ -1360,4 +1360,26 @@ test("NP drain beats the attacker's NP gain: Amakusa's Grail vs Iskandar's Arts 
   s2.players[0].ap = 10; s2.players[1].np = 60;
   const r2 = resolveTurn(s2, [{ ...skill('prayer_long_journey'), choice: 'left' }, atk('arts')]);
   assert.ok(r2.state.players[1].np > 60);
+});
+
+test('Healing skills cost 3 more AP each time they are used', () => {
+  let s = createMatch(SERVANTS.hundred_faces, dummy('B'), { seed: 1 });
+  const p = () => s.players[0];
+  const sk = SERVANTS.hundred_faces.skills.find(k => k.id === 'battle_retreat');
+  assert.equal(skillCost(sk, p()), 3);
+  s.players[0].ap = 12;
+  s = resolveTurn(s, [skill('battle_retreat'), atk('quick')]).state;
+  assert.equal(skillCost(sk, p()), 6);
+  const apAfter = p().ap;
+  s = resolveTurn(s, [atk('arts'), atk('quick')]).state;           // can't repeat it back to back anyway
+  s.players[0].ap = 5;
+  assert.ok(!getLegalActions(s, 0).skills.includes('battle_retreat'));   // 5 < 6
+  s.players[0].ap = 6;
+  assert.ok(getLegalActions(s, 0).skills.includes('battle_retreat'));
+  s = resolveTurn(s, [skill('battle_retreat'), atk('quick')]).state;
+  assert.equal(skillCost(sk, p()), 9);
+  // other skills are unaffected
+  const lib = SERVANTS.hundred_faces.skills.find(k => !k.costStep);
+  assert.equal(skillCost(lib, p()), lib.cost);
+  assert.ok(apAfter >= 0);
 });

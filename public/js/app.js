@@ -3,7 +3,7 @@
 //  - Online mode: the server owns the match; this client renders snapshots and
 //    sends intents (pick, lock in, rematch). Screens are shared between modes.
 
-import { createMatch, getLegalActions, resolveTurn, validateAction, deriveStats, npOf, foresightView } from '/src/engine/engine.js';
+import { createMatch, getLegalActions, resolveTurn, validateAction, deriveStats, npOf, foresightView, skillCost } from '/src/engine/engine.js';
 import { ROSTER } from '/src/data/servants.js';
 import { TUNING as T, CARDS } from '/src/engine/constants.js';
 import { CARD_LABEL, describeSkill, describeNp, describeEffects, buffChip } from './describe.js';
@@ -482,7 +482,7 @@ function kitHtml(s) {
         <div class="kit-row"><b>${esc(p.name)}${p.kind === 'unique' ? ' <em class="unique-tag">Unique</em>' : ''}</b><span>${glossify(esc(p.desc ?? describeEffects(p.effects)))}</span></div>`).join('')}` : ''}
       <h3>Skills</h3>
       ${s.skills.map(sk => `
-        <div class="kit-row"><b>${esc(sk.name)} <em class="ap-cost">${sk.cost} AP</em></b><span>${glossify(esc(describeSkill(sk)))}${sk.options ? ` (${sk.options.map(o => o.label).join(' / ')})` : ''}</span></div>`).join('')}
+        <div class="kit-row"><b>${esc(sk.name)} <em class="ap-cost">${sk.cost} AP${sk.costStep ? ` +${sk.costStep}/use` : ''}</em></b><span>${glossify(esc(describeSkill(sk)))}${sk.options ? ` (${sk.options.map(o => o.label).join(' / ')})` : ''}</span></div>`).join('')}
       <h3>Noble Phantasm</h3>
       <div class="kit-row np-row"><b>${esc(s.np.name)} ${s.np.modes ? '<span class="card-chip all">Modes</span>' : `<span class="card-chip ${s.np.card}">${CARD_LABEL[s.np.card]}</span>`}</b>
         <span>${glossify(esc(describeNp(s.np)))}</span></div>
@@ -816,9 +816,10 @@ function controlsHtml() {
         <div class="skills">
           ${s.skills.map((sk, k) => {
             const ok = legal.skills.includes(sk.id);
-            const why = legal.taunted ? 'Taunted: attacks only' : p.lastSkillId === sk.id ? 'Used last turn' : (p.ap < sk.cost ? `Needs ${sk.cost} AP` : '');
+            const why = legal.taunted ? 'Taunted: attacks only' : p.lastSkillId === sk.id ? 'Used last turn' : (p.ap < skillCost(sk, p) ? `Needs ${skillCost(sk, p)} AP` : '');
+            const cost = skillCost(sk, p), raised = cost > sk.cost;
             return `<button class="skill ${sel('skill', sk.id) ? 'selected' : ''}" data-skill="${sk.id}" ${ok ? '' : 'disabled'} title="Key: ${k + 1}">
-              <span class="skill-top"><b>${esc(sk.name)}</b><em class="ap-cost">${sk.cost} AP</em></span>
+              <span class="skill-top"><b>${esc(sk.name)}</b><em class="ap-cost${raised ? ' raised' : ''}"${raised ? ` title="Base ${sk.cost} AP, +${sk.costStep} per use"` : ''}>${cost} AP</em></span>
               <small>${why ? esc(why) : glossify(esc(describeSkill(sk)))}</small>
             </button>`;
           }).join('')}
@@ -944,7 +945,7 @@ function refCardHtml(i, kind, id) {
     return `<b>${esc(np.name)}${np.modeName ? ` (${esc(np.modeName)})` : ''}</b><span class="ref-meta">${esc(s.name)} · Noble Phantasm · ${CARD_LABEL[np.card]}</span><p>${glossify(esc(describeNp(np)))}</p>${modes}`;
   }
   const sk = s.skills.find(k => k.id === id);
-  return `<b>${esc(sk.name)}</b><span class="ref-meta">${esc(s.name)} · Skill · ${sk.cost} AP</span><p>${glossify(esc(describeSkill(sk)))}</p>`;
+  return `<b>${esc(sk.name)}</b><span class="ref-meta">${esc(s.name)} · Skill · ${sk.cost} AP${sk.costStep ? ` (+${sk.costStep} per use)` : ''}</span><p>${glossify(esc(describeSkill(sk)))}</p>`;
 }
 document.addEventListener('click', e => {
   const btn = e.target.closest?.('.log-ref');

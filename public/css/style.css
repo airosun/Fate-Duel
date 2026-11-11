@@ -644,3 +644,4 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
 .term { text-decoration: underline dotted rgba(243, 220, 147, .75); text-underline-offset: 2px; cursor: help; }
 .term:focus-visible { outline: 1px solid var(--gold); outline-offset: 1px; border-radius: 2px; }
 #tipbox { pointer-events: none; }
+.ap-cost.raised { color: #ff9f6b; }

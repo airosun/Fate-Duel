@@ -116,7 +116,8 @@ export const describeEffects = (effects = []) =>
   effects.map(e => describeEffect(e) + (e.condition === 'afterRevive' ? ' (after revive)' : '')).join(' · ');
 
 export function describeSkill(s) {
-  return s.desc ?? describeEffects(s.effects);
+  const base = s.desc ?? describeEffects(s.effects);
+  return s.costStep ? `${base}. Costs ${s.costStep} more AP each time it's used` : base;
 }
 
 export function describeNp(np) {

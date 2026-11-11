@@ -60,7 +60,7 @@ function servantHtml(s) {
     <section>
       <h5>Skills</h5>
       <ul class="rows">${s.skills.map(sk => `
-        <li><span class="name">${esc(sk.name)}<span class="ap">${sk.cost} AP</span></span><span>${gl(esc(sk.desc ?? ''))}${sk.options ? ` <em>Options: ${sk.options.map(o => esc(o.label)).join(' / ')}</em>` : ''}</span></li>`).join('')}
+        <li><span class="name">${esc(sk.name)}<span class="ap">${sk.cost} AP${sk.costStep ? ` +${sk.costStep}/use` : ''}</span></span><span>${gl(esc(sk.desc ?? ''))}${sk.costStep ? `. Costs ${sk.costStep} more AP each time it's used` : ''}${sk.options ? ` <em>Options: ${sk.options.map(o => esc(o.label)).join(' / ')}</em>` : ''}</span></li>`).join('')}
       </ul>
     </section>
     ${npHtml(s.np)}
