@@ -35,7 +35,7 @@ function npHtml(np) {
 }
 
 function servantHtml(s) {
-  const { hp, atk } = deriveStats(s);
+  const { hp, atk, crit } = deriveStats(s);
   const initials = s.name.split(/\s+/).map(w => w[0]).slice(0, 2).join('');
   const passives = s.passives ?? [];
   return `
@@ -48,6 +48,7 @@ function servantHtml(s) {
       <div><dt>HP</dt><dd>${hp.toLocaleString('en-US')}${s.hpMult ? `<small>×${s.hpMult}</small>` : ''}</dd></div>
       <div><dt>ATK</dt><dd>${atk}</dd></div>
       <div><dt>Max AP</dt><dd>${maxAp(s)}</dd></div>
+      <div><dt>Crit</dt><dd>${crit}%</dd></div>
       <div class="wide"><dt>NP gain</dt><dd>${npGain(s.fgoNpAtk, T.refFgoNpAtk)}× <small>atk</small> · ${npGain(s.fgoNpDef, T.refFgoNpDef)}× <small>def</small></dd></div>
       <div><dt>Favored</dt><dd>${favoredAll(s) ? '<span class="card all">All</span>' : chip(s.favoredCard)}</dd></div>
     </dl>

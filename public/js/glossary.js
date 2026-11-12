@@ -30,6 +30,7 @@ export const GLOSSARY = [
   { term: 'Petrify', re: 'Petrif(?:y|ied)', def: 'Drains AP now, and the servant gains less AP from each attack while it lasts.' },
   { term: 'Dragon', def: 'A mark with no effect on its own. Anti-Dragon effects (Dragon Slayer, Balmung) deal extra damage to it.' },
   { term: 'Power Boost', def: 'Extra damage for each debuff on him: Boost = 10% + 20% × (1 − current HP ÷ max HP). At full HP that is +10% per debuff, rising to +30% per debuff near 0 HP.' },
+  { term: 'Critical', re: 'Crit(?:ical)?(?: chance| Chance)?', def: 'Regular attacks (never NPs) can crit. Quick and Arts crits deal 1.5× damage; Quick also gives +1 AP and Arts extra NP charge. Buster crits deal 1.75× damage.' },
   { term: 'Instant Kill', def: "Kills outright when it lands. Revives don't trigger." },
   { term: 'No Boosts', def: 'Deals base damage: ATK up, card effectiveness, NP damage up, flat damage and other boosts (passives too) are ignored. Debuffs still apply.' },
   { term: 'Foresight', def: "See the opponent's locked-in action before choosing. The opponent is told and can't change it that turn." },

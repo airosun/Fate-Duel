@@ -464,7 +464,7 @@ function renderSpectateSelect() {
 // ---------- servant select ----------
 
 function kitHtml(s) {
-  const { hp, atk } = deriveStats(s);
+  const { hp, atk, crit } = deriveStats(s);
   const passives = s.passives ?? (s.passive ? [s.passive] : []);
   return `
     <div class="kit">
@@ -476,6 +476,7 @@ function kitHtml(s) {
         <div><label>HP</label><b>${hp}</b></div>
         <div><label>ATK</label><b>${atk}</b></div>
         <div><label>Max AP</label><b>${s.maxAp ?? T.defaultMaxAp}</b></div>
+        <div><label><span class="term" tabindex="0" data-tip-title="Critical" data-tip="${CRIT_TIP}">Crit</span></label><b>${crit}%</b></div>
         <div><label>Favored</label>${favoredAll(s) ? '<b class="card-chip all">All</b>' : `<b class="card-chip ${s.favoredCard}">${CARD_LABEL[s.favoredCard] ?? '—'}</b>`}</div>
       </div>
       ${passives.length ? `<h3>Passives</h3>${passives.map(p => `
@@ -489,6 +490,7 @@ function kitHtml(s) {
     </div>`;
 }
 
+const CRIT_TIP = `Regular attacks (never NPs) can crit. Quick and Arts crits deal 1.5× damage; Quick also gives +${T.crit.quickAp} AP and Arts extra NP charge. Buster crits deal 1.75× damage. Base chance comes from the servant's star absorption (20% max).`;
 const CLASS_ORDER = ['Saber', 'Archer', 'Lancer', 'Rider', 'Caster', 'Assassin', 'Berserker', 'Ruler', 'Avenger'];
 const SORTED = [...ROSTER].sort((a, b) => a.name.localeCompare(b.name));
 const CLASSES = CLASS_ORDER.filter(c => ROSTER.some(s => s.class === c))

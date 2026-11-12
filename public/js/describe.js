@@ -95,6 +95,7 @@ function describeEffectCore(e) {
     case 'cardVuln': return `${who}takes +${v}% ${c} damage${turnsText(e)}`;
     case 'mirrorAtkUp': return `Copies ${v}% of enemy ATK buffs`;
     case 'apRecoveryUp': return `+${v} AP from attacks${turnsText(e)}`;
+    case 'critUp': return `Critical chance +${v}% on regular attacks.`;
     case 'npGainDefUp': return `Gains ${v}% more NP when hit.`;
     case 'worldsEvils': {
       const hpPct = owner?.hp != null ? owner.hp / owner.maxHp : 1;
@@ -142,7 +143,7 @@ const BUFF_LABEL = {
   nextHitUp: 'Next Hit↑', affinityAll: 'All Cards Favored', apRecoveryDown: 'AP Recovery↓',
   bonusVsStatus: 'vs Petrified↑', buffFailChance: 'Breaker Gorgon', copyEnemyUnique: 'Trace On',
   instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF', terror: 'Terror', curse: 'Curse', divineIntervention: 'Divine Intervention', npDown: 'NP Dmg↓', buffDurationUp: 'Buffs +1T', debuffDurationUp: 'Debuffs +1T', npRegen: 'NP Regen', shock: 'Shock', burn: 'Burn', lastStand: 'Unyielding Will', lastStandActive: 'Blaze of Glory', hpRegen: 'HP Regen', madness: 'Madness', charm: 'Charm', starCrossed: 'Star-Crossed', rpsOverride: 'Misty Night', poison: 'Poison', nullifyBoosts: 'No Boosts', npOnlyKo: 'Kosmos', taunt: 'Taunted', confusion: 'Confusion', stun: 'Trap', debuffOnHit: 'Black Luna', apChance: 'AP Chance', npSeal: 'NP Seal', debuffResistDown: 'Debuff Res↓', doubleShot: 'Golden Apple', foresight: 'Foresight', maxApUp: 'Max AP↑', statusOnHit: "Fafnir's Blood", dmgVsStatus: 'vs Dragon↑', extraHitChance: 'Sea Demons', missChance: 'Decoys', buffSuccessUp: 'Buff Success↑', cardVuln: '↓ Resist',
-  mirrorAtkUp: 'Arms Mastery', apRecoveryUp: 'AP Recovery↑', npGainDefUp: 'NP Gain (hit)↑', worldsEvils: 'Power Boost',
+  mirrorAtkUp: 'Arms Mastery', apRecoveryUp: 'AP Recovery↑', npGainDefUp: 'NP Gain (hit)↑', critUp: 'Crit Chance↑', worldsEvils: 'Power Boost',
 };
 
 // Plain-language explanation of what a buff, debuff or passive does.

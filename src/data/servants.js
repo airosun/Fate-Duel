@@ -25,7 +25,7 @@ import { classPassive, unique } from './passives.js';
 export const SERVANTS = {
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   artoria: {
-    id: 'artoria', name: 'Artoria Pendragon', class: 'Saber', pronouns: 'she/her',
+    id: 'artoria', name: 'Artoria Pendragon', class: 'Saber', pronouns: 'she/her', starAbsorb: 102,
     fgoHp: 15150, fgoAtk: 11221, fgoNpAtk: 0.86, fgoNpDef: 3,
     favoredCard: 'buster', maxAp: 10,
     passives: [
@@ -54,9 +54,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   heracles: {
-    id: 'heracles', name: 'Heracles', class: 'Berserker', pronouns: 'he/him',
+    id: 'heracles', name: 'Heracles', class: 'Berserker', pronouns: 'he/him', starAbsorb: 10,
     fgoHp: 10327, fgoAtk: 10655, fgoNpAtk: 1.07, fgoNpDef: 5,
-    hpMult: 0.73, // 27% below FGO-derived HP: his HP is split across two lives
+    hpMult: 0.746, // 27% below FGO-derived HP: his HP is split across two lives
     favoredCard: 'buster', maxAp: 8,
     passives: [
       classPassive('madness', 'B'),
@@ -84,7 +84,7 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   medea: {
-    id: 'medea', name: 'Medea', class: 'Caster', pronouns: 'she/her',
+    id: 'medea', name: 'Medea', class: 'Caster', pronouns: 'she/her', starAbsorb: 50,
     fgoHp: 8643, fgoAtk: 7418, fgoNpAtk: 1.64, fgoNpDef: 3,
     favoredCard: 'arts', hpMult: 1.026, maxAp: 12,
     passives: [
@@ -115,9 +115,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   kojirou: {
-    id: 'kojirou', name: 'Sasaki Kojirou', class: 'Assassin', pronouns: 'he/him',
+    id: 'kojirou', name: 'Sasaki Kojirou', class: 'Assassin', pronouns: 'he/him', starAbsorb: 102,
     fgoHp: 6220, fgoAtk: 5735, fgoNpAtk: 1.05, fgoNpDef: 4,
-    favoredCard: 'quick', hpMult: 1.012, maxAp: 10,
+    favoredCard: 'quick', hpMult: 1.022, maxAp: 10,
     passives: [
       classPassive('presenceConcealment', 'D'),
       unique('Heaven Among the Mountains', "His Quick attacks Pierce Evade",
@@ -141,9 +141,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   emiya: {
-    id: 'emiya', name: 'EMIYA', class: 'Archer', pronouns: 'he/him',
+    id: 'emiya', name: 'EMIYA', class: 'Archer', pronouns: 'he/him', starAbsorb: 145,
     fgoHp: 11521, fgoAtk: 9398, fgoNpAtk: 0.51, fgoNpDef: 3,
-    favoredCard: 'arts', hpMult: 0.975, maxAp: 10,
+    favoredCard: 'arts', hpMult: 0.961, maxAp: 10,
     passives: [
       classPassive('magicResistance', 'D'),
       classPassive('independentAction', 'B'),
@@ -179,9 +179,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   cu: {
-    id: 'cu', name: 'Cú Chulainn', class: 'Lancer', pronouns: 'he/him',
+    id: 'cu', name: 'Cú Chulainn', class: 'Lancer', pronouns: 'he/him', starAbsorb: 87,
     fgoHp: 9593, fgoAtk: 7239, fgoNpAtk: 1.07, fgoNpDef: 4,
-    hpMult: 0.83, // 17% below FGO-derived HP: Battle Continuation is an extra life
+    hpMult: 0.837, // 17% below FGO-derived HP: Battle Continuation is an extra life
     favoredCard: 'quick', maxAp: 10,
     passives: [
       classPassive('magicResistance', 'C'),
@@ -208,9 +208,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   medusa: {
-    id: 'medusa', name: 'Medusa', class: 'Rider', pronouns: 'she/her',
+    id: 'medusa', name: 'Medusa', class: 'Rider', pronouns: 'she/her', starAbsorb: 194,
     fgoHp: 8937, fgoAtk: 7200, fgoNpAtk: 0.58, fgoNpDef: 3,
-    favoredCard: 'quick', hpMult: 1.005, maxAp: 10,
+    favoredCard: 'quick', hpMult: 0.997, maxAp: 10,
     passives: [
       classPassive('magicResistance', 'B'),
       classPassive('independentAction', 'C'),
@@ -239,7 +239,7 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   hassan: {
-    id: 'hassan', name: 'Hassan of the Cursed Arm', class: 'Assassin', pronouns: 'he/him',
+    id: 'hassan', name: 'Hassan of the Cursed Arm', class: 'Assassin', pronouns: 'he/him', starAbsorb: 97,
     fgoHp: 7594, fgoAtk: 6280, fgoNpAtk: 1.07, fgoNpDef: 4,
     favoredCard: 'quick', hpMult: 1.01, maxAp: 10,
     passives: [
@@ -265,7 +265,7 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   gilgamesh: {
-    id: 'gilgamesh', name: 'Gilgamesh', class: 'Archer', pronouns: 'he/him',
+    id: 'gilgamesh', name: 'Gilgamesh', class: 'Archer', pronouns: 'he/him', starAbsorb: 153,
     fgoHp: 13097, fgoAtk: 12280, fgoNpAtk: 0.34, fgoNpDef: 3,
     hpMult: 1.06, // lore: the King of Heroes should edge out every matchup (Artoria closest)
     favoredCard: 'buster', maxAp: 10,
@@ -295,9 +295,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   iskandar: {
-    id: 'iskandar', name: 'Iskandar', class: 'Rider', pronouns: 'he/him',
+    id: 'iskandar', name: 'Iskandar', class: 'Rider', pronouns: 'he/him', starAbsorb: 205,
     fgoHp: 13219, fgoAtk: 11560, fgoNpAtk: 0.86, fgoNpDef: 3,
-    favoredCard: 'buster', maxAp: 10,
+    favoredCard: 'buster', hpMult: 0.978, maxAp: 10,
     passives: [
       classPassive('magicResistance', 'D'),
       classPassive('riding', 'A+'),
@@ -324,7 +324,7 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   hundred_faces: {
-    id: 'hundred_faces', name: 'Hassan of the Hundred Faces', class: 'Assassin', pronouns: 'they/them',
+    id: 'hundred_faces', name: 'Hassan of the Hundred Faces', class: 'Assassin', pronouns: 'they/them', starAbsorb: 97,
     fgoHp: 9310, fgoAtk: 6686, fgoNpAtk: 0.48, fgoNpDef: 4,
     favoredCard: 'arts', hpMult: 1.03, maxAp: 10,
     passives: [
@@ -354,9 +354,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   lancelot: {
-    id: 'lancelot', name: 'Lancelot', class: 'Berserker', pronouns: 'he/him',
+    id: 'lancelot', name: 'Lancelot', class: 'Berserker', pronouns: 'he/him', starAbsorb: 10,
     fgoHp: 10327, fgoAtk: 10477, fgoNpAtk: 0.5, fgoNpDef: 5,
-    favoredCard: 'buster', maxAp: 10,
+    favoredCard: 'buster', hpMult: 1.025, maxAp: 10,
     passives: [
       classPassive('magicResistance', 'E'),
       classPassive('madness', 'C'),
@@ -381,9 +381,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   gilles: {
-    id: 'gilles', name: 'Gilles de Rais', class: 'Caster', pronouns: 'he/him',
+    id: 'gilles', name: 'Gilles de Rais', class: 'Caster', pronouns: 'he/him', starAbsorb: 48,
     fgoHp: 9506, fgoAtk: 6514, fgoNpAtk: 1.58, fgoNpDef: 3,
-    favoredCard: 'arts', hpMult: 0.985, maxAp: 10,
+    favoredCard: 'arts', hpMult: 0.997, maxAp: 10,
     passives: [
       classPassive('territoryCreation', 'B'),
       unique('Summoning: Sea Demons', "A landed Arts attack has a 40% chance of a Sea Demon follow-up hit for 30% of its damage",
@@ -412,9 +412,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   diarmuid: {
-    id: 'diarmuid', name: 'Diarmuid Ua Duibhne', class: 'Lancer', pronouns: 'he/him',
+    id: 'diarmuid', name: 'Diarmuid Ua Duibhne', class: 'Lancer', pronouns: 'he/him', starAbsorb: 87,
     fgoHp: 10098, fgoAtk: 6877, fgoNpAtk: 0.79, fgoNpDef: 4,
-    favoredCard: 'quick', hpMult: 1.02, maxAp: 10,
+    favoredCard: 'quick', hpMult: 1.012, maxAp: 10,
     passives: [
       classPassive('magicResistance', 'B'),
       unique("Knight's Oath", "Quick +10% and Arts +10%",
@@ -439,7 +439,7 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   mordred: {
-    id: 'mordred', name: 'Mordred', class: 'Saber', pronouns: 'she/her',
+    id: 'mordred', name: 'Mordred', class: 'Saber', pronouns: 'she/her', starAbsorb: 98,
     fgoHp: 14680, fgoAtk: 11723, fgoNpAtk: 0.56, fgoNpDef: 3,
     favoredCard: 'buster', maxAp: 10,
     passives: [
@@ -465,7 +465,7 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   siegfried: {
-    id: 'siegfried', name: 'Siegfried', class: 'Saber', pronouns: 'he/him',
+    id: 'siegfried', name: 'Siegfried', class: 'Saber', pronouns: 'he/him', starAbsorb: 97,
     fgoHp: 14165, fgoAtk: 8181, fgoNpAtk: 0.83, fgoNpDef: 3,
     favoredCard: 'buster', hpMult: 1.027, maxAp: 10,
     passives: [
@@ -491,9 +491,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   atalanta: {
-    id: 'atalanta', name: 'Atalanta', class: 'Archer', pronouns: 'she/her',
+    id: 'atalanta', name: 'Atalanta', class: 'Archer', pronouns: 'she/her', starAbsorb: 148,
     fgoHp: 12476, fgoAtk: 8633, fgoNpAtk: 0.5, fgoNpDef: 3,
-    favoredCard: 'quick', maxAp: 10,
+    favoredCard: 'quick', hpMult: 0.994, maxAp: 10,
     passives: [
       classPassive('magicResistance', 'D'),
       classPassive('independentAction', 'A'),
@@ -519,9 +519,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-09)
   chiron: {
-    id: 'chiron', name: 'Chiron', class: 'Archer', pronouns: 'he/him',
+    id: 'chiron', name: 'Chiron', class: 'Archer', pronouns: 'he/him', starAbsorb: 148,
     fgoHp: 12250, fgoAtk: 9294, fgoNpAtk: 0.68, fgoNpDef: 3,
-    favoredCard: 'arts', hpMult: 0.99, maxAp: 10,
+    favoredCard: 'arts', hpMult: 0.968, maxAp: 10,
     passives: [
       classPassive('magicResistance', 'B'),
       classPassive('independentAction', 'A'),
@@ -549,9 +549,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
   vlad: {
-    id: 'vlad', name: 'Vlad III', class: 'Lancer', pronouns: 'he/him',
+    id: 'vlad', name: 'Vlad III', class: 'Lancer', pronouns: 'he/him', starAbsorb: 9,
     fgoHp: 15086, fgoAtk: 11499, fgoNpAtk: 0.5, fgoNpDef: 5,
-    favoredCard: 'arts', maxAp: 10, hpMult: 0.732, // 25% below FGO-derived HP: Protection of Faith is an extra life
+    favoredCard: 'arts', maxAp: 10, hpMult: 0.748, // 25% below FGO-derived HP: Protection of Faith is an extra life
     passives: [
       classPassive('madness', 'EX'),
       unique('Protection of Faith', "Guts once: revives at 15% HP; on revival, NP gain +30% for the rest of the battle (a normal buff, so it can be removed)",
@@ -575,9 +575,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
   karna: {
-    id: 'karna', name: 'Karna', class: 'Lancer', pronouns: 'he/him',
+    id: 'karna', name: 'Karna', class: 'Lancer', pronouns: 'he/him', starAbsorb: 88,
     fgoHp: 13632, fgoAtk: 11976, fgoNpAtk: 0.72, fgoNpDef: 4,
-    favoredCard: 'buster', maxAp: 10,
+    favoredCard: 'buster', hpMult: 0.992, maxAp: 10,
     passives: [
       classPassive('magicResistance', 'C'),
       classPassive('riding', 'A'),
@@ -604,9 +604,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
   achilles: {
-    id: 'achilles', name: 'Achilles', class: 'Rider', pronouns: 'he/him',
+    id: 'achilles', name: 'Achilles', class: 'Rider', pronouns: 'he/him', starAbsorb: 196,
     fgoHp: 13219, fgoAtk: 11883, fgoNpAtk: 0.57, fgoNpDef: 3,
-    favoredCard: 'quick', maxAp: 10, hpMult: 0.73, // 27% below FGO-derived HP: only an NP (or Sure Hit first) can down him
+    favoredCard: 'quick', maxAp: 10, hpMult: 0.708, // 27% below FGO-derived HP: only an NP (or Sure Hit first) can down him
     passives: [
       classPassive('magicResistance', 'C'),
       classPassive('riding', 'A+'),
@@ -634,9 +634,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
   astolfo: {
-    id: 'astolfo', name: 'Astolfo', class: 'Rider', pronouns: 'they/them',
+    id: 'astolfo', name: 'Astolfo', class: 'Rider', pronouns: 'they/them', starAbsorb: 205,
     fgoHp: 11172, fgoAtk: 8937, fgoNpAtk: 0.66, fgoNpDef: 1,
-    favoredCard: 'quick', hpMult: 0.995, maxAp: 10,
+    favoredCard: 'quick', hpMult: 0.963, maxAp: 10,
     passives: [
       classPassive('magicResistance', 'A'),
       classPassive('riding', 'A+'),
@@ -663,7 +663,7 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
   jack: {
-    id: 'jack', name: 'Jack the Ripper', class: 'Assassin', pronouns: 'she/her',
+    id: 'jack', name: 'Jack the Ripper', class: 'Assassin', pronouns: 'she/her', starAbsorb: 97,
     fgoHp: 12696, fgoAtk: 11557, fgoNpAtk: 1.07, fgoNpDef: 4,
     favoredCard: 'quick', hpMult: 1.015, maxAp: 10,
     passives: [
@@ -689,7 +689,7 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
   semiramis: {
-    id: 'semiramis', name: 'Semiramis', class: 'Assassin', pronouns: 'she/her',
+    id: 'semiramis', name: 'Semiramis', class: 'Assassin', pronouns: 'she/her', starAbsorb: 102,
     fgoHp: 13266, fgoAtk: 11309, fgoNpAtk: 0.39, fgoNpDef: 4,
     favoredCard: 'arts', hpMult: 0.99, maxAp: 10,
     passives: [
@@ -720,9 +720,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
   shakespeare: {
-    id: 'shakespeare', name: 'William Shakespeare', class: 'Caster', pronouns: 'he/him',
+    id: 'shakespeare', name: 'William Shakespeare', class: 'Caster', pronouns: 'he/him', starAbsorb: 50,
     fgoHp: 8080, fgoAtk: 5798, fgoNpAtk: 1.59, fgoNpDef: 3,
-    favoredCard: 'arts', maxAp: 10,
+    favoredCard: 'arts', hpMult: 1.01, maxAp: 10,
     passives: [
       classPassive('territoryCreation', 'C'),
       unique('Works of Art', "At the start of each battle, one of his works takes the stage (its badge says which)", [{
@@ -756,7 +756,7 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
   avicebron: {
-    id: 'avicebron', name: 'Avicebron', class: 'Caster', pronouns: 'he/him',
+    id: 'avicebron', name: 'Avicebron', class: 'Caster', pronouns: 'he/him', starAbsorb: 50,
     fgoHp: 9981, fgoAtk: 6376, fgoNpAtk: 0.61, fgoNpDef: 3,
     favoredCard: 'arts', hpMult: 1.06, maxAp: 10,
     passives: [
@@ -784,9 +784,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
   frankenstein: {
-    id: 'frankenstein', name: 'Frankenstein', class: 'Berserker', pronouns: 'she/her',
+    id: 'frankenstein', name: 'Frankenstein', class: 'Berserker', pronouns: 'she/her', starAbsorb: 10,
     fgoHp: 10687, fgoAtk: 9441, fgoNpAtk: 0.83, fgoNpDef: 5,
-    favoredCard: 'buster', maxAp: 10,
+    favoredCard: 'buster', hpMult: 1.024, maxAp: 10,
     passives: [
       classPassive('madness', 'D'),
       unique('Procedure to Humanity', "A landed regular attack has a 20% chance to inflict Shock (20 per turn, 3 turns)",
@@ -810,9 +810,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
   spartacus: {
-    id: 'spartacus', name: 'Spartacus', class: 'Berserker', pronouns: 'he/him',
+    id: 'spartacus', name: 'Spartacus', class: 'Berserker', pronouns: 'he/him', starAbsorb: 9,
     fgoHp: 7722, fgoAtk: 5073, fgoNpAtk: 1.01, fgoNpDef: 5,
-    favoredCard: 'buster', maxAp: 10, hpMult: 0.865, // 15% below FGO-derived HP: Unyielding Will is a guaranteed last NP
+    favoredCard: 'buster', maxAp: 10, hpMult: 0.874, // 15% below FGO-derived HP: Unyielding Will is a guaranteed last NP
     passives: [
       classPassive('madness', 'EX'),
       unique('Unyielding Will', "Once, a lethal blow leaves him at 1 HP with a full NP gauge. Next turn he must fire his NP and can't fall before it lands; then he falls unless it took the enemy down",
@@ -835,9 +835,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
   jeanne: {
-    id: 'jeanne', name: "Jeanne d'Arc", class: 'Ruler', pronouns: 'she/her',
+    id: 'jeanne', name: "Jeanne d'Arc", class: 'Ruler', pronouns: 'she/her', starAbsorb: 99,
     fgoHp: 16500, fgoAtk: 9593, fgoNpAtk: 0.76, fgoNpDef: 3,
-    favoredCard: 'arts', maxAp: 10, hpMult: 0.728, // 27% below FGO-derived HP: regen, Divine Intervention and Magic Resistance EX
+    favoredCard: 'arts', maxAp: 10, hpMult: 0.732, // 27% below FGO-derived HP: regen, Divine Intervention and Magic Resistance EX
     passives: [
       classPassive('magicResistance', 'EX'),
       unique('Revelation from Heaven', "Heal 3% HP at the end of each turn", [{ type: 'hpRegen', value: 3 }]),
@@ -862,9 +862,9 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
   amakusa: {
-    id: 'amakusa', name: 'Amakusa Shirou', class: 'Ruler', pronouns: 'he/him',
+    id: 'amakusa', name: 'Amakusa Shirou', class: 'Ruler', pronouns: 'he/him', starAbsorb: 100,
     fgoHp: 14107, fgoAtk: 10972, fgoNpAtk: 0.86, fgoNpDef: 3,
-    favoredCard: 'buster', hpMult: 0.96, maxAp: 10,
+    favoredCard: 'buster', hpMult: 0.97, maxAp: 10,
     passives: [
       classPassive('magicResistance', 'A'),
       unique('Left Hand & Right Hand', "With his first action, his master chooses Left Hand (his buffs last 1 turn longer) or Right Hand (his debuffs on the enemy last 1 turn longer)", [{
@@ -893,7 +893,7 @@ export const SERVANTS = {
 
   // ✅ USER-DESIGNED KIT (numbers proposed by Claude, 2026-11-10)
   angra: {
-    id: 'angra', name: 'Angra Mainyu', class: 'Avenger', pronouns: 'he/him',
+    id: 'angra', name: 'Angra Mainyu', class: 'Avenger', pronouns: 'he/him', starAbsorb: 29,
     fgoHp: 7981, fgoAtk: 5683, fgoNpAtk: 0.79, fgoNpDef: 5,
     favoredCard: 'quick', maxAp: 10, atk: 200, // ATK well above FGO-derived (115): his NP deals no damage of its own. HP stays FGO-derived (user)
     passives: [

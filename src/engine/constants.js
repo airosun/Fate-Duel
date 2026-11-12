@@ -20,6 +20,16 @@ export const TUNING = {
   // multiplies an already-larger base (1.5x).
   affinityBonus: { quick: 0.15, arts: 0.15, buster: 0.08 },
 
+  // Critical hits (regular attacks only, never NPs). Base chance scales with FGO star absorption:
+  // chance = maxChance x starAbsorb / refAbsorb (Iskandar and Astolfo, 205, sit at the 20% cap).
+  crit: {
+    maxChance: 20,
+    refAbsorb: 205,
+    mult: { quick: 1.5, arts: 1.5, buster: 1.75 },
+    quickAp: 1,       // Quick crit: +1 AP
+    artsNp: 15,       // Arts crit: extra NP charge (scaled by the attacker's NP gain like any other charge)
+  },
+
   npMax: 100,
   npGainOnHit: Number(globalThis.process?.env?.NPH ?? 17),      // defender gains this when hit (attack or NP)
 

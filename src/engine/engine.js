@@ -26,13 +26,14 @@ export function deriveStats(servant, { uniquesOff = false } = {}) {
   const hpMult = uniquesOff ? mult + (1 - mult) * T.neutralizedHpRestore : mult;
   const hp = servant.hp ?? Math.round(T.baseHp * (servant.fgoHp / T.refFgoHp) ** T.statExponent * hpMult);
   const atk = servant.atk ?? Math.round(T.baseAtk * (servant.fgoAtk / T.refFgoAtk) ** T.statExponent);
-  return { hp, atk };
+  const crit = Math.round(10 * Math.min(T.crit.maxChance, T.crit.maxChance * (servant.starAbsorb ?? 0) / T.crit.refAbsorb)) / 10;
+  return { hp, atk, crit };
 }
 
 // ---------- match stats (shown on the post-battle stats screen) ----------
 export function newStats() {
   return {
-    dmg: { attack: 0, np: 0, extra: 0, curse: 0, poison: 0, shock: 0 }, biggest: { amount: 0, what: '' },
+    dmg: { attack: 0, np: 0, extra: 0, curse: 0, poison: 0, shock: 0 }, biggest: { amount: 0, what: '' }, crits: 0, crits: 0,
     attempted: { quick: 0, arts: 0, buster: 0 }, landed: { quick: 0, arts: 0, buster: 0 },
     clash: { won: 0, lost: 0, tied: 0 }, nps: { fired: 0, landed: 0, blocked: 0 },
     negated: 0, healed: 0, skills: 0, seals: 0, revives: 0, maxCombo: 0, combo: 0,
@@ -63,6 +64,7 @@ function createPlayer(servant, { blockUniques = false } = {}) {
     hp, maxHp: hp, atk,
     ap: T.startAp,
     maxAp: servant.maxAp ?? T.defaultMaxAp,
+    critChance: deriveStats(servant).crit,
     np: 0,
     npGainAtk: servant.npGain ?? (servant.fgoNpAtk ? Math.sqrt(servant.fgoNpAtk / T.refFgoNpAtk) : 1),
     npGainDef: servant.npGainDef ?? (servant.fgoNpDef ? Math.sqrt(servant.fgoNpDef / T.refFgoNpDef) : 1),
@@ -239,7 +241,7 @@ const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', '
 // Lasting positive effects a servant puts on itself (what Breaker Gorgon can make fail).
 const BUFF_TYPES = new Set(['ignoreDamageCut', 'buffSuccessUp', 'apRecoveryUp', 'atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
   'cardNpGainUp', 'debuffResist', 'guts', 'apRegen', 'busterConvert', 'flatDamage', 'sureHit', 'pierceEvade',
-  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight', 'npOnlyKo', 'debuffOnHit', 'apChance', 'rpsOverride', 'randomWork', 'starCrossed', 'lastStand', 'hpRegen', 'divineIntervention', 'battleChoice', 'buffDurationUp', 'debuffDurationUp', 'npRegen', 'npGainDefUp', 'worldsEvils']);
+  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight', 'npOnlyKo', 'debuffOnHit', 'apChance', 'rpsOverride', 'randomWork', 'starCrossed', 'lastStand', 'hpRegen', 'divineIntervention', 'battleChoice', 'buffDurationUp', 'debuffDurationUp', 'npRegen', 'npGainDefUp', 'worldsEvils', 'critUp']);
 const hasStatus = (p, status) => p.buffs.some(b => b.status === status);
 // All the World's Evils (Angra Mainyu): every chance-based effect on him lands (not instant kill, Breaker Gorgon,
 // Terror, or effects that stop him acting: Blind, Trap and Terror roll normally)
@@ -849,6 +851,16 @@ function resolveTurnInner(prev, actions, opts) {
       say(`${S[pk.from].np.name}: ${def.name}'s HP is dragged down to ${att.name}'s level (${Math.round(100 * def.hp / def.maxHp)}%, −${pk.amount}).`, { type: 'hit', ...pk });
       continue;
     }
+    // Critical hit: regular attacks only (never NPs or follow-ups). Rolled once the attack connects.
+    // Base chance from star absorption, plus any Critical Chance buffs (capped at 100%).
+    if (pk.kind === 'attack' && !pk.secondArrow && pk.amount > 0) {
+      const chance = Math.min(100, (att.critChance ?? 0) + (boosted(att) ? sumBuff(att, 'critUp') : 0));
+      if (chance > 0 && roll(state) * 100 < chance) {
+        pk.crit = pk.hitAs;
+        pk.amount = Math.round(pk.amount * T.crit.mult[pk.hitAs]);
+        att.stats.crits = (att.stats.crits ?? 0) + 1;
+      }
+    }
     // Divine Intervention (Jeanne): her master may negate this hit (not damage over time); then it's spent
     if ((pk.amount > 0 || pk.instantKill) && !pk.divineStripped
       && useDivine(pk.to, pk.instantKill ? def.hp : pk.amount, pk.from,
@@ -899,12 +911,13 @@ function resolveTurnInner(prev, actions, opts) {
         say(`${att.name}'s NP was drained this turn: the hit charges no NP.`, { type: 'info', player: pk.from });
       }
       const nextHitAp = pk.nextHit && pk.card === 'quick' ? 1 : 0;
-      att.ap = Math.min(att.maxAp, att.ap + T.apOnLand + nextHitAp);
+      att.ap = Math.min(att.maxAp, att.ap + T.apOnLand + nextHitAp + (pk.crit === 'quick' ? T.crit.quickAp : 0));
+      if (pk.crit === 'arts' && !drainedNp[pk.from]) gainNp(att, T.crit.artsNp, { card: 'arts' });
     }
     if (pk.nextHit) att.buffs = att.buffs.filter(b => b.type !== 'nextHitUp'); // consumed on a landed attack or NP
     if (pk.vsBonus) att.buffs = att.buffs.filter(b => b.type !== 'bonusVsStatus'); // one hit only
     if (pk.secondArrow) say(`Golden Apple: ${att.name}'s second arrow flies true for ${pk.amount}!`, { type: 'hit', ...pk });
-    else say(`${att.name} hits ${def.name} for ${pk.amount}${pk.hitAs && pk.hitAs !== pk.card ? ` (${CARD_NAME[pk.card]} → Buster)` : ''}${pk.reason === 'counter' ? ' (counter!)' : ''}.`, { type: 'hit', ...pk });
+    else say(`${pk.crit ? 'Critical! ' : ''}${att.name} hits ${def.name} for ${pk.amount}${pk.crit === 'quick' ? ` (+${T.crit.quickAp} AP)` : pk.crit === 'arts' ? ' (bonus NP)' : ''}${pk.hitAs && pk.hitAs !== pk.card ? ` (${CARD_NAME[pk.card]} → Buster)` : ''}${pk.reason === 'counter' ? ' (counter!)' : ''}.`, { type: 'hit', ...pk });
     // Fafnir's Blood: a landed regular attack may mark the enemy with a status (e.g. Dragon) for the next turn
     if (pk.kind === 'attack') for (const b of att.buffs.filter(b => b.type === 'statusOnHit')) {
       const marked = evilsLand(def) || roll(state) * 100 < b.value;

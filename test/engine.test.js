@@ -1,6 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createMatch, resolveTurn, getLegalActions, validateAction, foresightView, skillCost } from '../src/engine/engine.js';
+import { createMatch as createMatchRaw, resolveTurn, getLegalActions, validateAction, foresightView, skillCost, deriveStats } from '../src/engine/engine.js';
+// Most tests check exact damage, so crits are off unless a test asks for them ({ crits: true }).
+const createMatch = (a, b, o = {}) => {
+  const s = createMatchRaw(a, b, o);
+  if (!o.crits) for (const p of s.players) p.critChance = 0;
+  return s;
+};
 import { SERVANTS } from '../src/data/servants.js';
 import { TUNING as T } from '../src/engine/constants.js';
 
@@ -1382,4 +1388,50 @@ test('Healing skills cost 3 more AP each time they are used', () => {
   const lib = SERVANTS.hundred_faces.skills.find(k => !k.costStep);
   assert.equal(skillCost(lib, p()), lib.cost);
   assert.ok(apAfter >= 0);
+});
+
+test('Crits: chance from star absorption (20% cap); 1.5x Quick (+1 AP), 1.5x Arts (+NP), 1.75x Buster; never NPs', () => {
+  assert.equal(deriveStats(SERVANTS.iskandar).crit, 20);
+  assert.equal(deriveStats(SERVANTS.astolfo).crit, 20);
+  assert.equal(deriveStats(SERVANTS.spartacus).crit, 0.9);
+  assert.equal(createMatchRaw(SERVANTS.medea, dummy('B'), { seed: 1 }).players[0].critChance, 4.9);
+  const hit = (card, crit) => {
+    const s = createMatch(SERVANTS.mordred, dummy('B'), { seed: 7 });
+    s.players[0].critChance = crit ? 100 : 0; s.players[0].np = 0;
+    const lose = { quick: 'arts', arts: 'buster', buster: 'quick' }[card];
+    const r = resolveTurn(s, [atk(card), atk(lose)]);
+    return { amount: r.log.find(l => l.type === 'hit' && l.from === 0).amount, ap: r.state.players[0].ap, np: r.state.players[0].np, log: r.log };
+  };
+  for (const [card, mult] of [['quick', 1.5], ['arts', 1.5], ['buster', 1.75]]) {
+    const a = hit(card, false), b = hit(card, true);
+    assert.ok(Math.abs(b.amount / a.amount - mult) < 0.02, `${card} ${b.amount}/${a.amount}`);
+    assert.ok(b.log.some(l => /^Critical!/.test(l.msg)));
+    if (card === 'quick') assert.equal(b.ap, a.ap + 1);
+    if (card === 'arts') assert.ok(b.np > a.np);
+    if (card === 'buster') { assert.equal(b.ap, a.ap); assert.equal(b.np, a.np); }
+  }
+  // NPs never crit
+  const s = createMatch(SERVANTS.mordred, dummy('B'), { seed: 7 });
+  s.players[0].critChance = 100; s.players[0].np = 100;
+  const r = resolveTurn(s, [np(), atk('quick')]);
+  assert.ok(!r.log.some(l => /^Critical!/.test(l.msg)));
+  // a real rate lands near its chance (Iskandar 20%)
+  let crits = 0, hits = 0;
+  for (let seed = 1; seed <= 300; seed++) {
+    const m = createMatch(SERVANTS.iskandar, dummy('B'), { seed, crits: true });
+    const t = resolveTurn(m, [atk('buster'), atk('quick')]);
+    const h = t.log.find(l => l.type === 'hit' && l.from === 0);
+    if (h) { hits++; if (/^Critical!/.test(h.msg)) crits++; }
+  }
+  assert.ok(crits / hits > 0.13 && crits / hits < 0.27, `${crits}/${hits}`);
+});
+
+test("Crits don't count as an effect landing on Angra (All the World's Evils)", () => {
+  let crits = 0;
+  for (let seed = 1; seed <= 200; seed++) {
+    const m = createMatch(SERVANTS.medea, SERVANTS.angra, { seed, crits: true });   // Medea 4.9%
+    const t = resolveTurn(m, [atk('buster'), atk('quick')]);
+    if (t.log.some(l => /^Critical!/.test(l.msg) && l.from === 0)) crits++;
+  }
+  assert.ok(crits < 30, `crits ${crits}`);
 });
