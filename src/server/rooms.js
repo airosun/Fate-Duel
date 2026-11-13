@@ -14,9 +14,9 @@
 //  - Everyone else is omniscient: live servant browsing, live action drafts,
 //    and locked actions as they happen.
 
-import { createMatch, resolveTurn, validateAction, getLegalActions, foresightView } from '../engine/engine.js';
+import { createMatch, resolveTurn, validateAction, getLegalActions, foresightView, useSeal, sealError } from '../engine/engine.js';
 import { SERVANTS } from '../data/servants.js';
-import { chooseAction } from '../engine/ai.js';
+import { chooseAction, applySealPlan } from '../engine/ai.js';
 import * as GW from '../engine/grailwar.js';
 
 const randomUUID = () => globalThis.crypto?.randomUUID?.()
@@ -43,7 +43,7 @@ function cleanAction(a) {
     : m.type === 'skill' ? { type: 'skill', skillId: String(m.skillId), ...(m.option != null ? { option: String(m.option) } : {}) }
     : m.type === 'np' ? { type: 'np' }
     : null;
-  return { main, seal: a.seal == null ? null : String(a.seal), ...(a.choice != null ? { choice: String(a.choice) } : {}) };
+  return { main, ...(a.choice != null ? { choice: String(a.choice) } : {}) };
 }
 
 // What the end-of-war stats screen needs from one battle: the stat tallies, max HP and the
@@ -231,7 +231,19 @@ export class RoomManager {
     const seat = d.seats.indexOf(id);
     if (seat < 0 || d.locked[seat]) return;
     const a = cleanAction(rawAction);
-    d.drafts[seat] = a && (a.main || a.seal) ? a : null;
+    d.drafts[seat] = a && a.main ? a : null;
+  }
+
+  // Command Seal (Replenish Magical Energy): resolves the moment it's confirmed, while choosing.
+  seal(room, id) {
+    const d = this.#duelOf(room, id);
+    if (d?.phase !== 'battle') throw new RoomError('The battle is not in progress.');
+    const seat = this.#seatIn(d, id);
+    if (d.pendingDivine) throw new RoomError('The turn is already resolving.');
+    if (d.locked[seat]) throw new RoomError('You have already locked in this turn. Change your action to use a Command Seal.');
+    const err = sealError(d.match, seat);
+    if (err) throw new RoomError(err);
+    d.match = useSeal(d.match, seat).state;
   }
 
   // Teacher's Wisdom: this seat will see the opponent's locked action before locking its own.
@@ -297,6 +309,7 @@ export class RoomManager {
       if (d.phase !== 'battle' || d.pendingDivine) return;
       for (const seat of [0, 1]) {
         if (!d.cpu[seat] || d.locked[seat]) continue;
+        d.match = applySealPlan(d.match, seat, { strength: this.cpuStrength, random: this.random });   // seals first, in the open
         const a = chooseAction(d.match, seat, { strength: this.cpuStrength, random: this.random });
         d.locked[seat] = a; d.drafts[seat] = a; d.divine = [[], []];
       }

@@ -6,6 +6,7 @@
 import { createMatch, resolveTurn, getLegalActions, foresightView } from '../src/engine/engine.js';
 import { ROSTER } from '../src/data/servants.js';
 import { TUNING as T } from '../src/engine/constants.js';
+import { applySealPlan } from '../src/engine/ai.js';
 import { writeFileSync, mkdirSync } from 'node:fs';
 
 const args = process.argv.slice(2);
@@ -31,12 +32,8 @@ function bot(state, i) {
   const legal = { ...getLegalActions(state, i) }; if (!npUseful(state, i)) legal.np = false;
   if (legal.lastStand) return { main: { type: 'np' }, seal: null };   // Unyielding Will: forced NP
   const servant = state.servants[i];
-  let seal = null;
-  if (legal.seals.includes('heal') && me.hp / me.maxHp < 0.3 && rand() < 0.7) seal = 'heal';
-  else if (legal.seals.includes('grandOrder') && me.np < 40 && foe.hp / foe.maxHp < 0.45 && rand() < 0.3) seal = 'grandOrder';
-  else if (legal.seals.includes('empower') && rand() < 0.04) seal = 'empower';
-
-  if (legal.np && rand() < 0.75) return { main: { type: 'np' }, seal: seal === 'grandOrder' ? null : seal };
+  const seal = null;   // Command Seals are spent before the action (sealPlan)
+  if (legal.np && rand() < 0.75) return { main: { type: 'np' }, seal };
   // expect enemy NP? try a defensive skill
   if (foe.np >= T.npMax && legal.skills.length && rand() < 0.5) {
     const def = servant.skills.find(s => legal.skills.includes(s.id) &&
@@ -91,12 +88,16 @@ function play(a, b) {
   let s = createMatch(a, b);
   const stats = { nps: [0, 0], seals: [0, 0], skills: [0, 0], cards: { quick: 0, arts: 0, buster: 0 } };
   while (!s.over) {
+    for (const i of [0, 1]) {   // Command Seals resolve before actions are chosen
+      const before = s.players[i].seals;
+      s = applySealPlan(s, i, { strength: 1, random: rand });
+      stats.seals[i] += before - s.players[i].seals;
+    }
     const acts = botTurn(s);
     acts.forEach((x, i) => {
       if (x.main.type === 'np') stats.nps[i]++;
       if (x.main.type === 'skill') stats.skills[i]++;
       if (x.main.type === 'attack') stats.cards[x.main.card]++;
-      if (x.seal) stats.seals[i] += x.seal === 'grandOrder' ? 3 : 1;
     });
     s = resolveTurn(s, acts).state;
   }

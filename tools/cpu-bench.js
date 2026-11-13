@@ -2,7 +2,7 @@
 // heuristic bot, and how the adaptive difficulty settles against stand-in
 // "players" of different skill. Usage: node tools/cpu-bench.js [games=300]
 import { createMatch, resolveTurn, getLegalActions } from '../src/engine/engine.js';
-import { chooseAction } from '../src/engine/ai.js';
+import { chooseAction, applySealPlan } from '../src/engine/ai.js';
 import { nextStrength, START_STRENGTH } from '../src/engine/difficulty.js';
 import { ROSTER } from '../src/data/servants.js';
 import { TUNING as T } from '../src/engine/constants.js';
@@ -14,8 +14,7 @@ const pick = a => a[Math.floor(rand() * a.length)];
 
 function heuristic(state, i) {
   const me = state.players[i], foe = state.players[1 - i], L = getLegalActions(state, i), sv = state.servants[i];
-  let seal = null;
-  if (L.seals.includes('heal') && me.hp / me.maxHp < 0.3 && rand() < 0.7) seal = 'heal';
+  const seal = null;   // Command Seals are spent before the action (sealPlan)
   if (L.np && rand() < 0.75) return { main: { type: 'np' }, seal };
   if (foe.np >= T.npMax && L.skills.length && rand() < 0.5) {
     const d = sv.skills.find(x => L.skills.includes(x.id) && x.effects.some(e => ['damageCut', 'invincible'].includes(e.type)));
@@ -30,7 +29,7 @@ function heuristic(state, i) {
 
 function play(botA, botB) {
   let s = createMatch(pick(ROSTER), pick(ROSTER));
-  while (!s.over) s = resolveTurn(s, [botA(s, 0), botB(s, 1)]).state;
+  while (!s.over) { for (const i of [0, 1]) s = applySealPlan(s, i, { strength: 1, random: rand }); s = resolveTurn(s, [botA(s, 0), botB(s, 1)]).state; }
   return s.result.winner;
 }
 const cpu = strength => (s, i) => chooseAction(s, i, { strength, random: rand });

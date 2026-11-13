@@ -35,7 +35,7 @@ export const GLOSSARY = [
   { term: 'Crit chance', re: '(?:Buster |Quick |Arts )?[Cc]rit chance', def: "Changes the chance that a regular attack crits. The base chance comes from the servant's star absorption (20% max)." },
   { term: 'AP gain', def: 'More (or less) AP from each attack, by this %. Fractions carry over to the next attack.' },
   { term: 'Buff Removal Resist', def: "A chance that an enemy's buff removal (Rule Breaker, Information Erasure...) fails outright." },
-  { term: 'Command Seal', def: 'The master spends these on Heal, Recharge, Empower or Grand Order. Every master starts with 3.' },
+  { term: 'Command Seal', def: 'Every master starts with 3. Replenish Magical Energy: restores some HP and charges the NP gauge, the moment the master confirms it, on top of the turn\'s action. Any number can be used in one turn.' },
   { term: 'Critical', re: 'Crit(?:ical)?', def: 'Regular attacks (never NPs) can crit. Quick and Arts crits deal 1.5× damage; Quick also gives +1 AP and Arts extra NP charge. Buster crits deal 1.75× damage.' },
   { term: 'Instant Kill', def: "Kills outright when it lands. Revives don't trigger." },
   { term: 'No Boosts', def: 'Deals base damage: ATK up, card effectiveness, NP damage up, flat damage and other boosts (passives too) are ignored. Debuffs still apply.' },

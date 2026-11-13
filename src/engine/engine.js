@@ -5,15 +5,17 @@
 // Action shape:
 //   { main: { type: 'attack', card: 'quick'|'arts'|'buster' }
 //         | { type: 'skill', skillId }
-//         | { type: 'np' },
-//     seal: null | 'heal' | 'recharge' | 'empower' | 'grandOrder' }
+//         | { type: 'np' } }
+//
+// Command Seals are not part of an action: useSeal(state, i) spends one at once, while the
+// master is choosing (Replenish Magical Energy: heal + NP charge). Up to all three in a turn.
 //
 // Buff durations: `turns` counts the turn it is applied on. A skill used on
 // turn T with turns: 2 is active on T and T+1. turns: null = permanent.
 // Defaults: evade / damageCut 2 turns; invincible is always 1 turn.
 
 import { pro, verb } from './pronouns.js';
-import { TUNING as T, CARDS, SEALS } from './constants.js';
+import { TUNING as T, CARDS } from './constants.js';
 
 const CARD_NAME = { quick: 'Quick', arts: 'Arts', buster: 'Buster' };
 
@@ -77,7 +79,6 @@ function createPlayer(servant, { blockUniques = false } = {}) {
     npMode: servant.np?.defaultMode ?? null,
     lastSkillId: null,
     skillCount: {},
-    empower: false,
     buffs: [],
     stats: newStats(),
   };
@@ -206,10 +207,7 @@ export function getLegalActions(state, idx) {
   const skills = taunted ? [] : servant.skills
     .filter(s => p.ap >= skillCost(s, p) && p.lastSkillId !== s.id)
     .map(s => s.id);
-  const seals = [];
-  if (p.seals >= 1) seals.push('heal', 'recharge');
-  if (p.seals >= 1 && !p.empower) seals.push('empower');
-  if (p.seals >= 3 && p.np < T.npMax) seals.push('grandOrder');
+  const seals = p.seals;   // Command Seals left (spent with useSeal, outside the action)
   // Left Hand & Right Hand: a choice the master makes with their first action
   const pending = p.buffs.find(b => b.type === 'battleChoice');
   const choice = pending ? pending.options.map(o => ({ id: o.id, name: o.name, desc: o.desc })) : null;
@@ -235,11 +233,42 @@ export function validateAction(state, idx, action) {
   if (!['attack', 'skill', 'np'].includes(m.type)) return `Unknown action: ${m.type}`;
   if (action.foresight && !legal.foresight) return "No Teacher's Wisdom uses left";
   if (legal.choice && !legal.choice.some(o => o.id === action.choice)) return `Choose: ${legal.choice.map(o => o.name).join(' or ')}`;
-  if (action.seal != null) {
-    if (!SEALS.includes(action.seal)) return `Unknown seal: ${action.seal}`;
-    if (!legal.seals.includes(action.seal)) return `Seal not available: ${action.seal}`;
-  }
+  if (action.seal != null) return 'Command Seals are used on their own (useSeal), not with an action';
   return null;
+}
+
+// ---------- Command Seals ----------
+
+// Replenish Magical Energy: heal and NP charge, applied the moment the master confirms it.
+export function sealError(state, idx) {
+  if (state.over) return 'Match is over';
+  if (state.players[idx].seals < 1) return 'No Command Seals left';
+  return null;
+}
+
+export function useSeal(prev, idx) {
+  const err = sealError(prev, idx);
+  if (err) throw new Error(err);
+  const state = structuredClone(prev);
+  const p = state.players[idx];
+  const hp0 = p.hp, np0 = p.np;
+  p.seals -= 1;
+  p.stats.seals++;
+  applyEffect(p, { type: 'heal', value: T.seals.healPct });
+  applyEffect(p, { type: 'npCharge', value: T.seals.npCharge });
+  // tallied for this turn's log line ("uses 2 Command Seals: …")
+  state.sealsThisTurn ??= [null, null];
+  const t = (state.sealsThisTurn[idx] ??= { count: 0, hp: 0, np: 0 });
+  t.count++; t.hp += p.hp - hp0; t.np += p.np - np0;
+  return { state, healed: p.hp - hp0, np: p.np - np0 };
+}
+
+// The log line for the seals a master has used this turn (or null).
+export function sealLine(state, idx) {
+  const t = state.sealsThisTurn?.[idx];
+  if (!t?.count) return null;
+  const what = t.count === 1 ? 'a Command Seal' : `${t.count} Command Seals`;
+  return `${state.players[idx].name}'s master uses ${what}: Replenish Magical Energy (+${t.hp} HP, NP +${t.np}%).`;
 }
 
 // ---------- effects ----------
@@ -503,12 +532,11 @@ function defend(defender, raw, { isNp, ignoreDefense, sureHit, ignoreCut = false
 const vsStatusPct = (att, def) => att.buffs.filter(b => b.type === 'dmgVsStatus' && hasStatus(def, b.status))
   .reduce((a, b) => a + b.value, 0);
 
-function attackPacket(att, def, card, { counter, empowered, nextHit = 0, vsBonus = 0 }) {
+function attackPacket(att, def, card, { counter, nextHit = 0, vsBonus = 0 }) {
   const b = boosted(att);
   let raw = att.atk * T.cards[card].mult * atkMultiplier(att, card, nextHit) * (b ? (1 + vsBonus / 100) * (1 + vsStatusPct(att, def) / 100) : 1);
   if (hasAffinity(att, card)) raw *= 1 + T.affinityBonus[card];
   if (counter) raw *= 1 + T.counterBonus;
-  if (empowered) raw *= 1 + T.seals.empowerBonus;
   if (b) raw += sumBuff(att, 'flatDamage');
   // True Sure Hit (skills like Knowledge of the Souwa, Wisdom of Divine) vs. passives that only share
   // its evade-piercing property (Heaven Among the Mountains: pierceEvade). Future Sure Hit-only
@@ -534,8 +562,8 @@ export function npTargetBonus(np, def) {
   return pct;
 }
 
-function npPacket(att, def, np, { empowered = false, nextHit = 0, vsBonus = 0 } = {}) {
-  let mult = np.mult * (empowered ? 1 + T.seals.empowerBonus : 1);
+function npPacket(att, def, np, { nextHit = 0, vsBonus = 0 } = {}) {
+  let mult = np.mult;
   if (np.missingHpBonus) mult *= 1 + np.missingHpBonus * (1 - def.hp / def.maxHp);
   if (np.vsStatus && hasStatus(def, np.vsStatus.status)) mult *= 1 + np.vsStatus.value / 100; // Balmung vs Dragon
   mult *= 1 + npTargetBonus(np, def) / 100;
@@ -658,22 +686,12 @@ function resolveTurnInner(prev, actions, opts) {
     say(`${P[i].name} is gripped by Madness and acts on impulse: ${pick.type === 'attack' ? CARD_NAME[pick.card] + ' attack' : pick.type === 'np' ? 'Noble Phantasm' : sk.name}!`, { type: 'status', player: i });
   }
 
-  // 1. Command Seals
+  // 1. Command Seals were already spent while choosing (useSeal); the log notes them first.
   for (const i of [0, 1]) {
-    const seal = actions[i].seal;
-    if (!seal) continue;
-    const p = P[i];
-    if (seal === 'grandOrder') {
-      p.seals -= 3; p.np = T.npMax; p.stats.seals += 3;
-      say(`${p.name}'s master burns all three Command Seals: NP gauge full!`, { type: 'seal', player: i, seal });
-      continue;
-    }
-    p.seals -= 1; p.stats.seals++;
-    if (seal === 'heal') applyEffect(p, { type: 'heal', value: T.seals.healPct });
-    if (seal === 'recharge') applyEffect(p, { type: 'apGain', value: T.seals.rechargeAp });
-    if (seal === 'empower') p.empower = true;
-    say(`${p.name}'s master uses a Command Seal: ${{ heal: 'Heal', recharge: 'Recharge', empower: 'Empower' }[seal]}.`, { type: 'seal', player: i, seal });
+    const line = sealLine(state, i);
+    if (line) say(line, { type: 'seal', player: i, count: state.sealsThisTurn[i].count });
   }
+  state.sealsThisTurn = [null, null];
 
   // 2. Skills — self effects for both first, then enemy-targeted effects
   const skillUses = [0, 1].map(i =>
@@ -752,15 +770,14 @@ function resolveTurnInner(prev, actions, opts) {
   for (const i of npUsers) {
     const att = structuredClone(P[i]), def = structuredClone(P[1 - i]);
     applyEffects(att, def, npPre[i], 'np');
-    // Empower boosts whichever comes first: the next regular attack or the next NP.
-    // Next-hit boosts and bonus-vs-status work like Empower: used by whichever lands first, attack or NP.
+    // Next-hit boosts and bonus-vs-status are used by whichever lands first, attack or NP.
     const nextHit = sumBuff(att, 'nextHitUp');
     const vs = att.buffs.find(b => b.type === 'bonusVsStatus' && hasStatus(def, b.status));
     const vsBonus = vs ? vs.value : 0;
-    const pk = { from: i, to: 1 - i, kind: 'np', card: nps[i].card, empowered: P[i].empower, nextHit, vsBonus,
+    const pk = { from: i, to: 1 - i, kind: 'np', card: nps[i].card, nextHit, vsBonus,
       // a buff-stripping pre-effect (Twin Arm, Rule Breaker) removed Divine Intervention before the hit
       divineStripped: !def.buffs.some(b => b.type === 'divineIntervention'),
-      ...npPacket(att, def, nps[i], { empowered: P[i].empower, nextHit, vsBonus }) };
+      ...npPacket(att, def, nps[i], { nextHit, vsBonus }) };
     consumeNextCard(att, nps[i].card);
     // Verg Avesta: equalize HP percentages (worked out from HP before this turn's damage). If he's lower,
     // the enemy drops to his % and nothing can block it; if he's higher, he drops to theirs.
@@ -785,8 +802,7 @@ function resolveTurnInner(prev, actions, opts) {
   for (const i of npUsers) {
     P[i].np = 0;
     P[i].stats.nps.fired++;
-    say(`${P[i].name} unleashes ${nps[i].name}${nps[i].modeName ? ` (${nps[i].modeName})` : ''}${P[i].empower ? ', empowered by a Command Seal' : ''}!`, { type: 'np', player: i });
-    P[i].empower = false;
+    say(`${P[i].name} unleashes ${nps[i].name}${nps[i].modeName ? ` (${nps[i].modeName})` : ''}!`, { type: 'np', player: i });
   }
 
   // 4. Regular attacks — RPS clash
@@ -817,8 +833,6 @@ function resolveTurnInner(prev, actions, opts) {
     const j = 1 - i;
     const card = mains[i].card;
     clash.cards[i] = card;
-    const empowered = P[i].empower;
-    P[i].empower = false;
     // busterConvert (e.g. Dragon Reactor Core): the attack keeps its chosen
     // card for the RPS clash and AP, but hits (damage + NP gain) as Buster.
     const conv = P[i].buffs.find(b => b.type === 'busterConvert');
@@ -832,11 +846,8 @@ function resolveTurnInner(prev, actions, opts) {
     if (mains[j].type === 'np') { lands = false; reason = 'overpowered by NP'; }
     else if (mains[j].type === 'attack') {
       const other = mains[j].card;
-      if (card === other) {
-        const otherEmp = actions[j].seal === 'empower' || prev.players[j].empower;
-        if (otherEmp && !empowered) { lands = false; reason = 'empowered tie lost'; }
-        else reason = empowered && !otherEmp ? 'empowered tie won' : 'tie';
-      } else if (misty === i) { counter = true; reason = 'counter'; }
+      if (card === other) reason = 'tie';
+      else if (misty === i) { counter = true; reason = 'counter'; }
       else if (misty === j) { lands = false; reason = 'countered'; }
       else if (T.beats[card] === other) { counter = true; reason = 'counter'; }
       else { lands = false; reason = 'countered'; }
@@ -852,14 +863,14 @@ function resolveTurnInner(prev, actions, opts) {
         const shot = roll(state) * 100 < ds.value;
         proc(P[i], `${ds.source} (second arrows)`, shot);
         if (shot) packets.push({ from: i, to: j, kind: 'attack', card, hitAs, reason: 'second arrow', secondArrow: true, nextHit: 0, vsBonus: 0,
-          ...attackPacket(P[i], P[j], hitAs, { counter: false, empowered: false }) });
+          ...attackPacket(P[i], P[j], hitAs, { counter: false }) });
       }
       continue;
     }
     const nextHit = sumBuff(P[i], 'nextHitUp');
     const vs = P[i].buffs.find(b => b.type === 'bonusVsStatus' && hasStatus(P[j], b.status));
     packets.push({ from: i, to: j, kind: 'attack', card, hitAs, reason, nextHit, vsBonus: vs ? vs.value : 0,
-      ...attackPacket(P[i], P[j], hitAs, { counter, empowered, nextHit, vsBonus: vs ? vs.value : 0 }) });
+      ...attackPacket(P[i], P[j], hitAs, { counter, nextHit, vsBonus: vs ? vs.value : 0 }) });
     consumeNextCard(P[i], hitAs);
   }
 

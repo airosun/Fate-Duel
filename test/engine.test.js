@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createMatch as createMatchRaw, resolveTurn, getLegalActions, validateAction, foresightView, skillCost, deriveStats, npTargetBonus } from '../src/engine/engine.js';
+import { createMatch as createMatchRaw, resolveTurn, getLegalActions, validateAction, foresightView, skillCost, deriveStats, npTargetBonus, useSeal, sealLine } from '../src/engine/engine.js';
 // Most tests check exact damage, so crits are off unless a test asks for them ({ crits: true }).
 const createMatch = (a, b, o = {}) => {
   const s = createMatchRaw(a, b, o);
@@ -113,17 +113,38 @@ test('evade blocks attacks but not NPs; ignoreDefense pierces evade', () => {
   assert.equal(r.players[1].hp, 1000 - 300);
 });
 
-test('command seals: heal, empower wins ties, grand order fills NP', () => {
+test('Command Seals: Replenish Magical Energy heals and charges NP at once, several in one turn, one log line', () => {
   let s = fresh();
-  s = resolveTurn(s, [atk('buster'), atk('buster')]).state; // both 850
-  s = resolveTurn(s, [{ main: { type: 'attack', card: 'arts' }, seal: 'empower' }, atk('arts')]).state;
-  assert.equal(s.players[0].hp, 850);           // B's tie attack lost
-  assert.equal(s.players[1].hp, 850 - 150);     // 100 × 1.5 empower
-  s = resolveTurn(s, [{ main: { type: 'attack', card: 'quick' }, seal: 'heal' }, atk('quick')]).state;
-  assert.equal(s.players[0].hp, Math.min(1000, 850 + 300) - 80);
-  const g = resolveTurn(fresh(), [{ main: { type: 'attack', card: 'arts' }, seal: 'grandOrder' }, atk('arts')]).state;
-  assert.equal(g.players[0].np, 100);
-  assert.equal(g.players[0].seals, 0);
+  s = resolveTurn(s, [atk('buster'), atk('buster')]).state;   // both at 850
+  const before = s.players[0].np;
+  const r1 = useSeal(s, 0);
+  assert.equal(r1.state.players[0].hp, 850 + Math.round(1000 * T.seals.healPct / 100));
+  assert.equal(r1.state.players[0].np, before + T.seals.npCharge);
+  assert.equal(r1.state.players[0].seals, 2);
+  assert.equal(s.players[0].seals, 3);                          // pure: the old state is untouched
+  let t = useSeal(useSeal(r1.state, 0).state, 0).state;          // all three in one turn
+  assert.equal(t.players[0].seals, 0);
+  assert.throws(() => useSeal(t, 0), /No Command Seals/);
+  assert.match(sealLine(t, 0), /uses 3 Command Seals: Replenish Magical Energy/);
+  assert.equal(t.players[0].hp, 1000);                         // capped at max HP
+  // the turn's log notes them once, then the tally resets
+  const after = resolveTurn(t, [atk('quick'), atk('quick')]);
+  const lines = after.log.filter(l => l.type === 'seal');
+  assert.equal(lines.length, 1);
+  assert.equal(lines[0].count, 3);
+  assert.equal(sealLine(after.state, 0), null);
+  // a single seal reads "a Command Seal"
+  assert.match(sealLine(useSeal(fresh(), 1).state, 1), /uses a Command Seal: Replenish Magical Energy/);
+  // seals are not part of an action any more
+  assert.match(validateAction(fresh(), 0, { main: { type: 'attack', card: 'arts' }, seal: 'heal' }), /used on their own/);
+});
+
+test('Command Seals can fill the NP gauge in time to fire it this turn', () => {
+  let s = fresh();
+  s.players[0].np = 50;
+  for (let k = 0; k < 3; k++) s = useSeal(s, 0).state;
+  assert.ok(getLegalActions(s, 0).np === (s.players[0].np >= 100));
+  assert.equal(s.players[0].np, Math.min(100, 50 + 3 * T.seals.npCharge));
 });
 
 test('Rule Breaker strips buffs before damage', () => {
@@ -458,15 +479,6 @@ test('EMIYA: Trace On copies the opponent\'s unique passive (not other copy effe
   assert.deepEqual(mirror.copied, ['Reality Marble']);
   const vsMedusa = createMatch(SERVANTS.emiya, SERVANTS.medusa).players[0];
   assert.ok(vsMedusa.buffs.some(b => b.type === 'buffFailChance'));
-});
-
-test('Empower boosts the next NP if it comes before an attack, then is used up', () => {
-  let s = fresh();
-  s = resolveTurn(s, [{ main: { type: 'skill', skillId: 'charge' }, seal: 'empower' }, atk('arts')]).state;
-  assert.equal(s.players[0].empower, true);
-  const r = resolveTurn(s, [np(), atk('arts')]).state;
-  assert.equal(s.players[1].hp - r.players[1].hp, 100 * 4 * 1.5);
-  assert.equal(r.players[0].empower, false);
 });
 
 test('Hassan: Zabaniya instant kill lands about 5% of the time and ignores revives', () => {

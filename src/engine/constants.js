@@ -38,11 +38,11 @@ export const TUNING = {
   apPerAttack: Number(globalThis.process?.env?.AP_ATK ?? 3),       // any outcome
   apOnLand: Number(globalThis.process?.env?.AP_LAND ?? 1),          // bonus if the attack connects
 
+  // Command Seals: Replenish Magical Energy, used at once while choosing (up to all three a turn)
   seals: {
     count: 3,
-    healPct: 30,
-    rechargeAp: 5,
-    empowerBonus: 0.5,
+    healPct: Number(globalThis.process?.env?.SEAL_HEAL ?? 15),   // % of max HP
+    npCharge: Number(globalThis.process?.env?.SEAL_NP ?? 20),    // NP gauge %
   },
 
   // When Ea neutralizes a revive, the servant gets back this share of the HP
@@ -70,4 +70,3 @@ export const TUNING = {
 };
 
 export const CARDS = ['quick', 'arts', 'buster'];
-export const SEALS = ['heal', 'recharge', 'empower', 'grandOrder'];

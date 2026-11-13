@@ -735,3 +735,16 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
   .ws-who small { display: none; }
   .ws-who b { overflow: hidden; text-overflow: ellipsis; max-width: 80px; display: block; }
 }
+
+/* Command Seal: Replenish Magical Energy */
+.seal-btn { display: inline-flex; align-items: center; gap: .35rem; color: var(--text); cursor: pointer; font: inherit; font-size: .85rem; }
+.seal-btn small { opacity: .75; font-size: .72rem; margin-left: .2rem; }
+.seal-btn:not(:disabled):hover { background: rgba(224,51,74,.3); border-color: #ff8a98; }
+.seal-confirm { text-align: center; max-width: 440px; margin: 0 auto; }
+.seal-confirm h2 { color: var(--gold2); font-family: var(--title); margin-bottom: .6rem; }
+.seal-confirm p { margin-bottom: .6rem; }
+.seal-flash { margin: .35rem 0 .1rem; font-size: .82rem; color: #ffd5da; background: rgba(224,51,74,.18); border: 1px solid rgba(224,51,74,.55); border-radius: 6px; padding: .25rem .55rem; display: inline-flex; align-items: center; gap: .35rem; animation: sealflash 2.6s ease-out forwards; }
+.seal-flash .seal-mark { width: 9px; height: 12px; }
+.seal-flash b { color: #fff; }
+@keyframes sealflash { 0% { opacity: 0; transform: translateY(-4px) scale(.96); box-shadow: 0 0 0 rgba(224,51,74,0); } 12% { opacity: 1; transform: none; box-shadow: 0 0 18px rgba(224,51,74,.7); } 75% { opacity: 1; } 100% { opacity: 0; } }
+.log-turn.now h4 { color: #ff8a98; }

@@ -10,6 +10,7 @@ export const ACTIONS = {
   'battle:unlock': (rm, room, id) => rm.unlock(room, id),
   'battle:foresight': (rm, room, id) => rm.foresight(room, id),
   'battle:continue': (rm, room, id) => rm.continueTurn(room, id),
+  'battle:seal': (rm, room, id) => rm.seal(room, id),
   'battle:divine': (rm, room, id, { use }) => rm.divineDecision(room, id, use),
   'match:rematch': (rm, room, id, { choice }) => rm.rematch(room, id, choice),
   'match:return': (rm, room, id) => rm.returnToRoom(room, id),

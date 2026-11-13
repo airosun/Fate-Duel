@@ -27,7 +27,7 @@ export const SERVANTS = {
   artoria: {
     id: 'artoria', name: 'Artoria Pendragon', class: 'Saber', pronouns: 'she/her', rarity: 5, starAbsorb: 102,
     fgoHp: 15150, fgoAtk: 11221, fgoNpAtk: 0.86, fgoNpDef: 3,
-    hpMult: 0.91, favoredCard: 'buster',
+    hpMult: 0.925, favoredCard: 'buster',
     passives: [
       classPassive('magicResistance', 'A'),
       classPassive('riding', 'B'),
@@ -56,7 +56,7 @@ export const SERVANTS = {
   heracles: {
     id: 'heracles', name: 'Heracles', class: 'Berserker', pronouns: 'he/him', rarity: 4, starAbsorb: 10,
     fgoHp: 10327, fgoAtk: 10655, fgoNpAtk: 1.07, fgoNpDef: 5,
-    hpMult: 0.766,
+    hpMult: 0.804,
     favoredCard: 'buster', maxApBonus: -2,
     passives: [
       classPassive('madness', 'B'),
@@ -86,7 +86,7 @@ export const SERVANTS = {
   medea: {
     id: 'medea', name: 'Medea', class: 'Caster', pronouns: 'she/her', rarity: 3, starAbsorb: 50,
     fgoHp: 8643, fgoAtk: 7418, fgoNpAtk: 1.64, fgoNpDef: 3,
-    favoredCard: 'arts', hpMult: 1.045, maxApBonus: 2,
+    favoredCard: 'arts', hpMult: 0.998, maxApBonus: 2,
     passives: [
       classPassive('territoryCreation', 'A'),
       unique("Hecate's Staff", "Her master starts with an extra Command Seal (4 instead of 3)", [{ type: 'extraSeal', value: 1 }]),
@@ -116,7 +116,7 @@ export const SERVANTS = {
   kojirou: {
     id: 'kojirou', name: 'Sasaki Kojirou', class: 'Assassin', pronouns: 'he/him', rarity: 1, starAbsorb: 102,
     fgoHp: 6220, fgoAtk: 5735, fgoNpAtk: 1.05, fgoNpDef: 4,
-    favoredCard: 'quick', hpMult: 1.04,
+    favoredCard: 'quick', hpMult: 1.067,
     passives: [
       classPassive('presenceConcealment', 'D'),
       unique('Heaven Among the Mountains', "His Quick attacks Pierce Evade",
@@ -143,7 +143,7 @@ export const SERVANTS = {
   emiya: {
     id: 'emiya', name: 'EMIYA', class: 'Archer', pronouns: 'he/him', rarity: 4, starAbsorb: 145,
     fgoHp: 11521, fgoAtk: 9398, fgoNpAtk: 0.51, fgoNpDef: 3,
-    favoredCard: 'arts', hpMult: 1.009,
+    favoredCard: 'arts', hpMult: 1.006,
     passives: [
       classPassive('magicResistance', 'D'),
       classPassive('independentAction', 'B'),
@@ -181,7 +181,7 @@ export const SERVANTS = {
   cu: {
     id: 'cu', name: 'Cú Chulainn', class: 'Lancer', pronouns: 'he/him', rarity: 3, starAbsorb: 87,
     fgoHp: 9593, fgoAtk: 7239, fgoNpAtk: 1.07, fgoNpDef: 4,
-    hpMult: 0.834,
+    hpMult: 0.878,
     favoredCard: 'quick',
     passives: [
       classPassive('magicResistance', 'C'),
@@ -210,7 +210,7 @@ export const SERVANTS = {
   medusa: {
     id: 'medusa', name: 'Medusa', class: 'Rider', pronouns: 'she/her', rarity: 3, starAbsorb: 194,
     fgoHp: 8937, fgoAtk: 7200, fgoNpAtk: 0.58, fgoNpDef: 3,
-    favoredCard: 'quick', hpMult: 0.959,
+    favoredCard: 'quick', hpMult: 0.978,
     passives: [
       classPassive('magicResistance', 'B'),
       classPassive('independentAction', 'C'),
@@ -239,7 +239,7 @@ export const SERVANTS = {
   hassan: {
     id: 'hassan', name: 'Hassan of the Cursed Arm', class: 'Assassin', pronouns: 'he/him', rarity: 1, starAbsorb: 97,
     fgoHp: 7594, fgoAtk: 6280, fgoNpAtk: 1.07, fgoNpDef: 4,
-    favoredCard: 'quick', hpMult: 1.101,
+    favoredCard: 'quick', hpMult: 1.106,
     passives: [
       classPassive('presenceConcealment', 'A+'),
       unique("Shaytan's Arm", "Zabaniya has a 5% chance of Instant Kill (revives don't trigger)",
@@ -265,7 +265,7 @@ export const SERVANTS = {
   gilgamesh: {
     id: 'gilgamesh', name: 'Gilgamesh', class: 'Archer', pronouns: 'he/him', rarity: 5, starAbsorb: 153,
     fgoHp: 13097, fgoAtk: 12280, fgoNpAtk: 0.34, fgoNpDef: 3,
-    hpMult: 1.009,
+    hpMult: 1.039,
     favoredCard: 'buster',
     passives: [
       classPassive('independentAction', 'A+'),
@@ -295,7 +295,7 @@ export const SERVANTS = {
   iskandar: {
     id: 'iskandar', name: 'Iskandar', class: 'Rider', pronouns: 'he/him', rarity: 5, starAbsorb: 205,
     fgoHp: 13219, fgoAtk: 11560, fgoNpAtk: 0.86, fgoNpDef: 3,
-    favoredCard: 'buster', hpMult: 0.973,
+    favoredCard: 'buster', hpMult: 0.993,
     passives: [
       classPassive('magicResistance', 'D'),
       classPassive('riding', 'A+'),
@@ -324,7 +324,7 @@ export const SERVANTS = {
   hundred_faces: {
     id: 'hundred_faces', name: 'Hassan of the Hundred Faces', class: 'Assassin', pronouns: 'they/them', rarity: 3, starAbsorb: 97,
     fgoHp: 9310, fgoAtk: 6686, fgoNpAtk: 0.48, fgoNpDef: 4,
-    favoredCard: 'arts', hpMult: 1.029,
+    favoredCard: 'arts', hpMult: 1.011,
     passives: [
       classPassive('presenceConcealment', 'A'),
       unique('One Hundred Personas', "Regular attacks against them have a 10% chance to miss (Sure Hit ignores this)",
@@ -353,7 +353,7 @@ export const SERVANTS = {
   lancelot: {
     id: 'lancelot', name: 'Lancelot', class: 'Berserker', pronouns: 'he/him', rarity: 4, starAbsorb: 10,
     fgoHp: 10327, fgoAtk: 10477, fgoNpAtk: 0.5, fgoNpDef: 5,
-    favoredCard: 'buster', hpMult: 1.085,
+    favoredCard: 'buster', hpMult: 1.107,
     passives: [
       classPassive('magicResistance', 'E'),
       classPassive('madness', 'C'),
@@ -380,7 +380,7 @@ export const SERVANTS = {
   gilles: {
     id: 'gilles', name: 'Gilles de Rais', class: 'Caster', pronouns: 'he/him', rarity: 3, starAbsorb: 48,
     fgoHp: 9506, fgoAtk: 6514, fgoNpAtk: 1.58, fgoNpDef: 3,
-    favoredCard: 'arts', hpMult: 0.932,
+    favoredCard: 'arts', hpMult: 0.918,
     passives: [
       classPassive('territoryCreation', 'B'),
       unique('Summoning: Sea Demons', "A landed Arts attack has a 40% chance of a Sea Demon follow-up hit for 30% of its damage",
@@ -409,7 +409,7 @@ export const SERVANTS = {
   diarmuid: {
     id: 'diarmuid', name: 'Diarmuid Ua Duibhne', class: 'Lancer', pronouns: 'he/him', rarity: 3, starAbsorb: 87,
     fgoHp: 10098, fgoAtk: 6877, fgoNpAtk: 0.79, fgoNpDef: 4,
-    favoredCard: 'quick', hpMult: 1.026,
+    favoredCard: 'quick', hpMult: 1.003,
     passives: [
       classPassive('magicResistance', 'B'),
       unique("Knight's Oath", "Quick +10% and Arts +10%",
@@ -435,7 +435,7 @@ export const SERVANTS = {
   mordred: {
     id: 'mordred', name: 'Mordred', class: 'Saber', pronouns: 'she/her', rarity: 5, starAbsorb: 98,
     fgoHp: 14680, fgoAtk: 11723, fgoNpAtk: 0.56, fgoNpDef: 3,
-    hpMult: 0.981, favoredCard: 'buster',
+    hpMult: 0.97, favoredCard: 'buster',
     passives: [
       classPassive('magicResistance', 'B'),
       classPassive('riding', 'B'),
@@ -462,7 +462,7 @@ export const SERVANTS = {
   siegfried: {
     id: 'siegfried', name: 'Siegfried', class: 'Saber', pronouns: 'he/him', rarity: 4, starAbsorb: 97,
     fgoHp: 14165, fgoAtk: 8181, fgoNpAtk: 0.83, fgoNpDef: 3,
-    favoredCard: 'buster', hpMult: 1.046,
+    favoredCard: 'buster', hpMult: 1.064,
     passives: [
       classPassive('riding', 'B'),
       unique("Fafnir's Blood", "A landed regular attack has a 35% chance to mark the enemy as a Dragon (2 turns)",
@@ -488,7 +488,7 @@ export const SERVANTS = {
   atalanta: {
     id: 'atalanta', name: 'Atalanta', class: 'Archer', pronouns: 'she/her', rarity: 4, starAbsorb: 148,
     fgoHp: 12476, fgoAtk: 8633, fgoNpAtk: 0.5, fgoNpDef: 3,
-    favoredCard: 'quick', hpMult: 0.982,
+    favoredCard: 'quick', hpMult: 0.987,
     passives: [
       classPassive('magicResistance', 'D'),
       classPassive('independentAction', 'A'),
@@ -516,7 +516,7 @@ export const SERVANTS = {
   chiron: {
     id: 'chiron', name: 'Chiron', class: 'Archer', pronouns: 'he/him', rarity: 4, starAbsorb: 148,
     fgoHp: 12250, fgoAtk: 9294, fgoNpAtk: 0.68, fgoNpDef: 3,
-    favoredCard: 'arts', hpMult: 0.976,
+    favoredCard: 'arts', hpMult: 0.938,
     passives: [
       classPassive('magicResistance', 'B'),
       classPassive('independentAction', 'A'),
@@ -545,7 +545,7 @@ export const SERVANTS = {
   vlad: {
     id: 'vlad', name: 'Vlad III', class: 'Lancer', pronouns: 'he/him', rarity: 5, starAbsorb: 9,
     fgoHp: 15086, fgoAtk: 11499, fgoNpAtk: 0.5, fgoNpDef: 5,
-    favoredCard: 'arts', hpMult: 0.751,
+    favoredCard: 'arts', hpMult: 0.847,
     passives: [
       classPassive('madness', 'EX'),
       unique('Protection of Faith', "Guts once: revives at 15% HP; on revival, NP gain +30% for the rest of the battle (a normal buff, so it can be removed)",
@@ -571,7 +571,7 @@ export const SERVANTS = {
   karna: {
     id: 'karna', name: 'Karna', class: 'Lancer', pronouns: 'he/him', rarity: 5, starAbsorb: 88,
     fgoHp: 13632, fgoAtk: 11976, fgoNpAtk: 0.72, fgoNpDef: 4,
-    favoredCard: 'buster', hpMult: 0.984,
+    favoredCard: 'buster', hpMult: 1.003,
     passives: [
       classPassive('magicResistance', 'C'),
       classPassive('riding', 'A'),
@@ -601,7 +601,7 @@ export const SERVANTS = {
   achilles: {
     id: 'achilles', name: 'Achilles', class: 'Rider', pronouns: 'he/him', rarity: 5, starAbsorb: 196,
     fgoHp: 13219, fgoAtk: 11883, fgoNpAtk: 0.57, fgoNpDef: 3,
-    favoredCard: 'quick', hpMult: 0.702,
+    favoredCard: 'quick', hpMult: 0.684,
     passives: [
       classPassive('magicResistance', 'C'),
       classPassive('riding', 'A+'),
@@ -631,7 +631,7 @@ export const SERVANTS = {
   astolfo: {
     id: 'astolfo', name: 'Astolfo', class: 'Rider', pronouns: 'they/them', rarity: 4, starAbsorb: 205,
     fgoHp: 11172, fgoAtk: 8937, fgoNpAtk: 0.66, fgoNpDef: 1,
-    favoredCard: 'quick', hpMult: 0.972,
+    favoredCard: 'quick', hpMult: 0.943,
     passives: [
       classPassive('magicResistance', 'A'),
       classPassive('riding', 'A+'),
@@ -659,7 +659,7 @@ export const SERVANTS = {
   jack: {
     id: 'jack', name: 'Jack the Ripper', class: 'Assassin', pronouns: 'she/her', rarity: 5, starAbsorb: 97,
     fgoHp: 12696, fgoAtk: 11557, fgoNpAtk: 1.07, fgoNpDef: 4,
-    favoredCard: 'quick', hpMult: 0.989,
+    favoredCard: 'quick', hpMult: 0.967,
     passives: [
       classPassive('presenceConcealment', 'A+'),
       unique('The Misty Night of London', "When her Quick attack meets a Buster attack, a 20% chance her Quick wins the clash instead",
@@ -686,7 +686,7 @@ export const SERVANTS = {
   semiramis: {
     id: 'semiramis', name: 'Semiramis', class: 'Assassin', pronouns: 'she/her', rarity: 5, starAbsorb: 102,
     fgoHp: 13266, fgoAtk: 11309, fgoNpAtk: 0.39, fgoNpDef: 4,
-    favoredCard: 'arts', hpMult: 1.005,
+    favoredCard: 'arts', hpMult: 0.992,
     passives: [
       classPassive('presenceConcealment', 'C+'),
       classPassive('territoryCreation', 'EX'),
@@ -717,7 +717,7 @@ export const SERVANTS = {
   shakespeare: {
     id: 'shakespeare', name: 'William Shakespeare', class: 'Caster', pronouns: 'he/him', rarity: 2, starAbsorb: 50,
     fgoHp: 8080, fgoAtk: 5798, fgoNpAtk: 1.59, fgoNpDef: 3,
-    favoredCard: 'arts', hpMult: 0.909,
+    favoredCard: 'arts', hpMult: 0.869,
     passives: [
       classPassive('territoryCreation', 'C'),
       unique('Works of Art', "At the start of each battle, one of his works takes the stage (its badge says which)", [{
@@ -754,7 +754,7 @@ export const SERVANTS = {
   avicebron: {
     id: 'avicebron', name: 'Avicebron', class: 'Caster', pronouns: 'he/him', rarity: 3, starAbsorb: 50,
     fgoHp: 9981, fgoAtk: 6376, fgoNpAtk: 0.61, fgoNpDef: 3,
-    favoredCard: 'arts', hpMult: 1.082,
+    favoredCard: 'arts', hpMult: 1.06,
     passives: [
       classPassive('territoryCreation', 'B'),
       unique("Golem's Support", "A landed Buster attack has a 40% chance of a Golem strike for 30% of its damage",
@@ -782,7 +782,7 @@ export const SERVANTS = {
   frankenstein: {
     id: 'frankenstein', name: 'Frankenstein', class: 'Berserker', pronouns: 'she/her', rarity: 4, starAbsorb: 10,
     fgoHp: 10687, fgoAtk: 9441, fgoNpAtk: 0.83, fgoNpDef: 5,
-    favoredCard: 'buster', hpMult: 1.179,
+    favoredCard: 'buster', hpMult: 1.225,
     passives: [
       classPassive('madness', 'D'),
       unique("Procedure to Humanity", "A landed regular attack has a 20% chance to inflict Burn (20 per turn, 3 turns)", [{ type: 'debuffOnHit', value: 20, inflict: { type: 'burn', value: 20, turns: 3, refresh: true } }]),
@@ -807,7 +807,7 @@ export const SERVANTS = {
   spartacus: {
     id: 'spartacus', name: 'Spartacus', class: 'Berserker', pronouns: 'he/him', rarity: 1, starAbsorb: 9,
     fgoHp: 7722, fgoAtk: 5073, fgoNpAtk: 1.01, fgoNpDef: 5,
-    favoredCard: 'buster', hpMult: 0.828,
+    favoredCard: 'buster', hpMult: 0.817,
     passives: [
       classPassive('madness', 'EX'),
       unique('Unyielding Will', "Once, a lethal blow leaves him at 1 HP with a full NP gauge. Next turn he must fire his NP and can't fall before it lands; [[then he falls unless it took the enemy down]]",
@@ -832,7 +832,7 @@ export const SERVANTS = {
   jeanne: {
     id: 'jeanne', name: "Jeanne d'Arc", class: 'Ruler', pronouns: 'she/her', rarity: 5, starAbsorb: 99,
     fgoHp: 16500, fgoAtk: 9593, fgoNpAtk: 0.76, fgoNpDef: 3,
-    favoredCard: 'arts', hpMult: 0.817,
+    favoredCard: 'arts', hpMult: 0.753,
     passives: [
       classPassive('magicResistance', 'EX'),
       unique('Revelation from Heaven', "Heal 3% HP at the end of each turn", [{ type: 'hpRegen', value: 3 }]),
@@ -858,7 +858,7 @@ export const SERVANTS = {
   amakusa: {
     id: 'amakusa', name: 'Amakusa Shirou', class: 'Ruler', pronouns: 'he/him', rarity: 5, starAbsorb: 100,
     fgoHp: 14107, fgoAtk: 10972, fgoNpAtk: 0.86, fgoNpDef: 3,
-    favoredCard: 'buster', hpMult: 0.95,
+    favoredCard: 'buster', hpMult: 0.964,
     passives: [
       classPassive('magicResistance', 'A'),
       unique('Left Hand & Right Hand', "With his first action, his master chooses Left Hand (his buffs last 1 turn longer) or Right Hand (his debuffs on the enemy last 1 turn longer)", [{

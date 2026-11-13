@@ -3,11 +3,11 @@
 //  - Online mode: the server owns the match; this client renders snapshots and
 //    sends intents (pick, lock in, rematch). Screens are shared between modes.
 
-import { createMatch, getLegalActions, resolveTurn, validateAction, deriveStats, npOf, foresightView, skillCost } from '/src/engine/engine.js';
+import { createMatch, getLegalActions, resolveTurn, validateAction, deriveStats, npOf, foresightView, skillCost, useSeal, sealError, sealLine } from '/src/engine/engine.js';
 import { ROSTER } from '/src/data/servants.js';
 import { TUNING as T, CARDS } from '/src/engine/constants.js';
 import { CARD_LABEL, describeSkill, describeNp, describeEffects, buffChip } from './describe.js';
-import { chooseAction, wantsForesight } from '/src/engine/ai.js';
+import { chooseAction, wantsForesight, applySealPlan } from '/src/engine/ai.js';
 import { statsHtml, total as dmgTotal } from './stats.js';
 import { pro } from '/src/engine/pronouns.js';
 import { glossify, plainDesc } from './glossary.js';
@@ -57,7 +57,7 @@ const ui = {
   picks: [null, null],      // local: servant ids
   match: null,
   active: 0,                // seat currently choosing an action (-1 = none)
-  draft: { main: null, seal: null },
+  draft: { main: null },
   draftTurn: null,
   locked: [null, null],
   bars: {},                 // last shown % per bar, for animation
@@ -186,7 +186,7 @@ function rulesHtml() {
           <li><b>Buster</b> hits hardest · <b>Arts</b> charges NP · <b>Quick</b> restores AP.</li>
           <li>Skills cost AP and resolve first. The same skill can't be used two turns in a row.</li>
           <li>A full NP gauge unleashes a Noble Phantasm, which beats every regular attack.</li>
-          <li>Command Seals (3 per match) are free extra actions: heal, recharge AP, empower the next attack or NP, or all three to fill the NP gauge.</li>
+          <li>Command Seals (3 per match): <b>Replenish Magical Energy</b> restores ${T.seals.healPct}% HP and charges the NP gauge by ${T.seals.npCharge}%. Use one at any time while choosing, on top of your action; it takes effect immediately. You can use all three in one turn.</li>
           <li>Reduce the enemy Servant to 0 HP. Double KO or reaching turn ${T.maxTurns} is a draw.</li>
         </ul>
       </div>
@@ -239,7 +239,7 @@ function onSnapshot(snap) {
   if (!duel?.lastTurn) ui.net.revealedTurn = 0;               // new match: nothing revealed yet
   else if (firstForRoom || (switched && !duel.replay)) ui.net.revealedTurn = duel.lastTurn.turn; // refresh: don't replay old turns
   else if (switched) ui.net.revealedTurn = duel.lastTurn.turn - 1; // a replay picks up at the viewer's step
-  if (duel?.match) { ui.match = duel.match; ui.locked = duel.locked; }
+  if (duel?.match) { noteSeals(ui.match, duel.match); ui.match = duel.match; ui.locked = duel.locked; }
   // Spectators: once both duelists have continued past the turn being shown, move on automatically
   if (ui.revealing && !isDuelist() && duel?.lastTurn && (duel.continued ?? [0, 0]).every(t => t >= ui.net.revealedTurn)) {
     document.querySelector('#overlay #cont')?.click();
@@ -296,7 +296,7 @@ function onSnapshot(snap) {
     }, { autoNote: !isDuelist() && !duel.replay });
   }
   if (phase === 'over') return show('end');
-  if (ui.draftTurn !== duel.match.turn) { ui.draft = { main: null, seal: null }; ui.draftTurn = duel.match.turn; }
+  if (ui.draftTurn !== duel.match.turn) { ui.draft = { main: null }; ui.draftTurn = duel.match.turn; }
   ui.active = isDuelist() && !duel.locked[snap.seat] ? snap.seat : -1;
   show('battle');
 }
@@ -956,8 +956,13 @@ function startLocalMatch() {
 }
 
 function beginLocalTurn(i, first = false, note = null) {
+  if (vsCpu() && i === 0 && !ui.match.over) {   // the CPU spends any Command Seals first, where you can see it
+    const before = ui.match;
+    ui.match = applySealPlan(ui.match, 1, { strength: cpuStrength() });
+    noteSeals(before, ui.match);
+  }
   ui.active = i;
-  ui.draft = { main: null, seal: null };
+  ui.draft = { main: null };
   show('battle');
   if (vsCpu()) return; // no hand-off screens against the CPU
   const msg = note ?? (first && i === 0 ? 'The Holy Grail War begins. Choose your first action.' : `Turn ${ui.match.turn}: choose your action.`);
@@ -1011,6 +1016,7 @@ function panelHtml(i) {
           ${ui.locked[i] ? '<span class="locked-tag">LOCKED IN</span>' : ''}
         </div>
         ${bar(`hp${i}`, hpPct, hpPct < 25 ? 'hp low' : 'hp', `${p.hp} / ${p.maxHp}`)}
+        ${ui.sealFlash?.[i] && Date.now() - ui.sealFlash[i].at < 2600 ? `<div class="seal-flash" style="animation-delay:${-(Date.now() - ui.sealFlash[i].at)}ms"><i class="seal-mark"></i> Command Seal${ui.sealFlash[i].count > 1 ? ` ×${ui.sealFlash[i].count}` : ''}: <b>+${ui.sealFlash[i].hp} HP</b> · <b>NP +${ui.sealFlash[i].np}%</b></div>` : ''}
         <div class="np-line">
           <label>NP</label>
           ${bar(`np${i}`, p.np, `np ${npFull ? 'full' : ''}`, `${p.np}%`)}
@@ -1027,7 +1033,6 @@ function panelHtml(i) {
           </div>
         </div>
         <div class="buffs">
-          ${p.empower ? badge('active', 'Empowered', 'Command Seal: Empower', `The next attack or Noble Phantasm deals ${T.seals.empowerBonus * 100}% more damage, whichever comes first. An empowered attack also wins a tie.`, 'Used up by the next attack or NP') : ''}
           ${p.work ? badge('passive work', `${p.work.chosen ? '✋' : '🎭'} ${p.work.name}`, `${p.work.from}: ${p.work.name}`, `This battle's work: ${p.work.desc}.`, 'Chosen at random when the battle began; lasts the whole battle') : ''}
           ${(p.neutralized ?? []).map(n => badge('passive blocked', `⊘ ${n}`, `Neutralized: ${n}`, "The opponent's Ea switches off this unique passive for the whole match.", '')).join('')}
           ${(p.copyBlocked ?? []).map(n => badge('passive blocked', `✕ ${n}`, `Trace On: ${n}`, "Trace On couldn't copy this passive, because revives can't be copied.", '')).join('')}
@@ -1053,12 +1058,54 @@ function actionLabel(servant, action) {
 const favoredAll = s => (s.passives ?? []).some(p => p.effects.some(e => e.type === 'affinityAll'));
 const isFavored = (s, card) => s.favoredCard === card || favoredAll(s);
 
-const SEAL_INFO = {
-  heal: { name: 'Heal', desc: `Restore ${T.seals.healPct}% HP`, cost: 1 },
-  recharge: { name: 'Recharge', desc: `+${T.seals.rechargeAp} AP`, cost: 1 },
-  empower: { name: 'Empower', desc: `Next attack or NP +${T.seals.empowerBonus * 100}% damage (attacks also win ties)`, cost: 1 },
-  grandOrder: { name: 'Grand Order', desc: 'Spend all 3: fill NP gauge', cost: 3 },
-};
+const SEAL_NAME = 'Replenish Magical Energy';
+const SEAL_DESC = `Restore ${T.seals.healPct}% HP and charge the NP gauge by ${T.seals.npCharge}%. Takes effect immediately.`;
+
+// Spot a Command Seal between two states of the same match (ours, or one the server sent) and
+// pop up what it did over that servant's panel, on every screen.
+function noteSeals(before, after) {
+  if (!before || !after || before.turn !== after.turn || before.servants?.[0]?.id !== after.servants?.[0]?.id) return;
+  for (const i of [0, 1]) {
+    const used = before.players[i].seals - after.players[i].seals;
+    if (used <= 0) continue;
+    ui.sealFlash ??= [null, null];
+    ui.sealFlash[i] = { at: Date.now(), count: used, hp: after.players[i].hp - before.players[i].hp, np: after.players[i].np - before.players[i].np };
+    setTimeout(() => { if (ui.screen === 'battle' && !ui.revealing) { const y = window.scrollY; render(); window.scrollTo(0, y); } }, 2700);
+  }
+}
+
+// Click → confirm → it resolves at once (local) or on the server (online).
+function confirmSeal() {
+  const i = ui.active, p = ui.match.players[i], s = ui.match.servants[i];
+  const err = sealError(ui.match, i);
+  if (err) { const e = app.querySelector('#err'); if (e) e.textContent = err; return; }
+  const heal = Math.min(p.maxHp - p.hp, Math.round(p.maxHp * T.seals.healPct / 100));
+  openOverlay(`
+    <div class="seal-confirm">
+      <div class="seal-mark big"></div>
+      <h2>Use a Command Seal?</h2>
+      <p><b>${SEAL_NAME}</b>: ${esc(s.name)} restores <b>${heal} HP</b> and charges the NP gauge by <b>${Math.min(T.seals.npCharge, T.npMax - p.np)}%</b>.</p>
+      <p class="muted">It takes effect right now, and your opponent sees it. ${p.seals - 1} Command Seal${p.seals - 1 === 1 ? '' : 's'} left after this.</p>
+      <div class="divine-btns">
+        <button class="btn gold" id="sealYes">Use Command Seal</button>
+        <button class="btn ghost" id="sealNo">Cancel</button>
+      </div>
+    </div>`, o => {
+    o.querySelector('#sealNo').onclick = () => { overlay.hidden = true; };
+    o.querySelector('#sealYes').onclick = async () => {
+      overlay.hidden = true;
+      if (online()) {
+        const res = await emit('battle:seal');
+        if (!res.ok) { const e = app.querySelector('#err'); if (e) e.textContent = res.error; }
+        return;   // the snapshot shows it
+      }
+      const before = ui.match;
+      ui.match = useSeal(ui.match, i).state;
+      noteSeals(before, ui.match);
+      setDraft({});
+    };
+  });
+}
 
 // ---------- Teacher's Wisdom (see the opponent's locked action first) ----------
 // { seat, revealed } for this turn: online it comes from the server, locally from ui.foresight.
@@ -1166,16 +1213,17 @@ function controlsHtml() {
           ${optSkill.options.map(o => `<button class="option-btn ${o.card ?? ''} ${d.main.option === o.id ? 'selected' : ''}" data-option="${o.id}">${esc(o.label)}${o.id === p.npMode ? ' <small>(current)</small>' : ''}</button>`).join('')}
         </div>` : ''}
         <div class="seal-row">
-          <label>Command Seal <small>(free action)</small></label>
-          ${Object.entries(SEAL_INFO).map(([k, v]) => `
-            <button class="seal-btn ${d.seal === k ? 'selected' : ''}" data-seal="${k}" ${legal.seals.includes(k) ? '' : 'disabled'} title="${esc(v.desc)}">
-              ${'<i class="seal-mark"></i>'.repeat(v.cost)} ${v.name}
-            </button>`).join('')}
+          <label>Command Seal <small>(free · resolves immediately)</small></label>
+          <button class="seal-btn" id="sealBtn" ${p.seals > 0 ? '' : 'disabled'} title="${esc(SEAL_DESC)}">
+            ${Array.from({ length: Math.max(p.seals, 0) }, () => '<i class="seal-mark"></i>').join('')} ${SEAL_NAME}
+            <small>+${T.seals.healPct}% HP · NP +${T.seals.npCharge}%</small>
+          </button>
+          ${p.seals > 0 ? '' : '<small class="muted">No Command Seals left</small>'}
         </div>
       </div>
       ${foresightHtml(i, legal)}
       <div class="lock-row">
-        <span class="draft">${d.main ? `${esc(actionLabel(s, d))}${d.seal ? ` + ${SEAL_INFO[d.seal].name}` : ''}` : 'Choose an action'}</span>
+        <span class="draft">${d.main ? esc(actionLabel(s, d)) : 'Choose an action'}</span>
         <span class="error" id="err"></span>
         <button class="btn gold" id="lock" ${d.main && (!legal.choice || d.choice) && !(foresightState()?.seat === i && !foresightState()?.revealed) ? '' : 'disabled'}>Lock in ⏎</button>
       </div>
@@ -1183,10 +1231,10 @@ function controlsHtml() {
 }
 
 function describeAction(i, action) {
-  if (!action?.main && !action?.seal) return null;
+  if (!action?.main) return null;
   const s = ui.match.servants[i];
   const main = action.main ? actionLabel(s, action) : 'No action yet';
-  return `${main}${action.seal ? ` + ${SEAL_INFO[action.seal].name}` : ''}`;
+  return main;
 }
 
 function spectatorHtml() {
@@ -1231,7 +1279,7 @@ function waitingControlsHtml() {
   return `
     <section class="controls resolving">
       <div>
-        <p class="locked-line">Locked in: <b>${mine ? esc(actionLabel(s, mine)) : '…'}${mine?.seal ? ` + ${SEAL_INFO[mine.seal].name}` : ''}</b></p>
+        <p class="locked-line">Locked in: <b>${mine ? esc(actionLabel(s, mine)) : '…'}</b></p>
         <div class="spinner"></div>
         ${foresightState()?.seat === 1 - mySeat()
           ? `<p class="foresight-note">${esc(ui.match.servants[1 - mySeat()].name)} used ${esc(foresightName(1 - mySeat()))} and has seen your action. It's final for this turn.</p>`
@@ -1313,9 +1361,10 @@ function logHtml() {
     <section class="log ${ui.logOpen ? '' : 'collapsed'}">
       <button class="log-toggle" id="logToggle">Battle log ${ui.logOpen ? '▾' : '▸'}</button>
       <div class="log-body">
+        ${[0, 1].map(i => sealLine(ui.match, i)).some(Boolean) ? `<div class="log-turn now"><h4>Turn ${ui.match.turn} (now)</h4>${[0, 1].map(i => sealLine(ui.match, i)).filter(Boolean).map(l => `<p class="log-seal">${logLine(l)}</p>`).join('')}</div>` : ''}
         ${turns.length ? turns.map(t => `
           <div class="log-turn"><h4>Turn ${t.turn}</h4>${t.log.map(l => `<p class="log-${l.type}">${logLine(l.msg)}</p>`).join('')}</div>`).join('')
-          : '<p class="muted">No actions yet.</p>'}
+          : sealLine(ui.match, 0) || sealLine(ui.match, 1) ? '' : '<p class="muted">No actions yet.</p>'}
       </div>
     </section>`;
 }
@@ -1393,7 +1442,8 @@ function bindControls() {
   $('.option-btn').forEach(b => b.onclick = () => setDraft({ main: { ...ui.draft.main, option: b.dataset.option } }));
   const np = app.querySelector('#np');
   if (np) np.onclick = () => setDraft({ main: { type: 'np' } });
-  $('.seal-btn').forEach(b => b.onclick = () => setDraft({ seal: ui.draft.seal === b.dataset.seal ? null : b.dataset.seal }));
+  const sealBtn = app.querySelector('#sealBtn');
+  if (sealBtn) sealBtn.onclick = confirmSeal;
   const lock = app.querySelector('#lock');
   if (lock) lock.onclick = lockIn;
   const fs = app.querySelector('#foresight');
@@ -1417,7 +1467,7 @@ function bindControls() {
 
 async function lockIn() {
   const i = ui.active;
-  const action = { main: ui.draft.main, seal: ui.draft.seal, ...(ui.draft.choice ? { choice: ui.draft.choice } : {}) };
+  const action = { main: ui.draft.main, ...(ui.draft.choice ? { choice: ui.draft.choice } : {}) };
   const f = foresightState();
   if (f?.seat === i) {
     if (!f.revealed) { app.querySelector('#err').textContent = 'Wait for your opponent to lock in first.'; return; }
@@ -1471,8 +1521,9 @@ function clashBanner(actions, servants) {
   return { text: `${names[atk]} strikes unopposed!`, cls: [a, b][atk].card };
 }
 
-function revealSide(i, action, servants) {
+function revealSide(i, action, servants, log = []) {
   const s = servants[i];
+  const sealsUsed = log.find(l => l.type === 'seal' && l.player === i)?.count ?? 0;
   const m = action.main;
   const kind = m.type === 'attack' ? m.card : m.type;
   const label = actionLabel(s, action);
@@ -1486,7 +1537,7 @@ function revealSide(i, action, servants) {
         <div class="cmd-frame"><span class="cmd-name">${esc(label)}</span>
           <span class="cmd-perk">${m.type === 'skill' ? 'Skill' : m.type === 'np' ? 'Noble Phantasm' : 'Attack'}</span></div>
       </div>
-      ${action.seal ? `<div class="reveal-seal"><i class="seal-mark"></i> ${SEAL_INFO[action.seal].name}</div>` : '<div class="reveal-seal none">No seal</div>'}
+      ${sealsUsed ? `<div class="reveal-seal"><i class="seal-mark"></i> ${sealsUsed > 1 ? `${sealsUsed} Command Seals` : 'Command Seal'}</div>` : '<div class="reveal-seal none">No seal</div>'}
     </div>`;
 }
 
@@ -1513,7 +1564,7 @@ function showReveal({ turn, actions, log }, state, onContinue, { autoNote = fals
   openOverlay(`
     <div class="reveal">
       <h4>Turn ${turn}</h4>
-      <div class="reveal-row">${revealSide(0, actions[0], state.servants)}<div class="versus">VS</div>${revealSide(1, actions[1], state.servants)}</div>
+      <div class="reveal-row">${revealSide(0, actions[0], state.servants, log)}<div class="versus">VS</div>${revealSide(1, actions[1], state.servants, log)}</div>
       <div class="clash-banner ${banner.cls}">${esc(banner.text)}</div>
       <div class="reveal-log">${log.map((l, k) => `<p class="log-${l.type}" style="animation-delay:${0.25 + k * 0.35}s">${logLine(l.msg, state.servants)}</p>`).join('')}</div>
       ${revealHp(state)}

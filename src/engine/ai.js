@@ -12,8 +12,8 @@
 //     difficulty can be tuned without changing the logic.
 // It never looks at the opponent's locked action; it only uses public state.
 
-import { getLegalActions, resolveTurn } from './engine.js';
-import { CARDS } from './constants.js';
+import { getLegalActions, resolveTurn, useSeal } from './engine.js';
+import { CARDS, TUNING as T } from './constants.js';
 
 const POSITIVE = new Set(['atkUp', 'cardUp', 'npUp', 'npGainUp', 'cardNpGainUp', 'flatDamage', 'nextHitUp', 'debuffResist']);
 
@@ -30,7 +30,6 @@ function buffScore(p) {
     else if (b.type === 'sureHit' || b.type === 'busterConvert') v += 0.25;
     else if (b.type === 'atkDown' || b.type === 'defDown') v -= (b.value / 100) * t * 0.9;
   }
-  if (p.empower) v += 0.6;
   return v;
 }
 
@@ -65,11 +64,7 @@ function myCandidates(state, i) {
   const mains = [...legal.attacks.map(card => ({ type: 'attack', card })), ...skillMains(state, i, legal)];
   if (legal.np) mains.push({ type: 'np' });
   const out = mains.map(main => ({ main, seal: null }));
-  // Seal pairings worth considering (kept small so the search stays fast)
-  if (legal.seals.includes('heal') && p.hp / p.maxHp < 0.45) out.push(...mains.map(main => ({ main, seal: 'heal' })));
-  if (legal.seals.includes('recharge') && p.ap <= 2) for (const main of mains) if (main.type === 'attack') out.push({ main, seal: 'recharge' });
-  if (legal.seals.includes('empower')) for (const main of mains) if (main.type === 'attack') out.push({ main, seal: 'empower' });
-  if (legal.seals.includes('grandOrder') && p.np <= 40) for (const main of mains) if (main.type !== 'np') out.push({ main, seal: 'grandOrder' });
+  void p;
   // Left Hand & Right Hand: simulate with the first option; the final pick is randomized in chooseAction
   if (legal.choice) for (const a of out) a.choice = legal.choice[0].id;
   return out;
@@ -129,13 +124,12 @@ function chooseActionInner(state, i, { strength = 0.7, random = Math.random, kno
       ev += p * value(resolveTurn(base, acts).state, i);
     }
     if (a.main.type === 'attack') ev -= 0.1 * recent.filter(c => c === a.main.card).length;
-    if (a.seal) ev -= 0.15; // spend seals only when they clearly help
     return { a, ev };
   });
 
   // Deliberate mistakes at low strength: a random legal attack.
   if (random() < (1 - strength) * 0.3) {
-    const attacks = scored.filter(x => x.a.main.type === 'attack' && !x.a.seal);
+    const attacks = scored.filter(x => x.a.main.type === 'attack');
     if (attacks.length) return attacks[Math.floor(random() * attacks.length)].a;   // none during a forced NP
   }
   // Softmax: low strength = flatter (more random), high = sharper.
@@ -155,3 +149,28 @@ export function wantsForesight(state, i, { random = Math.random } = {}) {
   const foeNpReady = state.players[1 - i].np >= 100;
   return random() < (foeNpReady ? 0.8 : 0.2);
 }
+
+// Command Seals (Replenish Magical Energy: heal + NP charge) are spent before choosing an action.
+// How many to use right now (0 to all that are left):
+//  - enough to fill the NP gauge, when firing it now matters (either side under half HP, or late)
+//  - one or two to heal when low
+export function sealPlan(state, i, { strength = 0.7, random = Math.random } = {}) {
+  const p = state.players[i], op = state.players[1 - i];
+  if (state.over || p.seals < 1) return 0;
+  if (random() < (1 - strength) * 0.3) return 0;   // weaker CPUs sometimes sit on them
+  const hp = p.hp / p.maxHp, opHp = op.hp / op.maxHp;
+  const npReady = getLegalActions(state, i).np;
+  const need = Math.ceil((T.npMax - p.np) / T.seals.npCharge);
+  if (!npReady && need <= p.seals && (opHp < 0.5 || hp < 0.5 || state.turn > 8)) return need;
+  if (hp < 0.3) return Math.min(p.seals, 2);
+  if (hp < 0.45) return 1;
+  return 0;
+}
+
+// Spend that many seals; returns the new state.
+export function applySealPlan(state, i, opts) {
+  let st = state;
+  for (let k = sealPlan(state, i, opts); k > 0; k--) st = useSeal(st, i).state;
+  return st;
+}
+

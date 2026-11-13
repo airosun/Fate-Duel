@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { RoomManager, MAX_MEMBERS } from '../src/server/rooms.js';
 
-const atk = card => ({ main: { type: 'attack', card }, seal: null });
+const atk = card => ({ main: { type: 'attack', card } });
 
 function room3() {
   const rm = new RoomManager();
@@ -364,4 +364,26 @@ test('Holy Grail War: leaving mid-war hands the seat to a CPU', () => {
   }
   const end = playWar(rm, room, [H, C].filter(id => id !== inFight));
   assert.equal(end.stage, 'over');
+});
+
+test('Command Seal online: resolves at once for the user, not while locked, shows to everyone', () => {
+  const { rm, room, H, B, C } = room3();
+  startBattle(rm, room, H, B);
+  const before = room.duel.match.players[0];
+  rm.seal(room, H);
+  const after = room.duel.match.players[0];
+  assert.equal(after.seals, before.seals - 1);
+  assert.ok(after.np > before.np);
+  assert.equal(rm.snapshot(room, C).duel.match.players[0].seals, 2);   // spectators see it
+  assert.equal(rm.snapshot(room, B).duel.match.players[0].seals, 2);   // so does the opponent
+  rm.lock(room, H, atk('quick'));
+  assert.throws(() => rm.seal(room, H), /already locked in/);
+  assert.throws(() => rm.seal(room, C), /not in the current duel/);
+  rm.unlock(room, H);
+  rm.seal(room, H); rm.seal(room, H);
+  assert.throws(() => rm.seal(room, H), /No Command Seals/);
+  rm.lock(room, H, atk('quick'));
+  rm.lock(room, B, atk('quick'));
+  const line = room.duel.lastTurn.log.find(l => l.type === 'seal');
+  assert.match(line.msg, /uses 3 Command Seals/);
 });
