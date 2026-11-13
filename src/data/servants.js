@@ -61,7 +61,7 @@ export const SERVANTS = {
     passives: [
       classPassive('madness', 'B'),
       classPassive('divinity', 'A'),
-      unique('12 Labors', "Guts once: revives at 25% HP, but his NP gauge and AP reset to 0",
+      unique('12 Labors', "Guts once: revives at 25% HP, [[but his NP gauge and AP reset to 0]]",
         [{ type: 'guts', value: 25, charges: 1, resetNp: true, resetAp: true }]),
     ],
     skills: [
@@ -341,7 +341,7 @@ export const SERVANTS = {
                   { type: 'cardUp', card: 'arts', value: 25, turns: 3, chance: 80 },
                   { type: 'cardUp', card: 'buster', value: 25, turns: 3, chance: 80 }] },
       { id: 'battle_retreat', name: 'Battle Retreat B', cost: 6, costStep: 3,
-        desc: "Heal 30% HP; removes all of their own buffs (passives stay)",
+        desc: "Heal 30% HP; [[removes all of their own buffs (passives stay)]]",
         effects: [{ type: 'removeBuffs' }, { type: 'heal', value: 30 }] },
     ],
     np: { name: 'Zabaniya (Delusional Illusion)', card: 'arts', mult: 3.5,
@@ -529,7 +529,7 @@ export const SERVANTS = {
         desc: "Applies Evade and Damage Cut 20% (2 turns)",
         effects: [{ type: 'evade', turns: 2 }, { type: 'damageCut', value: 20, turns: 2 }] },
       { id: 'eternal_consecration', name: 'Eternal Consecration EX', cost: 5,
-        desc: "AP +6; lose 5% HP (can't KO him); Crit damage +30% (3 turns)",
+        desc: "AP +6; [[lose 5% HP (can't KO him)]]; Crit damage +30% (3 turns)",
         effects: [{ type: 'apGain', value: 6 }, { type: 'hpCost', value: 5 }, { type: 'critDmgUp', value: 30, turns: 3 }] },
       { id: 'wisdom_of_divine', name: 'Wisdom of Divine A+', cost: 6,
         desc: "Quick +25%, Arts +25% and Buster +25% (3 turns); Applies Sure Hit (3 turns)",
@@ -795,11 +795,11 @@ export const SERVANTS = {
         desc: "60% chance to inflict Shocked (next turn); Enemy DEF −20% (this turn)",
         effects: [{ type: 'stun', value: 100, turns: 2, chance: 60, label: 'Shocked', target: 'enemy' }, { type: 'defDown', value: 20, turns: 1, target: 'enemy' }] },
       { id: 'overload', name: 'Overload C', cost: 4,
-        desc: "NP damage +30% (3 turns); Burn on herself (20 per turn, 5 turns)",
+        desc: "NP damage +30% (3 turns); [[Burn on herself (20 per turn, 5 turns)]]",
         effects: [{ type: 'npUp', value: 30, turns: 3 }, { type: 'burn', value: 20, turns: 5, refresh: true }] },
     ],
     np: { name: 'Blasted Tree', card: 'quick', mult: 3.95,
-          desc: "Heavy Quick damage; Enemy Crit chance −15% (3 turns); 60% chance to inflict Shocked on herself (next turn)",
+          desc: "Heavy Quick damage; Enemy Crit chance −15% (3 turns); [[60% chance to inflict Shocked on herself (next turn)]]",
           postEffects: [{ type: 'critDown', value: 15, turns: 4, target: 'enemy' }, { type: 'stun', value: 100, turns: 2, chance: 60, label: 'Shocked' }] },
   },
 
@@ -810,7 +810,7 @@ export const SERVANTS = {
     favoredCard: 'buster', hpMult: 0.828,
     passives: [
       classPassive('madness', 'EX'),
-      unique('Unyielding Will', "Once, a lethal blow leaves him at 1 HP with a full NP gauge. Next turn he must fire his NP and can't fall before it lands; then he falls unless it took the enemy down",
+      unique('Unyielding Will', "Once, a lethal blow leaves him at 1 HP with a full NP gauge. Next turn he must fire his NP and can't fall before it lands; [[then he falls unless it took the enemy down]]",
         [{ type: 'lastStand' }]),
     ],
     skills: [
@@ -909,7 +909,7 @@ export const SERVANTS = {
         effects: [{ type: 'cardUp', card: 'quick', value: 50, turns: 3 }, { type: 'cardUp', card: 'arts', value: 50, turns: 3 }, { type: 'npCharge', value: 50 }] },
     ],
     np: { name: 'Verg Avesta', subtitle: 'False Copy of Inscribed Creation', card: 'arts', mult: 0, equalize: true,
-          desc: "Equalizes HP %: if his is lower, the enemy's HP drops to match (can't be blocked); if his is higher, his own HP drops to match" },
+          desc: "Equalizes HP %: if his is lower, the enemy's HP drops to match (can't be blocked); [[if his is higher, his own HP drops to match]]" },
   },
 };
 

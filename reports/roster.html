@@ -19,6 +19,7 @@
 [data-class="Rider"] { --cls: #c98b2c; } [data-class="Caster"] { --cls: #7b4cc9; } [data-class="Assassin"] { --cls: #5d6380; }
 [data-class="Berserker"] { --cls: #9c2c4f; }
 .term { text-decoration: underline dotted; text-underline-offset: 2px; cursor: help; }
+.demerit { color: #e5484d; }
 [data-class="Ruler"] { --cls: #b8963a; }
 [data-class="Avenger"] { --cls: #3d2350; }
 * { box-sizing: border-box; }
@@ -143,7 +144,7 @@ footer { color: var(--muted); font-size: .8rem; }
       <ul class="rows">
         <li><span class="name">Mad Enhancement B</span><span>Buster +10%</span></li>
         <li><span class="name">Divinity A</span><span>+10 damage on every hit</span></li>
-        <li><span class="name">12 Labors<span class="tag">Unique</span></span><span><span class="term" tabindex="0" title="Survives one killing blow and revives.">Guts</span> once: revives at 25% HP, but his NP gauge and AP reset to 0</span></li>
+        <li><span class="name">12 Labors<span class="tag">Unique</span></span><span><span class="term" tabindex="0" title="Survives one killing blow and revives.">Guts</span> once: revives at 25% HP, <span class="demerit">but his NP gauge and AP reset to 0</span></span></li>
       </ul>
     </section>
     <section>
@@ -471,7 +472,7 @@ footer { color: var(--muted); font-size: .8rem; }
       <ul class="rows">
         <li><span class="name">Library of Stored Information B<span class="ap">5 AP</span></span><span>NP +30%; NP gain +30%, <span class="term" tabindex="0" title="Chance-based buffs are this much more likely to land, and enemy buff-failure effects (Breaker Gorgon) are this much weaker.">Buff success</span> +20% and <span class="term" tabindex="0" title="Crits deal this much more damage, on top of the usual crit multiplier (Quick and Arts 1.5×, Buster 1.75×).">Crit damage</span> +30% (3 turns)</span></li>
         <li><span class="name">Expert of Many Specializations A+<span class="ap">5 AP</span></span><span>Applies <span class="term" tabindex="0" title="Dodges regular attacks. Noble Phantasms still hit, and Sure Hit and Pierce Evade go through it.">Evade</span> (2 turns); Quick +25%, Arts +25% and Buster +25% (3 turns), each with an 80% chance</span></li>
-        <li><span class="name">Battle Retreat B<span class="ap">6 AP +3/use</span></span><span>Heal 30% HP; removes all of their own buffs (passives stay). Costs 3 more AP each time it's used</span></li>
+        <li><span class="name">Battle Retreat B<span class="ap">6 AP +3/use</span></span><span>Heal 30% HP; <span class="demerit">removes all of their own buffs (passives stay)</span>. Costs 3 more AP each time it's used</span></li>
       </ul>
     </section>
     <div class="np">
@@ -713,7 +714,7 @@ footer { color: var(--muted); font-size: .8rem; }
       <h5>Skills</h5>
       <ul class="rows">
         <li><span class="name">Eye of the Mind (True) A<span class="ap">4 AP</span></span><span>Applies <span class="term" tabindex="0" title="Dodges regular attacks. Noble Phantasms still hit, and Sure Hit and Pierce Evade go through it.">Evade</span> and <span class="term" tabindex="0" title="Takes this % less damage from attacks and Noble Phantasms. Stacks up to 90%.">Damage Cut</span> 20% (2 turns)</span></li>
-        <li><span class="name">Eternal Consecration EX<span class="ap">5 AP</span></span><span>AP +6; lose 5% HP (can&#39;t KO him); <span class="term" tabindex="0" title="Crits deal this much more damage, on top of the usual crit multiplier (Quick and Arts 1.5×, Buster 1.75×).">Crit damage</span> +30% (3 turns)</span></li>
+        <li><span class="name">Eternal Consecration EX<span class="ap">5 AP</span></span><span>AP +6; <span class="demerit">lose 5% HP (can&#39;t KO him)</span>; <span class="term" tabindex="0" title="Crits deal this much more damage, on top of the usual crit multiplier (Quick and Arts 1.5×, Buster 1.75×).">Crit damage</span> +30% (3 turns)</span></li>
         <li><span class="name">Wisdom of Divine A+<span class="ap">6 AP</span></span><span>Quick +25%, Arts +25% and Buster +25% (3 turns); Applies <span class="term" tabindex="0" title="Attacks always hit: they go through Evade and can't be dodged by decoys. Invincible still blocks them. Some effects react to Sure Hit specifically (Akhilleus Kosmos).">Sure Hit</span> (3 turns)</span></li>
       </ul>
     </section>
@@ -1028,12 +1029,12 @@ footer { color: var(--muted); font-size: .8rem; }
       <ul class="rows">
         <li><span class="name">Galvanism B<span class="ap">5 AP</span></span><span>NP gain +40% (3 turns)</span></li>
         <li><span class="name">Lament of the Falsely Living C<span class="ap">6 AP</span></span><span>60% chance to inflict <span class="term" tabindex="0" title="Stunned by electricity: loses the whole next action. Chance-based: it can miss when it is applied.">Shocked</span> (next turn); Enemy <span class="term" tabindex="0" title="DEF down: takes this % more damage from attacks and Noble Phantasms.">DEF</span> −20% (this turn)</span></li>
-        <li><span class="name">Overload C<span class="ap">4 AP</span></span><span>NP damage +30% (3 turns); <span class="term" tabindex="0" title="Takes fixed damage at the end of each turn. Recasting refreshes it instead of stacking.">Burn</span> on herself (20 per turn, 5 turns)</span></li>
+        <li><span class="name">Overload C<span class="ap">4 AP</span></span><span>NP damage +30% (3 turns); <span class="demerit"><span class="term" tabindex="0" title="Takes fixed damage at the end of each turn. Recasting refreshes it instead of stacking.">Burn</span> on herself (20 per turn, 5 turns)</span></span></li>
       </ul>
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Blasted Tree</h4><span class="card quick">Quick</span><span class="mult">3.95×</span></div>
-    <p>Heavy Quick damage; Enemy <span class="term" tabindex="0" title="Changes the chance that a regular attack crits. The base chance comes from the servant's star absorption (20% max).">Crit chance</span> −15% (3 turns); 60% chance to inflict <span class="term" tabindex="0" title="Stunned by electricity: loses the whole next action. Chance-based: it can miss when it is applied.">Shocked</span> on herself (next turn)</p></div>
+    <p>Heavy Quick damage; Enemy <span class="term" tabindex="0" title="Changes the chance that a regular attack crits. The base chance comes from the servant's star absorption (20% max).">Crit chance</span> −15% (3 turns); <span class="demerit">60% chance to inflict <span class="term" tabindex="0" title="Stunned by electricity: loses the whole next action. Chance-based: it can miss when it is applied.">Shocked</span> on herself (next turn)</span></p></div>
     <p class="fgo">FGO stats: 10,687 HP · 9,441 ATK · NP 0.83% / 5%</p>
   </article>
 
@@ -1054,7 +1055,7 @@ footer { color: var(--muted); font-size: .8rem; }
       <h5>Passives</h5>
       <ul class="rows">
         <li><span class="name">Mad Enhancement EX</span><span>Buster +15%</span></li>
-        <li><span class="name">Unyielding Will<span class="tag">Unique</span></span><span>Once, a lethal blow leaves him at 1 HP with a full NP gauge. Next turn he must fire his NP and can&#39;t fall before it lands; then he falls unless it took the enemy down</span></li>
+        <li><span class="name">Unyielding Will<span class="tag">Unique</span></span><span>Once, a lethal blow leaves him at 1 HP with a full NP gauge. Next turn he must fire his NP and can&#39;t fall before it lands; <span class="demerit">then he falls unless it took the enemy down</span></span></li>
       </ul>
     </section>
     <section>
@@ -1171,7 +1172,7 @@ footer { color: var(--muted); font-size: .8rem; }
     </section>
     <div class="np">
     <div class="np-head"><span class="label">Noble Phantasm</span><h4>Verg Avesta</h4><span class="card arts">Arts</span><span class="mult">0×</span></div>
-    <p>Equalizes HP %: if his is lower, the enemy&#39;s HP drops to match (can&#39;t be blocked); if his is higher, his own HP drops to match</p></div>
+    <p>Equalizes HP %: if his is lower, the enemy&#39;s HP drops to match (can&#39;t be blocked); <span class="demerit">if his is higher, his own HP drops to match</span></p></div>
     <p class="fgo">FGO stats: 7,981 HP · 5,683 ATK · NP 0.79% / 5%</p>
   </article>
   </main>

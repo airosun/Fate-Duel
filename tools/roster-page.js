@@ -92,6 +92,7 @@ const html = `<!DOCTYPE html>
 [data-class="Rider"] { --cls: #c98b2c; } [data-class="Caster"] { --cls: #7b4cc9; } [data-class="Assassin"] { --cls: #5d6380; }
 [data-class="Berserker"] { --cls: #9c2c4f; }
 .term { text-decoration: underline dotted; text-underline-offset: 2px; cursor: help; }
+.demerit { color: #e5484d; }
 [data-class="Ruler"] { --cls: #b8963a; }
 [data-class="Avenger"] { --cls: #3d2350; }
 * { box-sizing: border-box; }

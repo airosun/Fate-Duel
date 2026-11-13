@@ -53,8 +53,12 @@ export function termDef(text) {
 }
 
 // Input is already HTML-escaped text; returns HTML with each named effect wrapped.
+// Demerits are written [[like this]] in descriptions: drawn in red, and dropped from plain-text tooltips.
+export const plainDesc = t => String(t ?? '').replace(/\[\[|\]\]/g, '');
+const demerits = html => html.replace(/\[\[/g, '<span class="demerit">').replace(/\]\]/g, '</span>');
+
 export function glossify(html) {
-  return html.replace(ALL, m => {
+  return demerits(html).replace(ALL, m => {
     const g = termDef(m);
     if (!g) return m;
     const title = g.term === 'resist' ? `${m.split(' ')[0]} resist` : g.term;

@@ -10,7 +10,7 @@ import { CARD_LABEL, describeSkill, describeNp, describeEffects, buffChip } from
 import { chooseAction, wantsForesight } from '/src/engine/ai.js';
 import { statsHtml } from './stats.js';
 import { pro } from '/src/engine/pronouns.js';
-import { glossify } from './glossary.js';
+import { glossify, plainDesc } from './glossary.js';
 import { nextStrength, START_STRENGTH } from '/src/engine/difficulty.js';
 
 const app = document.getElementById('app');
@@ -797,7 +797,7 @@ function controlsHtml() {
                 ${conv && c !== 'buster' ? '<span class="cmd-conv">hits as Buster</span>' : ''}
               </div>
             </button>`).join('')}
-          <span class="np-wrap" tabindex="0" data-tip-title="${esc(np.name)}${np.modeName ? ` (${esc(np.modeName)})` : ''}" data-tip="${esc(describeNp(np))}"
+          <span class="np-wrap" tabindex="0" data-tip-title="${esc(np.name)}${np.modeName ? ` (${esc(np.modeName)})` : ''}" data-tip="${esc(plainDesc(describeNp(np)))}"
             data-tip-meta="${esc(`Noble Phantasm · ${CARD_LABEL[np.card]} · Gauge ${p.np}%${s.np.modes ? ' · Mode set by its skill' : ''}`)}">
           <button class="np-card ${legal.np ? 'ready' : ''} ${sel('np') ? 'selected' : ''}" id="np" ${legal.np ? '' : 'disabled'}>
             <span class="np-label">Noble Phantasm${np.modeName ? ` · ${esc(np.modeName)}` : ''}</span>

@@ -645,3 +645,7 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
 .term:focus-visible { outline: 1px solid var(--gold); outline-offset: 1px; border-radius: 2px; }
 #tipbox { pointer-events: none; }
 .ap-cost.raised { color: #ff9f6b; }
+
+/* demerit effects in skill / NP / passive text */
+.demerit, .kit-row span.demerit, small .demerit, #refcard .demerit { color: #ff6b6b; }
+.demerit .term, .kit-row span.demerit span.term { color: inherit; }
