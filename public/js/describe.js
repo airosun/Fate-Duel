@@ -70,11 +70,17 @@ function describeEffectCore(e) {
     case 'lastStand': return 'Survive one lethal blow for a final NP';
     case 'hpRegen': return `heal ${v}% HP each turn${turnsText(e)}`;
     case 'poison': return `${who}Poison (${v} per turn)${turnsText(e)}`;
+    case 'bleed': return `${who}Bleed (${v} per turn)${turnsText(e)}${e.chance != null ? ` at ${e.chance}% chance` : ''}`;
+    case 'pierceInvincible': return `Attacks pierce Invincible${turnsText(e)}`;
+    case 'skillCostDown': return `Skills cost ${v} less AP${turnsText(e)}`;
+    case 'npSkillDiscount': return `After each NP: skills cost ${v} less AP (${e.markTurns ?? 2} turns)`;
+    case 'npEqualizeChance': return `${v}% chance each turn to split NP gauges evenly when the enemy has more`;
+    case 'offenseFailChance': return `Own offensive buffs ${v}% chance to fail${turnsText(e)}`;
     case 'nullifyBoosts': return `${who}deals base damage (boosts ignored)${turnsText(e)}`;
     case 'taunt': return `${who}Taunt next turn (attacks only)`;
     case 'confusion': return `${who}Confusion (${v}% a skill fizzles)${turnsText(e)}`;
     case 'stun': return e.value >= 100 ? `${who}can't act next turn${e.chance != null ? ` (${e.chance}% chance${e.onMiss ? '; on a miss: ' + e.onMiss.map(x => describeEffect(x)).join(', ') : ''})` : ''}` : `${who}${v}% chance to lose next turn`;
-    case 'debuffOnHit': return `${v}% chance on hit: ${e.inflict?.type === 'terror' ? 'Terror' : e.inflict?.type === 'poison' ? `Poison (${e.inflict.value}/turn)` : cap(e.inflict?.type)}`;
+    case 'debuffOnHit': return `${v}% chance on hit: ${e.inflict?.type === 'terror' ? 'Terror' : ['poison', 'bleed'].includes(e.inflict?.type) ? `${cap(e.inflict.type)} (${e.inflict.value}/turn)` : cap(e.inflict?.type)}`;
     case 'apChance': return `${v}% chance of +${e.amount} AP each turn${turnsText(e)}`;
     case 'npSeal': return `${who}NP Seal this turn (NP fizzles, -${v}% gauge)`;
     case 'debuffResistDown': return `${who}debuff resist -${v}%${turnsText(e)}`;
@@ -151,6 +157,7 @@ const BUFF_LABEL = {
   bonusVsStatus: 'vs Petrified↑', buffFailChance: 'Breaker Gorgon', copyEnemyUnique: 'Trace On',
   instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF', terror: 'Terror', curse: 'Curse', divineIntervention: 'Divine Intervention', npDown: 'NP Dmg↓', buffDurationUp: 'Buffs +1T', debuffDurationUp: 'Debuffs +1T', npRegen: 'NP Regen', shock: 'Shock', burn: 'Burn', lastStand: 'Unyielding Will', lastStandActive: 'Blaze of Glory', hpRegen: 'HP Regen', madness: 'Madness', charm: 'Charm', starCrossed: 'Star-Crossed', rpsOverride: 'Misty Night', poison: 'Poison', nullifyBoosts: 'No Boosts', npOnlyKo: 'Kosmos', taunt: 'Taunted', confusion: 'Confusion', stun: 'Trap', debuffOnHit: 'Black Luna', apChance: 'AP Chance', npSeal: 'NP Seal', debuffResistDown: 'Debuff Res↓', doubleShot: 'Golden Apple', foresight: 'Foresight', maxApUp: 'Max AP↑', statusOnHit: "Fafnir's Blood", dmgVsStatus: 'vs Dragon↑', extraHitChance: 'Sea Demons', missChance: 'Decoys', buffSuccessUp: 'Buff Success↑', cardVuln: '↓ Resist',
   mirrorAtkUp: 'Arms Mastery', apRecoveryUp: 'AP Recovery↑', npGainDefUp: 'NP Gain (hit)↑', critUp: 'Crit Chance↑', worldsEvils: 'Power Boost', critDmgUp: 'Crit Dmg↑', critDown: 'Crit Chance↓', apGainUp: 'AP Gain↑', apDelayed: 'AP Later', removalResist: 'Removal Resist', nextCardUp: 'Next Buster↑', extraSeal: 'Extra Seal',
+  bleed: 'Bleed', pierceInvincible: 'Pierce Invincible', skillCostDown: 'Skill Cost↓', npSkillDiscount: "Fox's Blessing", npEqualizeChance: 'Take from the Rich', offenseFailChance: 'Restless',
 };
 
 // Plain-language explanation of what a buff, debuff or passive does.
@@ -176,7 +183,8 @@ export function explainBuff(b, owner) {
       const at = b.value ? `${v}% HP` : '1 HP';
       const reset = b.resetNp || b.resetAp ? ` ${Cap(P.their)} NP gauge and AP drop to 0 on revival.` : ` ${Cap(P.they)} ${P.plural ? 'keep' : 'keeps'} ${P.their} AP and NP gauge.`;
       const bonus = b.onRevive?.length ? ` On revival: ${b.onRevive.map(x => describeEffect(x)).join(', ')}.` : '';
-      return `Guts: survives one killing blow and comes back at ${at}.${reset}${bonus}`;
+      const times = (b.charges ?? 1) > 1 ? `the next ${b.charges} killing blows` : 'one killing blow';
+      return `Guts: survives ${times} and comes back at ${at} each time.${reset}${bonus}`;
     }
     case 'atkDown': return `Deals ${v}% less damage.`;
     case 'defDown': return `Takes ${v}% more damage from attacks and Noble Phantasms.`;
@@ -205,6 +213,12 @@ export function explainBuff(b, owner) {
     case 'hpRegen': return `Heals ${v}% of max HP at the end of each turn.`;
     case 'rpsOverride': return `When a ${c} attack meets ${b.vs === 'buster' ? 'Buster' : b.vs}, a ${v}% chance the ${c} attack wins the clash instead.`;
     case 'poison': return `Poisoned: takes ${Math.round(b.value)} damage at the end of each turn. Each Poison is a separate stack; stacks add up.`;
+    case 'bleed': return `Bleeding: takes ${Math.round(b.value)} damage at the end of each turn. Each Bleed is a separate stack; stacks add up.`;
+    case 'pierceInvincible': return `${Cap(P.their)} regular attacks go through Invincible.`;
+    case 'skillCostDown': return `${Cap(P.their)} skills cost ${v} less AP.`;
+    case 'npSkillDiscount': return `After each of ${P.their} Noble Phantasms, ${P.their} skills cost ${v} less AP for ${b.markTurns ?? 2} turns.`;
+    case 'npEqualizeChance': return `At the end of each turn the enemy has more NP than ${P.them}: ${v}% chance to add both NP gauges together and split them evenly.`;
+    case 'offenseFailChance': return `Restless: each offensive buff ${P.they} ${P.plural ? 'give' : 'gives'} ${P.themself} (ATK, card, NP damage, crit) has a ${v}% chance to fail.`;
     case 'nullifyBoosts': return `No Boosts: deals base damage. ${Cap(P.their)} ATK up, card effectiveness, NP damage up, flat damage and other boosts (passives too) are ignored. Debuffs still apply.`;
     case 'npOnlyKo': return `Only a Noble Phantasm can down ${P.them}: anything else leaves ${P.them} at 1 HP. A landed Sure Hit attack strikes the heel and removes this.`;
     case 'taunt': return `Taunted: ${P.they} can only attack (no skills, no Noble Phantasm).`;
@@ -261,6 +275,8 @@ export function buffChip(b, owner) {
   if (b.type === 'stun' && b.label) label = b.label;
   if (b.type === 'statusMark' && b.status === 'petrified') label = 'Petrified';
   if (b.type === 'doubleShot') label = '2nd Arrow';
+  if (b.type === 'debuffOnHit' && b.inflict?.type === 'bleed') label = 'Impaler';
+  if (b.type === 'debuffOnHit' && b.inflict?.type === 'poison') label = 'Chalice';
   if (b.type === 'statusMark') label = b.status[0].toUpperCase() + b.status.slice(1);
   if (b.type === 'curse') label = 'Curse';
   if (b.type === 'worldsEvils') {   // live total: debuffs on him x (10% + 20% x missing HP)
@@ -270,7 +286,7 @@ export function buffChip(b, owner) {
   }
   // Labels never include the value; it's appended once here.
   const val = b.type === 'apRecoveryDown' ? ` −${Math.round(b.value)} AP` : b.type === 'apRecoveryUp' ? ` +${Math.round(b.value)} AP`
-    : ['curse', 'poison', 'shock', 'burn'].includes(b.type) ? ` ${Math.round(b.value)}/turn` : ['hpRegen', 'npRegen'].includes(b.type) ? ` ${b.value}%/turn` : ['buffDurationUp', 'debuffDurationUp'].includes(b.type) ? ''
+    : ['curse', 'poison', 'shock', 'burn', 'bleed'].includes(b.type) ? ` ${Math.round(b.value)}/turn` : ['hpRegen', 'npRegen'].includes(b.type) ? ` ${b.value}%/turn` : ['buffDurationUp', 'debuffDurationUp'].includes(b.type) ? ''
     : b.value && !['evade', 'invincible', 'busterConvert', 'apRegen', 'flatDamage', 'sureHit', 'copyEnemyUnique', 'guts', 'ignoreDamageCut', 'nullifyBoosts', 'madness', 'charm', 'lastStand', 'lastStandActive', 'divineIntervention', 'taunt', 'npOnlyKo', 'pierceEvade', 'statusMark', 'worldsEvils'].includes(b.type)
       ? ` ${Math.round(b.value)}%` : (['apRegen', 'flatDamage'].includes(b.type) ? ` +${b.value}` : '');
   const kind = b.debuff ? 'debuff' : b.turns === null ? 'passive' : 'active';

@@ -27,7 +27,7 @@ export const SERVANTS = {
   artoria: {
     id: 'artoria', name: 'Artoria Pendragon', class: 'Saber', pronouns: 'she/her', rarity: 5, starAbsorb: 102,
     fgoHp: 15150, fgoAtk: 11221, fgoNpAtk: 0.86, fgoNpDef: 3,
-    hpMult: 0.925, favoredCard: 'buster',
+    hpMult: 0.93, favoredCard: 'buster',
     passives: [
       classPassive('magicResistance', 'A'),
       classPassive('riding', 'B'),
@@ -56,13 +56,13 @@ export const SERVANTS = {
   heracles: {
     id: 'heracles', name: 'Heracles', class: 'Berserker', pronouns: 'he/him', rarity: 4, starAbsorb: 10,
     fgoHp: 10327, fgoAtk: 10655, fgoNpAtk: 1.07, fgoNpDef: 5,
-    hpMult: 0.804,
+    hpMult: 0.69,
     favoredCard: 'buster', maxApBonus: -2,
     passives: [
       classPassive('madness', 'B'),
       classPassive('divinity', 'A'),
-      unique('12 Labors', "Guts once: revives at 25% HP, [[but his NP gauge and AP reset to 0]]",
-        [{ type: 'guts', value: 25, charges: 1, resetNp: true, resetAp: true }]),
+      unique('12 Labors', "Guts twice: revives at 25% HP each time, [[but his NP gauge and AP reset to 0]]",
+        [{ type: 'guts', value: 25, charges: 2, resetNp: true, resetAp: true }]),
     ],
     skills: [
       { id: 'bravery', name: 'Bravery A+', cost: 5,
@@ -86,7 +86,7 @@ export const SERVANTS = {
   medea: {
     id: 'medea', name: 'Medea', class: 'Caster', pronouns: 'she/her', rarity: 3, starAbsorb: 50,
     fgoHp: 8643, fgoAtk: 7418, fgoNpAtk: 1.64, fgoNpDef: 3,
-    favoredCard: 'arts', hpMult: 0.998, maxApBonus: 2,
+    favoredCard: 'arts', hpMult: 0.997, maxApBonus: 2,
     passives: [
       classPassive('territoryCreation', 'A'),
       unique("Hecate's Staff", "Her master starts with an extra Command Seal (4 instead of 3)", [{ type: 'extraSeal', value: 1 }]),
@@ -116,7 +116,7 @@ export const SERVANTS = {
   kojirou: {
     id: 'kojirou', name: 'Sasaki Kojirou', class: 'Assassin', pronouns: 'he/him', rarity: 1, starAbsorb: 102,
     fgoHp: 6220, fgoAtk: 5735, fgoNpAtk: 1.05, fgoNpDef: 4,
-    favoredCard: 'quick', hpMult: 1.067,
+    favoredCard: 'quick', hpMult: 1.068,
     passives: [
       classPassive('presenceConcealment', 'D'),
       unique('Heaven Among the Mountains', "His Quick attacks Pierce Evade",
@@ -143,7 +143,7 @@ export const SERVANTS = {
   emiya: {
     id: 'emiya', name: 'EMIYA', class: 'Archer', pronouns: 'he/him', rarity: 4, starAbsorb: 145,
     fgoHp: 11521, fgoAtk: 9398, fgoNpAtk: 0.51, fgoNpDef: 3,
-    favoredCard: 'arts', hpMult: 1.006,
+    favoredCard: 'arts', hpMult: 1.023,
     passives: [
       classPassive('magicResistance', 'D'),
       classPassive('independentAction', 'B'),
@@ -181,7 +181,7 @@ export const SERVANTS = {
   cu: {
     id: 'cu', name: 'Cú Chulainn', class: 'Lancer', pronouns: 'he/him', rarity: 3, starAbsorb: 87,
     fgoHp: 9593, fgoAtk: 7239, fgoNpAtk: 1.07, fgoNpDef: 4,
-    hpMult: 0.878,
+    hpMult: 0.887,
     favoredCard: 'quick',
     passives: [
       classPassive('magicResistance', 'C'),
@@ -210,7 +210,7 @@ export const SERVANTS = {
   medusa: {
     id: 'medusa', name: 'Medusa', class: 'Rider', pronouns: 'she/her', rarity: 3, starAbsorb: 194,
     fgoHp: 8937, fgoAtk: 7200, fgoNpAtk: 0.58, fgoNpDef: 3,
-    favoredCard: 'quick', hpMult: 0.978,
+    favoredCard: 'quick', hpMult: 0.985,
     passives: [
       classPassive('magicResistance', 'B'),
       classPassive('independentAction', 'C'),
@@ -239,7 +239,7 @@ export const SERVANTS = {
   hassan: {
     id: 'hassan', name: 'Hassan of the Cursed Arm', class: 'Assassin', pronouns: 'he/him', rarity: 1, starAbsorb: 97,
     fgoHp: 7594, fgoAtk: 6280, fgoNpAtk: 1.07, fgoNpDef: 4,
-    favoredCard: 'quick', hpMult: 1.106,
+    favoredCard: 'quick', hpMult: 1.108,
     passives: [
       classPassive('presenceConcealment', 'A+'),
       unique("Shaytan's Arm", "Zabaniya has a 5% chance of Instant Kill (revives don't trigger)",
@@ -265,7 +265,7 @@ export const SERVANTS = {
   gilgamesh: {
     id: 'gilgamesh', name: 'Gilgamesh', class: 'Archer', pronouns: 'he/him', rarity: 5, starAbsorb: 153,
     fgoHp: 13097, fgoAtk: 12280, fgoNpAtk: 0.34, fgoNpDef: 3,
-    hpMult: 1.039,
+    hpMult: 1.043,
     favoredCard: 'buster',
     passives: [
       classPassive('independentAction', 'A+'),
@@ -295,7 +295,7 @@ export const SERVANTS = {
   iskandar: {
     id: 'iskandar', name: 'Iskandar', class: 'Rider', pronouns: 'he/him', rarity: 5, starAbsorb: 205,
     fgoHp: 13219, fgoAtk: 11560, fgoNpAtk: 0.86, fgoNpDef: 3,
-    favoredCard: 'buster', hpMult: 0.993,
+    favoredCard: 'buster', hpMult: 0.994,
     passives: [
       classPassive('magicResistance', 'D'),
       classPassive('riding', 'A+'),
@@ -353,7 +353,7 @@ export const SERVANTS = {
   lancelot: {
     id: 'lancelot', name: 'Lancelot', class: 'Berserker', pronouns: 'he/him', rarity: 4, starAbsorb: 10,
     fgoHp: 10327, fgoAtk: 10477, fgoNpAtk: 0.5, fgoNpDef: 5,
-    favoredCard: 'buster', hpMult: 1.107,
+    favoredCard: 'buster', hpMult: 1.105,
     passives: [
       classPassive('magicResistance', 'E'),
       classPassive('madness', 'C'),
@@ -409,7 +409,7 @@ export const SERVANTS = {
   diarmuid: {
     id: 'diarmuid', name: 'Diarmuid Ua Duibhne', class: 'Lancer', pronouns: 'he/him', rarity: 3, starAbsorb: 87,
     fgoHp: 10098, fgoAtk: 6877, fgoNpAtk: 0.79, fgoNpDef: 4,
-    favoredCard: 'quick', hpMult: 1.003,
+    favoredCard: 'quick', hpMult: 1.008,
     passives: [
       classPassive('magicResistance', 'B'),
       unique("Knight's Oath", "Quick +10% and Arts +10%",
@@ -435,7 +435,7 @@ export const SERVANTS = {
   mordred: {
     id: 'mordred', name: 'Mordred', class: 'Saber', pronouns: 'she/her', rarity: 5, starAbsorb: 98,
     fgoHp: 14680, fgoAtk: 11723, fgoNpAtk: 0.56, fgoNpDef: 3,
-    hpMult: 0.97, favoredCard: 'buster',
+    hpMult: 0.979, favoredCard: 'buster',
     passives: [
       classPassive('magicResistance', 'B'),
       classPassive('riding', 'B'),
@@ -462,7 +462,7 @@ export const SERVANTS = {
   siegfried: {
     id: 'siegfried', name: 'Siegfried', class: 'Saber', pronouns: 'he/him', rarity: 4, starAbsorb: 97,
     fgoHp: 14165, fgoAtk: 8181, fgoNpAtk: 0.83, fgoNpDef: 3,
-    favoredCard: 'buster', hpMult: 1.064,
+    favoredCard: 'buster', hpMult: 1.067,
     passives: [
       classPassive('riding', 'B'),
       unique("Fafnir's Blood", "A landed regular attack has a 35% chance to mark the enemy as a Dragon (2 turns)",
@@ -488,7 +488,7 @@ export const SERVANTS = {
   atalanta: {
     id: 'atalanta', name: 'Atalanta', class: 'Archer', pronouns: 'she/her', rarity: 4, starAbsorb: 148,
     fgoHp: 12476, fgoAtk: 8633, fgoNpAtk: 0.5, fgoNpDef: 3,
-    favoredCard: 'quick', hpMult: 0.987,
+    favoredCard: 'quick', hpMult: 0.991,
     passives: [
       classPassive('magicResistance', 'D'),
       classPassive('independentAction', 'A'),
@@ -516,7 +516,7 @@ export const SERVANTS = {
   chiron: {
     id: 'chiron', name: 'Chiron', class: 'Archer', pronouns: 'he/him', rarity: 4, starAbsorb: 148,
     fgoHp: 12250, fgoAtk: 9294, fgoNpAtk: 0.68, fgoNpDef: 3,
-    favoredCard: 'arts', hpMult: 0.938,
+    favoredCard: 'arts', hpMult: 0.936,
     passives: [
       classPassive('magicResistance', 'B'),
       classPassive('independentAction', 'A'),
@@ -545,7 +545,7 @@ export const SERVANTS = {
   vlad: {
     id: 'vlad', name: 'Vlad III', class: 'Lancer', pronouns: 'he/him', rarity: 5, starAbsorb: 9,
     fgoHp: 15086, fgoAtk: 11499, fgoNpAtk: 0.5, fgoNpDef: 5,
-    favoredCard: 'arts', hpMult: 0.847,
+    favoredCard: 'arts', hpMult: 0.853,
     passives: [
       classPassive('madness', 'EX'),
       unique('Protection of Faith', "Guts once: revives at 15% HP; on revival, NP gain +30% for the rest of the battle (a normal buff, so it can be removed)",
@@ -571,7 +571,7 @@ export const SERVANTS = {
   karna: {
     id: 'karna', name: 'Karna', class: 'Lancer', pronouns: 'he/him', rarity: 5, starAbsorb: 88,
     fgoHp: 13632, fgoAtk: 11976, fgoNpAtk: 0.72, fgoNpDef: 4,
-    favoredCard: 'buster', hpMult: 1.003,
+    favoredCard: 'buster', hpMult: 1.002,
     passives: [
       classPassive('magicResistance', 'C'),
       classPassive('riding', 'A'),
@@ -631,7 +631,7 @@ export const SERVANTS = {
   astolfo: {
     id: 'astolfo', name: 'Astolfo', class: 'Rider', pronouns: 'they/them', rarity: 4, starAbsorb: 205,
     fgoHp: 11172, fgoAtk: 8937, fgoNpAtk: 0.66, fgoNpDef: 1,
-    favoredCard: 'quick', hpMult: 0.943,
+    favoredCard: 'quick', hpMult: 0.935,
     passives: [
       classPassive('magicResistance', 'A'),
       classPassive('riding', 'A+'),
@@ -659,7 +659,7 @@ export const SERVANTS = {
   jack: {
     id: 'jack', name: 'Jack the Ripper', class: 'Assassin', pronouns: 'she/her', rarity: 5, starAbsorb: 97,
     fgoHp: 12696, fgoAtk: 11557, fgoNpAtk: 1.07, fgoNpDef: 4,
-    favoredCard: 'quick', hpMult: 0.967,
+    favoredCard: 'quick', hpMult: 0.963,
     passives: [
       classPassive('presenceConcealment', 'A+'),
       unique('The Misty Night of London', "When her Quick attack meets a Buster attack, a 20% chance her Quick wins the clash instead",
@@ -754,7 +754,7 @@ export const SERVANTS = {
   avicebron: {
     id: 'avicebron', name: 'Avicebron', class: 'Caster', pronouns: 'he/him', rarity: 3, starAbsorb: 50,
     fgoHp: 9981, fgoAtk: 6376, fgoNpAtk: 0.61, fgoNpDef: 3,
-    favoredCard: 'arts', hpMult: 1.06,
+    favoredCard: 'arts', hpMult: 1.055,
     passives: [
       classPassive('territoryCreation', 'B'),
       unique("Golem's Support", "A landed Buster attack has a 40% chance of a Golem strike for 30% of its damage",
@@ -782,7 +782,7 @@ export const SERVANTS = {
   frankenstein: {
     id: 'frankenstein', name: 'Frankenstein', class: 'Berserker', pronouns: 'she/her', rarity: 4, starAbsorb: 10,
     fgoHp: 10687, fgoAtk: 9441, fgoNpAtk: 0.83, fgoNpDef: 5,
-    favoredCard: 'buster', hpMult: 1.225,
+    favoredCard: 'buster', hpMult: 1.229,
     passives: [
       classPassive('madness', 'D'),
       unique("Procedure to Humanity", "A landed regular attack has a 20% chance to inflict Burn (20 per turn, 3 turns)", [{ type: 'debuffOnHit', value: 20, inflict: { type: 'burn', value: 20, turns: 3, refresh: true } }]),
@@ -807,7 +807,7 @@ export const SERVANTS = {
   spartacus: {
     id: 'spartacus', name: 'Spartacus', class: 'Berserker', pronouns: 'he/him', rarity: 1, starAbsorb: 9,
     fgoHp: 7722, fgoAtk: 5073, fgoNpAtk: 1.01, fgoNpDef: 5,
-    favoredCard: 'buster', hpMult: 0.817,
+    favoredCard: 'buster', hpMult: 0.812,
     passives: [
       classPassive('madness', 'EX'),
       unique('Unyielding Will', "Once, a lethal blow leaves him at 1 HP with a full NP gauge. Next turn he must fire his NP and can't fall before it lands; [[then he falls unless it took the enemy down]]",
@@ -832,7 +832,7 @@ export const SERVANTS = {
   jeanne: {
     id: 'jeanne', name: "Jeanne d'Arc", class: 'Ruler', pronouns: 'she/her', rarity: 5, starAbsorb: 99,
     fgoHp: 16500, fgoAtk: 9593, fgoNpAtk: 0.76, fgoNpDef: 3,
-    favoredCard: 'arts', hpMult: 0.753,
+    favoredCard: 'arts', hpMult: 0.747,
     passives: [
       classPassive('magicResistance', 'EX'),
       unique('Revelation from Heaven', "Heal 3% HP at the end of each turn", [{ type: 'hpRegen', value: 3 }]),
@@ -858,7 +858,7 @@ export const SERVANTS = {
   amakusa: {
     id: 'amakusa', name: 'Amakusa Shirou', class: 'Ruler', pronouns: 'he/him', rarity: 5, starAbsorb: 100,
     fgoHp: 14107, fgoAtk: 10972, fgoNpAtk: 0.86, fgoNpDef: 3,
-    favoredCard: 'buster', hpMult: 0.964,
+    favoredCard: 'buster', hpMult: 0.967,
     passives: [
       classPassive('magicResistance', 'A'),
       unique('Left Hand & Right Hand', "With his first action, his master chooses Left Hand (his buffs last 1 turn longer) or Right Hand (his debuffs on the enemy last 1 turn longer)", [{
@@ -910,6 +910,185 @@ export const SERVANTS = {
     ],
     np: { name: 'Verg Avesta', subtitle: 'False Copy of Inscribed Creation', card: 'arts', mult: 0, equalize: true,
           desc: "Equalizes HP %: if his is lower, the enemy's HP drops to match (can't be blocked); [[if his is higher, his own HP drops to match]]" },
+  },
+  // ✅ USER-DESIGNED KITS (numbers proposed by Claude, 2026-11-13)
+  nero: {
+    id: 'nero', name: 'Nero Claudius', class: 'Saber', pronouns: 'she/her', rarity: 4, starAbsorb: 102,
+    fgoHp: 11753, fgoAtk: 9449, fgoNpAtk: 0.84, fgoNpDef: 3,
+    hpMult: 0.785, favoredCard: 'arts',
+    passives: [
+      classPassive('magicResistance', 'C'),
+      classPassive('riding', 'B'),
+      unique('Thrice Setting Sun', "Guts once: revives at 20% HP; on revival, NP damage +30% (6 turns)",
+        [{ type: 'guts', value: 20, charges: 1, onRevive: [{ type: 'npUp', value: 30, turns: 6 }] }]),
+    ],
+    skills: [
+      { id: 'goblet_of_wealth', name: 'Goblet of Wealth B', cost: 5, costStep: 3,
+        desc: "NP +20%; 50% chance: Arts +30% (3 turns); Debuff Resist +30% (3 turns); Heals 10% HP",
+        effects: [{ type: 'npCharge', value: 20 }, { type: 'cardUp', card: 'arts', value: 30, turns: 3, chance: 50 },
+                  { type: 'debuffResist', value: 30, turns: 3 }, { type: 'heal', value: 10 }] },
+      { id: 'imperial_privilege', name: 'Imperial Privilege (Applause) EX', cost: 5, costStep: 3,
+        desc: "60% chance: ATK +20% (3 turns); 60% chance: Damage Cut 20% (3 turns); Heals 10% HP; Arts +20% (3 turns); AP +2 at the end of each turn (3 turns)",
+        effects: [{ type: 'atkUp', value: 20, turns: 3, chance: 60 }, { type: 'damageCut', value: 20, turns: 3, chance: 60 },
+                  { type: 'heal', value: 10 }, { type: 'cardUp', card: 'arts', value: 20, turns: 3 }, { type: 'apRegen', value: 2, turns: 3 }] },
+      { id: 'invictus_spiritus', name: 'Invictus Spiritus EX', cost: 10,
+        desc: "Removes her debuffs; Buff success +40% (6 turns); NP gain +30% (6 turns)",
+        effects: [{ type: 'cleanse' }, { type: 'buffSuccessUp', value: 40, turns: 6 }, { type: 'npGainUp', value: 30, turns: 6 }] },
+    ],
+    np: { name: "Laus Saint Claudius", card: 'arts', mult: 3.2, ignoreCut: true,
+          desc: "Heavy Arts damage that ignores Damage Cut; Enemy DEF −20% (1 turn)",
+          postEffects: [{ type: 'defDown', value: 20, turns: 2, target: 'enemy' }] },
+  },
+  robin: {
+    id: 'robin', name: 'Robin Hood', class: 'Archer', pronouns: 'he/him', rarity: 3, starAbsorb: 150,
+    fgoHp: 10187, fgoAtk: 6715, fgoNpAtk: 0.87, fgoNpDef: 3,
+    hpMult: 1.072, favoredCard: 'arts',
+    passives: [
+      classPassive('magicResistance', 'D'),
+      classPassive('independentAction', 'A'),
+      unique('Take from the Rich, Give to the Poor', "At the end of each turn the enemy has more NP than him: 10% chance to split both NP gauges evenly",
+        [{ type: 'npEqualizeChance', value: 10 }]),
+    ],
+    skills: [
+      { id: 'sabotage', name: 'Sabotage A', cost: 5,
+        desc: "Enemy ATK −20% (3 turns); Inflicts Poison (15 per turn, 5 turns)",
+        effects: [{ type: 'atkDown', value: 20, turns: 3, target: 'enemy' },
+                  { type: 'poison', value: 15, turns: 5, status: 'poisoned', target: 'enemy' }] },
+      { id: 'sage_of_the_forest', name: 'Sage of the Forest D', cost: 6,
+        desc: "NP +20%; NP gain +30% (3 turns); Arts +20% (3 turns)",
+        effects: [{ type: 'npCharge', value: 20 }, { type: 'npGainUp', value: 30, turns: 3 }, { type: 'cardUp', card: 'arts', value: 20, turns: 3 }] },
+      { id: 'may_king', name: 'May King B', cost: 6,
+        desc: "Applies Sure Hit (3 turns) and Evade (2 turns); AP +3",
+        effects: [{ type: 'sureHit', turns: 3 }, { type: 'evade', turns: 2 }, { type: 'apGain', value: 3 }] },
+    ],
+    np: { name: 'Yew Bow', card: 'arts', mult: 3.2, vsStatus: { status: 'poisoned', value: 25 },
+          desc: "Heavy Arts damage; +25% damage vs a Poisoned enemy" },
+  },
+  vlad_extra: {
+    id: 'vlad_extra', name: 'Vlad III (EXTRA)', class: 'Lancer', pronouns: 'he/him', rarity: 4, starAbsorb: 88,
+    art: '/art/vladEXTRA.png',
+    fgoHp: 13005, fgoAtk: 8775, fgoNpAtk: 1.1, fgoNpDef: 4,
+    hpMult: 0.898, favoredCard: 'buster',
+    passives: [
+      classPassive('magicResistance', 'C'),
+      unique('The Impaler', "A landed regular attack has a 25% chance to inflict Bleed (15 per turn, 5 turns)",
+        [{ type: 'debuffOnHit', value: 25, inflict: { type: 'bleed', value: 15, turns: 5, status: 'bleeding' } }]),
+    ],
+    skills: [
+      { id: 'protection_of_faith_x', name: 'Protection of Faith A+++', cost: 5, costStep: 3,
+        desc: "Debuff Resist +30% and ATK +20% (3 turns); Heals 15% HP; Damage Cut 20% (2 turns)",
+        effects: [{ type: 'debuffResist', value: 30, turns: 3 }, { type: 'heal', value: 15 },
+                  { type: 'damageCut', value: 20, turns: 2 }, { type: 'atkUp', value: 20, turns: 3 }] },
+      { id: 'dracul_tactics', name: 'Dracul Military Tactics A', cost: 5,
+        desc: "NP damage +20% and Buster +20% (3 turns); Enemy DEF −20% (2 turns)",
+        effects: [{ type: 'npUp', value: 20, turns: 3 }, { type: 'cardUp', card: 'buster', value: 20, turns: 3 },
+                  { type: 'defDown', value: 20, turns: 2, target: 'enemy' }] },
+      { id: 'innocent_monster', name: 'Innocent Monster A', cost: 5,
+        desc: "AP +2 at the end of each turn (3 turns); Inflicts Taunt (next turn)",
+        effects: [{ type: 'apRegen', value: 2, turns: 3 }, { type: 'taunt', value: 1, turns: 2, target: 'enemy' }] },
+    ],
+    np: { name: 'Kazikli Bey (Fortress of Impalement)', card: 'buster', mult: 3.4, pierceInvincible: true,
+          desc: "Heavy Buster damage that pierces Invincible; 70% chance to inflict Bleed (20 per turn, 5 turns)",
+          postEffects: [{ type: 'bleed', value: 20, turns: 6, status: 'bleeding', chance: 70, label: 'Bleed', target: 'enemy' }] },
+  },
+  drake: {
+    id: 'drake', name: 'Francis Drake', class: 'Rider', pronouns: 'she/her', rarity: 5, starAbsorb: 208,
+    fgoHp: 12830, fgoAtk: 11326, fgoNpAtk: 0.42, fgoNpDef: 3,
+    hpMult: 1.126, favoredCard: 'buster',
+    passives: [
+      classPassive('magicResistance', 'D'),
+      classPassive('riding', 'B'),
+      unique('Voyager of the Storm', "Her regular attacks pierce Evade and Invincible",
+        [{ type: 'pierceEvade' }, { type: 'pierceInvincible' }]),
+    ],
+    skills: [
+      { id: 'beyond_the_uncharted', name: 'Beyond the Uncharted', cost: 5,
+        desc: "NP damage +20%, ATK +20% and NP gain +30% (3 turns)",
+        effects: [{ type: 'npUp', value: 20, turns: 3 }, { type: 'atkUp', value: 20, turns: 3 }, { type: 'npGainUp', value: 30, turns: 3 }] },
+      { id: 'golden_rule_drake', name: 'Golden Rule of the Running Through A', cost: 6,
+        desc: "NP gain +30%, Buster +20% and Ignore Damage Cut (3 turns)",
+        effects: [{ type: 'npGainUp', value: 30, turns: 3 }, { type: 'cardUp', card: 'buster', value: 20, turns: 3 }, { type: 'ignoreDamageCut', turns: 3 }] },
+      { id: 'pioneer_of_the_stars', name: 'Pioneer of the Stars EX', cost: 6,
+        desc: "NP +30%; AP +4",
+        effects: [{ type: 'npCharge', value: 30 }, { type: 'apGain', value: 4 }] },
+    ],
+    np: { name: 'Golden Wild Hunt', card: 'buster', mult: 3.6,
+          desc: "Heavy Buster damage; AP +4",
+          postEffects: [{ type: 'apGain', value: 4 }] },
+  },
+  li_shuwen: {
+    id: 'li_shuwen', name: 'Li Shuwen', class: 'Assassin', pronouns: 'he/him', rarity: 4, starAbsorb: 87,
+    art: '/art/li.png',
+    fgoHp: 11360, fgoAtk: 9653, fgoNpAtk: 0.52, fgoNpDef: 4,
+    hpMult: 1.194, favoredCard: 'arts',
+    passives: [
+      classPassive('magicResistance', 'D'),
+      unique('No Second Strike', "His NP has a 5% chance to Instant Kill; it goes through revives",
+        [{ type: 'instantKillChance', value: 5, npName: 'Shen Qiang Wu Er Da' }]),
+    ],
+    skills: [
+      { id: 'liu_he_da_qiang', name: 'Chinese Martial Arts (Liu He Da Qiang) A+++', cost: 6,
+        desc: "Applies Sure Hit (2 turns); Crit damage +40% (2 turns)",
+        effects: [{ type: 'sureHit', turns: 2 }, { type: 'critDmgUp', value: 40, turns: 2 }] },
+      { id: 'sphere_boundary', name: 'Sphere Boundary B', cost: 6,
+        desc: "Applies Evade (2 turns); Crit chance +20% (2 turns)",
+        effects: [{ type: 'evade', turns: 2 }, { type: 'critUp', value: 20, turns: 2 }] },
+      { id: 'juezhao', name: 'Juezhao B++', cost: 5,
+        desc: "His attacks pierce Invincible (2 turns); Arts +30% (2 turns); AP +3",
+        effects: [{ type: 'pierceInvincible', turns: 2 }, { type: 'cardUp', card: 'arts', value: 30, turns: 2 }, { type: 'apGain', value: 3 }] },
+    ],
+    np: { name: 'Shen Qiang Wu Er Da', card: 'arts', mult: 3.1, ignoreCut: true,
+          desc: "Heavy Arts damage that ignores Damage Cut; Enemy DEF −20% (3 turns)",
+          postEffects: [{ type: 'defDown', value: 20, turns: 4, target: 'enemy' }] },
+  },
+  tamamo: {
+    id: 'tamamo', name: 'Tamamo no Mae', class: 'Caster', pronouns: 'she/her', rarity: 5, starAbsorb: 49,
+    fgoHp: 14259, fgoAtk: 10546, fgoNpAtk: 0.32, fgoNpDef: 3,
+    hpMult: 0.968, favoredCard: 'arts',
+    passives: [
+      classPassive('territoryCreation', 'C'),
+      classPassive('divinity', 'A'),
+      unique("Nine-Tail Fox's Blessing", "After each NP, her skills cost 2 less AP (2 turns)",
+        [{ type: 'npSkillDiscount', value: 2, markTurns: 2 }]),
+    ],
+    skills: [
+      { id: 'mantra_sunlight', name: 'Mantra: Boundless Sunlight A', cost: 5,
+        desc: "80% chance: Enemy NP −20%; NP damage +20% (3 turns)",
+        effects: [{ type: 'npDrain', value: 20, chance: 80, label: 'NP drain', target: 'enemy' }, { type: 'npUp', value: 20, turns: 3 }] },
+      { id: 'singing_at_nasuno', name: 'Singing at Nasuno EX', cost: 5,
+        desc: "Damage Cut 15% (3 turns) and another 15% (1 turn); Buff Removal Resist 60% (2 turns); NP +20%",
+        effects: [{ type: 'damageCut', value: 15, turns: 3 }, { type: 'damageCut', value: 15, turns: 1 },
+                  { type: 'removalResist', value: 60, turns: 2 }, { type: 'npCharge', value: 20 }] },
+      { id: 'foxs_wedding', name: "Fox's Wedding EX", cost: 5, costStep: 3,
+        desc: "Arts +30% (3 turns); Heals 20% HP",
+        effects: [{ type: 'cardUp', card: 'arts', value: 30, turns: 3 }, { type: 'heal', value: 20 }] },
+    ],
+    np: { name: 'Eightfold Blessings of Amaterasu', card: 'arts', mult: 2.7,
+          desc: "Arts damage; Heals 10% HP",
+          postEffects: [{ type: 'heal', value: 10 }] },
+  },
+  lubu: {
+    id: 'lubu', name: 'Lu Bu Fengxian', class: 'Berserker', pronouns: 'he/him', rarity: 4, starAbsorb: 9,
+    fgoHp: 8302, fgoAtk: 8119, fgoNpAtk: 1.04, fgoNpDef: 5,
+    hpMult: 1.059, favoredCard: 'buster',
+    passives: [
+      classPassive('madness', 'A'),
+      unique('Red Hare', "Riding EX: Quick +15%", [{ type: 'cardUp', card: 'quick', value: 15 }]),
+    ],
+    skills: [
+      { id: 'bravery_lubu', name: 'Bravery B', cost: 5,
+        desc: "ATK +20% and Debuff Resist +20% (3 turns)",
+        effects: [{ type: 'atkUp', value: 20, turns: 3 }, { type: 'debuffResist', value: 20, turns: 3 }] },
+      { id: 'restless_soul', name: 'Restless Soul B', cost: 5,
+        desc: "Damage Cut 25% (3 turns); [[his own offensive buffs have a 50% chance to fail (2 turns)]]",
+        effects: [{ type: 'damageCut', value: 25, turns: 3 }, { type: 'offenseFailChance', value: 50, turns: 2 }] },
+      { id: 'ruthless_warrior', name: 'Ruthless Warrior of the Turbulent Times A', cost: 6,
+        desc: "NP damage +30% (2 turns); Crit chance +40% (2 turns); [[his DEF −20% (2 turns)]]",
+        effects: [{ type: 'npUp', value: 30, turns: 2 }, { type: 'critUp', value: 40, turns: 2 }, { type: 'defDown', value: 20, turns: 2 }] },
+    ],
+    np: { name: 'God Force', card: 'buster', mult: 3.3, ignoreCut: true,
+          desc: "Heavy Buster damage that ignores Damage Cut; 50% chance to inflict Restrained (next turn)",
+          postEffects: [{ type: 'stun', value: 100, turns: 2, chance: 50, label: 'Restrained', status: 'restrained', target: 'enemy' }] },
   },
 };
 

@@ -1,962 +1,1445 @@
 servant,opponent,win_pct
-Artoria Pendragon,Artoria Pendragon,45.4
-Artoria Pendragon,Heracles,54.7
-Artoria Pendragon,Medea,49.0
-Artoria Pendragon,Sasaki Kojirou,54.9
-Artoria Pendragon,EMIYA,25.5
-Artoria Pendragon,Cú Chulainn,49.7
-Artoria Pendragon,Medusa,60.7
-Artoria Pendragon,Hassan of the Cursed Arm,51.5
-Artoria Pendragon,Gilgamesh,25.4
-Artoria Pendragon,Iskandar,44.3
-Artoria Pendragon,Hassan of the Hundred Faces,47.9
-Artoria Pendragon,Lancelot,50.3
-Artoria Pendragon,Gilles de Rais,52.3
-Artoria Pendragon,Diarmuid Ua Duibhne,50.9
+Artoria Pendragon,Artoria Pendragon,47.1
+Artoria Pendragon,Heracles,54.1
+Artoria Pendragon,Medea,48.0
+Artoria Pendragon,Sasaki Kojirou,53.5
+Artoria Pendragon,EMIYA,25.9
+Artoria Pendragon,Cú Chulainn,53.0
+Artoria Pendragon,Medusa,61.2
+Artoria Pendragon,Hassan of the Cursed Arm,50.3
+Artoria Pendragon,Gilgamesh,25.0
+Artoria Pendragon,Iskandar,43.9
+Artoria Pendragon,Hassan of the Hundred Faces,51.2
+Artoria Pendragon,Lancelot,52.7
+Artoria Pendragon,Gilles de Rais,53.7
+Artoria Pendragon,Diarmuid Ua Duibhne,53.7
 Artoria Pendragon,Mordred,32.7
-Artoria Pendragon,Siegfried,49.4
-Artoria Pendragon,Atalanta,53.7
-Artoria Pendragon,Chiron,52.7
-Artoria Pendragon,Vlad III,47.3
-Artoria Pendragon,Karna,56.4
-Artoria Pendragon,Achilles,52.3
-Artoria Pendragon,Astolfo,38.9
-Artoria Pendragon,Jack the Ripper,29.2
-Artoria Pendragon,Semiramis,47.3
-Artoria Pendragon,William Shakespeare,47.9
-Artoria Pendragon,Avicebron,48.2
-Artoria Pendragon,Frankenstein,48.9
-Artoria Pendragon,Spartacus,36.9
-Artoria Pendragon,Jeanne d'Arc,46.4
-Artoria Pendragon,Amakusa Shirou,56.3
-Artoria Pendragon,Angra Mainyu,64.9
-Heracles,Artoria Pendragon,39.5
-Heracles,Heracles,49.2
-Heracles,Medea,46.1
-Heracles,Sasaki Kojirou,45.1
-Heracles,EMIYA,47.8
-Heracles,Cú Chulainn,46.8
-Heracles,Medusa,50.7
-Heracles,Hassan of the Cursed Arm,44.3
-Heracles,Gilgamesh,41.4
-Heracles,Iskandar,47.1
-Heracles,Hassan of the Hundred Faces,38.3
-Heracles,Lancelot,45.5
-Heracles,Gilles de Rais,48.9
-Heracles,Diarmuid Ua Duibhne,48.3
-Heracles,Mordred,44.5
-Heracles,Siegfried,46.9
-Heracles,Atalanta,49.2
-Heracles,Chiron,46.1
-Heracles,Vlad III,44.5
-Heracles,Karna,36.1
-Heracles,Achilles,43.3
-Heracles,Astolfo,50.4
-Heracles,Jack the Ripper,51.3
-Heracles,Semiramis,43.8
-Heracles,William Shakespeare,48.3
-Heracles,Avicebron,44.9
-Heracles,Frankenstein,47.5
-Heracles,Spartacus,54.7
-Heracles,Jeanne d'Arc,46.7
-Heracles,Amakusa Shirou,53.9
+Artoria Pendragon,Siegfried,51.4
+Artoria Pendragon,Atalanta,53.0
+Artoria Pendragon,Chiron,54.1
+Artoria Pendragon,Vlad III,47.1
+Artoria Pendragon,Karna,58.7
+Artoria Pendragon,Achilles,47.5
+Artoria Pendragon,Astolfo,41.9
+Artoria Pendragon,Jack the Ripper,29.0
+Artoria Pendragon,Semiramis,48.9
+Artoria Pendragon,William Shakespeare,47.8
+Artoria Pendragon,Avicebron,50.6
+Artoria Pendragon,Frankenstein,53.7
+Artoria Pendragon,Spartacus,34.2
+Artoria Pendragon,Jeanne d'Arc,46.8
+Artoria Pendragon,Amakusa Shirou,57.3
+Artoria Pendragon,Angra Mainyu,65.0
+Artoria Pendragon,Nero Claudius,32.9
+Artoria Pendragon,Robin Hood,51.8
+Artoria Pendragon,Vlad III (EXTRA),49.7
+Artoria Pendragon,Francis Drake,55.1
+Artoria Pendragon,Li Shuwen,40.9
+Artoria Pendragon,Tamamo no Mae,43.1
+Artoria Pendragon,Lu Bu Fengxian,35.7
+Heracles,Artoria Pendragon,42.3
+Heracles,Heracles,46.3
+Heracles,Medea,46.5
+Heracles,Sasaki Kojirou,47.8
+Heracles,EMIYA,50.8
+Heracles,Cú Chulainn,48.1
+Heracles,Medusa,58.1
+Heracles,Hassan of the Cursed Arm,47.3
+Heracles,Gilgamesh,34.1
+Heracles,Iskandar,50.8
+Heracles,Hassan of the Hundred Faces,39.2
+Heracles,Lancelot,50.5
+Heracles,Gilles de Rais,50.6
+Heracles,Diarmuid Ua Duibhne,48.1
+Heracles,Mordred,42.6
+Heracles,Siegfried,47.5
+Heracles,Atalanta,53.7
+Heracles,Chiron,44.9
+Heracles,Vlad III,48.5
+Heracles,Karna,45.3
+Heracles,Achilles,44.6
+Heracles,Astolfo,50.9
+Heracles,Jack the Ripper,49.3
+Heracles,Semiramis,46.3
+Heracles,William Shakespeare,44.1
+Heracles,Avicebron,45.7
+Heracles,Frankenstein,50.8
+Heracles,Spartacus,61.9
+Heracles,Jeanne d'Arc,46.0
+Heracles,Amakusa Shirou,53.3
 Heracles,Angra Mainyu,64.5
-Medea,Artoria Pendragon,39.5
-Medea,Heracles,44.1
-Medea,Medea,38.1
-Medea,Sasaki Kojirou,38.6
-Medea,EMIYA,35.9
-Medea,Cú Chulainn,46.9
-Medea,Medusa,34.7
-Medea,Hassan of the Cursed Arm,37.7
-Medea,Gilgamesh,38.4
-Medea,Iskandar,39.4
-Medea,Hassan of the Hundred Faces,42.1
-Medea,Lancelot,38.5
-Medea,Gilles de Rais,37.3
-Medea,Diarmuid Ua Duibhne,42.5
-Medea,Mordred,50.9
-Medea,Siegfried,43.1
-Medea,Atalanta,33.9
-Medea,Chiron,54.9
-Medea,Vlad III,43.4
-Medea,Karna,41.6
-Medea,Achilles,58.8
-Medea,Astolfo,38.4
-Medea,Jack the Ripper,30.3
-Medea,Semiramis,37.7
-Medea,William Shakespeare,54.4
-Medea,Avicebron,41.5
-Medea,Frankenstein,41.1
-Medea,Spartacus,47.9
-Medea,Jeanne d'Arc,67.9
-Medea,Amakusa Shirou,44.5
-Medea,Angra Mainyu,50.7
-Sasaki Kojirou,Artoria Pendragon,39.2
-Sasaki Kojirou,Heracles,53.1
-Sasaki Kojirou,Medea,42.2
-Sasaki Kojirou,Sasaki Kojirou,50.0
-Sasaki Kojirou,EMIYA,56.9
-Sasaki Kojirou,Cú Chulainn,52.9
-Sasaki Kojirou,Medusa,48.7
-Sasaki Kojirou,Hassan of the Cursed Arm,50.1
-Sasaki Kojirou,Gilgamesh,46.7
-Sasaki Kojirou,Iskandar,44.4
-Sasaki Kojirou,Hassan of the Hundred Faces,58.2
-Sasaki Kojirou,Lancelot,47.9
-Sasaki Kojirou,Gilles de Rais,50.3
-Sasaki Kojirou,Diarmuid Ua Duibhne,50.7
-Sasaki Kojirou,Mordred,40.0
+Heracles,Nero Claudius,52.5
+Heracles,Robin Hood,41.4
+Heracles,Vlad III (EXTRA),50.1
+Heracles,Francis Drake,46.2
+Heracles,Li Shuwen,40.4
+Heracles,Tamamo no Mae,42.9
+Heracles,Lu Bu Fengxian,42.1
+Medea,Artoria Pendragon,37.7
+Medea,Heracles,49.9
+Medea,Medea,36.4
+Medea,Sasaki Kojirou,39.7
+Medea,EMIYA,34.2
+Medea,Cú Chulainn,44.2
+Medea,Medusa,33.5
+Medea,Hassan of the Cursed Arm,35.3
+Medea,Gilgamesh,37.5
+Medea,Iskandar,41.1
+Medea,Hassan of the Hundred Faces,39.7
+Medea,Lancelot,40.9
+Medea,Gilles de Rais,38.4
+Medea,Diarmuid Ua Duibhne,41.2
+Medea,Mordred,49.3
+Medea,Siegfried,45.6
+Medea,Atalanta,34.4
+Medea,Chiron,57.7
+Medea,Vlad III,45.7
+Medea,Karna,41.1
+Medea,Achilles,59.1
+Medea,Astolfo,37.3
+Medea,Jack the Ripper,29.7
+Medea,Semiramis,38.9
+Medea,William Shakespeare,52.8
+Medea,Avicebron,40.6
+Medea,Frankenstein,38.0
+Medea,Spartacus,47.8
+Medea,Jeanne d'Arc,68.7
+Medea,Amakusa Shirou,42.7
+Medea,Angra Mainyu,51.9
+Medea,Nero Claudius,48.6
+Medea,Robin Hood,44.1
+Medea,Vlad III (EXTRA),45.2
+Medea,Francis Drake,47.1
+Medea,Li Shuwen,42.7
+Medea,Tamamo no Mae,40.4
+Medea,Lu Bu Fengxian,45.2
+Sasaki Kojirou,Artoria Pendragon,39.1
+Sasaki Kojirou,Heracles,52.0
+Sasaki Kojirou,Medea,45.5
+Sasaki Kojirou,Sasaki Kojirou,45.9
+Sasaki Kojirou,EMIYA,50.0
+Sasaki Kojirou,Cú Chulainn,53.4
+Sasaki Kojirou,Medusa,44.7
+Sasaki Kojirou,Hassan of the Cursed Arm,50.9
+Sasaki Kojirou,Gilgamesh,46.0
+Sasaki Kojirou,Iskandar,47.4
+Sasaki Kojirou,Hassan of the Hundred Faces,56.3
+Sasaki Kojirou,Lancelot,46.3
+Sasaki Kojirou,Gilles de Rais,52.0
+Sasaki Kojirou,Diarmuid Ua Duibhne,47.4
+Sasaki Kojirou,Mordred,38.5
 Sasaki Kojirou,Siegfried,44.2
-Sasaki Kojirou,Atalanta,49.6
-Sasaki Kojirou,Chiron,45.7
-Sasaki Kojirou,Vlad III,42.3
-Sasaki Kojirou,Karna,49.8
-Sasaki Kojirou,Achilles,53.3
-Sasaki Kojirou,Astolfo,52.6
-Sasaki Kojirou,Jack the Ripper,52.1
-Sasaki Kojirou,Semiramis,42.6
-Sasaki Kojirou,William Shakespeare,47.3
-Sasaki Kojirou,Avicebron,47.4
-Sasaki Kojirou,Frankenstein,40.0
-Sasaki Kojirou,Spartacus,46.1
-Sasaki Kojirou,Jeanne d'Arc,40.7
-Sasaki Kojirou,Amakusa Shirou,44.5
-Sasaki Kojirou,Angra Mainyu,63.7
-EMIYA,Artoria Pendragon,72.5
-EMIYA,Heracles,45.5
-EMIYA,Medea,46.2
-EMIYA,Sasaki Kojirou,40.5
-EMIYA,EMIYA,50.2
-EMIYA,Cú Chulainn,37.1
-EMIYA,Medusa,44.9
-EMIYA,Hassan of the Cursed Arm,44.1
-EMIYA,Gilgamesh,41.1
-EMIYA,Iskandar,52.3
-EMIYA,Hassan of the Hundred Faces,41.7
-EMIYA,Lancelot,49.2
-EMIYA,Gilles de Rais,48.9
-EMIYA,Diarmuid Ua Duibhne,43.8
-EMIYA,Mordred,58.1
-EMIYA,Siegfried,11.6
-EMIYA,Atalanta,44.1
-EMIYA,Chiron,56.8
-EMIYA,Vlad III,44.0
-EMIYA,Karna,63.4
-EMIYA,Achilles,41.7
-EMIYA,Astolfo,41.7
-EMIYA,Jack the Ripper,41.6
-EMIYA,Semiramis,49.9
-EMIYA,William Shakespeare,49.4
-EMIYA,Avicebron,45.1
-EMIYA,Frankenstein,41.9
-EMIYA,Spartacus,44.5
-EMIYA,Jeanne d'Arc,71.9
-EMIYA,Amakusa Shirou,41.3
-EMIYA,Angra Mainyu,71.3
-Cú Chulainn,Artoria Pendragon,45.1
-Cú Chulainn,Heracles,47.1
-Cú Chulainn,Medea,43.1
-Cú Chulainn,Sasaki Kojirou,44.1
-Cú Chulainn,EMIYA,58.0
-Cú Chulainn,Cú Chulainn,47.9
-Cú Chulainn,Medusa,46.6
-Cú Chulainn,Hassan of the Cursed Arm,50.5
-Cú Chulainn,Gilgamesh,39.9
-Cú Chulainn,Iskandar,46.9
-Cú Chulainn,Hassan of the Hundred Faces,51.7
-Cú Chulainn,Lancelot,46.6
-Cú Chulainn,Gilles de Rais,49.3
-Cú Chulainn,Diarmuid Ua Duibhne,39.3
+Sasaki Kojirou,Atalanta,54.5
+Sasaki Kojirou,Chiron,47.7
+Sasaki Kojirou,Vlad III,42.8
+Sasaki Kojirou,Karna,47.5
+Sasaki Kojirou,Achilles,53.0
+Sasaki Kojirou,Astolfo,56.3
+Sasaki Kojirou,Jack the Ripper,53.5
+Sasaki Kojirou,Semiramis,43.9
+Sasaki Kojirou,William Shakespeare,46.3
+Sasaki Kojirou,Avicebron,45.5
+Sasaki Kojirou,Frankenstein,40.7
+Sasaki Kojirou,Spartacus,47.3
+Sasaki Kojirou,Jeanne d'Arc,39.7
+Sasaki Kojirou,Amakusa Shirou,44.1
+Sasaki Kojirou,Angra Mainyu,64.3
+Sasaki Kojirou,Nero Claudius,43.1
+Sasaki Kojirou,Robin Hood,50.9
+Sasaki Kojirou,Vlad III (EXTRA),46.4
+Sasaki Kojirou,Francis Drake,33.7
+Sasaki Kojirou,Li Shuwen,56.8
+Sasaki Kojirou,Tamamo no Mae,41.1
+Sasaki Kojirou,Lu Bu Fengxian,42.9
+EMIYA,Artoria Pendragon,71.9
+EMIYA,Heracles,43.9
+EMIYA,Medea,46.1
+EMIYA,Sasaki Kojirou,43.8
+EMIYA,EMIYA,45.3
+EMIYA,Cú Chulainn,38.1
+EMIYA,Medusa,45.0
+EMIYA,Hassan of the Cursed Arm,44.3
+EMIYA,Gilgamesh,40.7
+EMIYA,Iskandar,55.9
+EMIYA,Hassan of the Hundred Faces,42.2
+EMIYA,Lancelot,53.1
+EMIYA,Gilles de Rais,50.1
+EMIYA,Diarmuid Ua Duibhne,42.3
+EMIYA,Mordred,57.7
+EMIYA,Siegfried,14.3
+EMIYA,Atalanta,49.5
+EMIYA,Chiron,57.1
+EMIYA,Vlad III,42.9
+EMIYA,Karna,65.6
+EMIYA,Achilles,46.0
+EMIYA,Astolfo,44.4
+EMIYA,Jack the Ripper,45.0
+EMIYA,Semiramis,51.9
+EMIYA,William Shakespeare,51.3
+EMIYA,Avicebron,48.3
+EMIYA,Frankenstein,45.1
+EMIYA,Spartacus,46.5
+EMIYA,Jeanne d'Arc,75.2
+EMIYA,Amakusa Shirou,45.1
+EMIYA,Angra Mainyu,72.7
+EMIYA,Nero Claudius,45.7
+EMIYA,Robin Hood,44.0
+EMIYA,Vlad III (EXTRA),53.9
+EMIYA,Francis Drake,34.9
+EMIYA,Li Shuwen,39.3
+EMIYA,Tamamo no Mae,40.4
+EMIYA,Lu Bu Fengxian,47.3
+Cú Chulainn,Artoria Pendragon,44.7
+Cú Chulainn,Heracles,51.9
+Cú Chulainn,Medea,44.7
+Cú Chulainn,Sasaki Kojirou,43.6
+Cú Chulainn,EMIYA,55.6
+Cú Chulainn,Cú Chulainn,46.1
+Cú Chulainn,Medusa,43.7
+Cú Chulainn,Hassan of the Cursed Arm,50.1
+Cú Chulainn,Gilgamesh,38.7
+Cú Chulainn,Iskandar,48.3
+Cú Chulainn,Hassan of the Hundred Faces,50.9
+Cú Chulainn,Lancelot,47.1
+Cú Chulainn,Gilles de Rais,52.5
+Cú Chulainn,Diarmuid Ua Duibhne,39.7
 Cú Chulainn,Mordred,45.3
-Cú Chulainn,Siegfried,51.5
-Cú Chulainn,Atalanta,47.3
-Cú Chulainn,Chiron,44.8
-Cú Chulainn,Vlad III,50.1
-Cú Chulainn,Karna,35.4
-Cú Chulainn,Achilles,58.2
-Cú Chulainn,Astolfo,53.5
-Cú Chulainn,Jack the Ripper,53.1
-Cú Chulainn,Semiramis,43.5
-Cú Chulainn,William Shakespeare,42.8
-Cú Chulainn,Avicebron,47.1
-Cú Chulainn,Frankenstein,47.0
-Cú Chulainn,Spartacus,47.5
-Cú Chulainn,Jeanne d'Arc,40.6
-Cú Chulainn,Amakusa Shirou,43.5
-Cú Chulainn,Angra Mainyu,75.9
-Medusa,Artoria Pendragon,35.4
-Medusa,Heracles,44.9
-Medusa,Medea,49.7
-Medusa,Sasaki Kojirou,50.3
-Medusa,EMIYA,48.6
-Medusa,Cú Chulainn,51.5
-Medusa,Medusa,45.7
-Medusa,Hassan of the Cursed Arm,45.5
-Medusa,Gilgamesh,46.9
-Medusa,Iskandar,42.4
-Medusa,Hassan of the Hundred Faces,49.1
-Medusa,Lancelot,35.8
-Medusa,Gilles de Rais,49.7
-Medusa,Diarmuid Ua Duibhne,47.2
-Medusa,Mordred,41.1
-Medusa,Siegfried,43.5
-Medusa,Atalanta,48.0
-Medusa,Chiron,45.7
-Medusa,Vlad III,40.4
-Medusa,Karna,31.1
-Medusa,Achilles,60.1
-Medusa,Astolfo,53.9
-Medusa,Jack the Ripper,45.3
-Medusa,Semiramis,45.1
-Medusa,William Shakespeare,52.5
-Medusa,Avicebron,48.1
-Medusa,Frankenstein,39.1
-Medusa,Spartacus,53.9
-Medusa,Jeanne d'Arc,53.7
-Medusa,Amakusa Shirou,54.1
-Medusa,Angra Mainyu,63.1
-Hassan of the Cursed Arm,Artoria Pendragon,43.4
-Hassan of the Cursed Arm,Heracles,50.8
-Hassan of the Cursed Arm,Medea,52.3
-Hassan of the Cursed Arm,Sasaki Kojirou,44.9
-Hassan of the Cursed Arm,EMIYA,52.3
-Hassan of the Cursed Arm,Cú Chulainn,47.7
-Hassan of the Cursed Arm,Medusa,50.0
-Hassan of the Cursed Arm,Hassan of the Cursed Arm,47.5
-Hassan of the Cursed Arm,Gilgamesh,37.9
-Hassan of the Cursed Arm,Iskandar,45.7
-Hassan of the Cursed Arm,Hassan of the Hundred Faces,46.5
-Hassan of the Cursed Arm,Lancelot,41.4
-Hassan of the Cursed Arm,Gilles de Rais,47.5
-Hassan of the Cursed Arm,Diarmuid Ua Duibhne,44.0
-Hassan of the Cursed Arm,Mordred,42.1
-Hassan of the Cursed Arm,Siegfried,46.3
-Hassan of the Cursed Arm,Atalanta,46.6
-Hassan of the Cursed Arm,Chiron,46.3
-Hassan of the Cursed Arm,Vlad III,45.9
-Hassan of the Cursed Arm,Karna,49.0
-Hassan of the Cursed Arm,Achilles,48.6
-Hassan of the Cursed Arm,Astolfo,48.3
-Hassan of the Cursed Arm,Jack the Ripper,51.0
-Hassan of the Cursed Arm,Semiramis,44.9
-Hassan of the Cursed Arm,William Shakespeare,48.5
-Hassan of the Cursed Arm,Avicebron,49.3
-Hassan of the Cursed Arm,Frankenstein,44.5
-Hassan of the Cursed Arm,Spartacus,51.4
-Hassan of the Cursed Arm,Jeanne d'Arc,43.2
-Hassan of the Cursed Arm,Amakusa Shirou,50.8
-Hassan of the Cursed Arm,Angra Mainyu,58.8
-Gilgamesh,Artoria Pendragon,67.4
-Gilgamesh,Heracles,54.9
-Gilgamesh,Medea,57.0
-Gilgamesh,Sasaki Kojirou,49.0
-Gilgamesh,EMIYA,55.1
-Gilgamesh,Cú Chulainn,54.6
-Gilgamesh,Medusa,49.5
-Gilgamesh,Hassan of the Cursed Arm,55.7
-Gilgamesh,Gilgamesh,46.1
-Gilgamesh,Iskandar,61.3
-Gilgamesh,Hassan of the Hundred Faces,51.3
-Gilgamesh,Lancelot,56.0
-Gilgamesh,Gilles de Rais,34.9
-Gilgamesh,Diarmuid Ua Duibhne,55.9
-Gilgamesh,Mordred,59.3
-Gilgamesh,Siegfried,59.4
-Gilgamesh,Atalanta,52.9
-Gilgamesh,Chiron,61.3
-Gilgamesh,Vlad III,61.1
-Gilgamesh,Karna,57.0
-Gilgamesh,Achilles,31.9
-Gilgamesh,Astolfo,48.5
-Gilgamesh,Jack the Ripper,58.1
-Gilgamesh,Semiramis,44.8
-Gilgamesh,William Shakespeare,32.3
-Gilgamesh,Avicebron,47.5
-Gilgamesh,Frankenstein,73.6
-Gilgamesh,Spartacus,41.7
-Gilgamesh,Jeanne d'Arc,39.0
-Gilgamesh,Amakusa Shirou,57.0
-Gilgamesh,Angra Mainyu,49.2
-Iskandar,Artoria Pendragon,51.5
-Iskandar,Heracles,44.7
-Iskandar,Medea,45.0
-Iskandar,Sasaki Kojirou,49.9
-Iskandar,EMIYA,41.3
-Iskandar,Cú Chulainn,45.7
-Iskandar,Medusa,50.5
-Iskandar,Hassan of the Cursed Arm,48.4
-Iskandar,Gilgamesh,35.6
-Iskandar,Iskandar,46.1
-Iskandar,Hassan of the Hundred Faces,43.3
-Iskandar,Lancelot,40.7
-Iskandar,Gilles de Rais,46.6
-Iskandar,Diarmuid Ua Duibhne,49.3
-Iskandar,Mordred,48.6
-Iskandar,Siegfried,49.1
-Iskandar,Atalanta,46.3
-Iskandar,Chiron,44.3
-Iskandar,Vlad III,43.8
-Iskandar,Karna,34.3
+Cú Chulainn,Siegfried,49.2
+Cú Chulainn,Atalanta,45.8
+Cú Chulainn,Chiron,44.5
+Cú Chulainn,Vlad III,50.3
+Cú Chulainn,Karna,36.0
+Cú Chulainn,Achilles,56.8
+Cú Chulainn,Astolfo,57.6
+Cú Chulainn,Jack the Ripper,54.1
+Cú Chulainn,Semiramis,44.1
+Cú Chulainn,William Shakespeare,45.9
+Cú Chulainn,Avicebron,52.1
+Cú Chulainn,Frankenstein,48.2
+Cú Chulainn,Spartacus,48.1
+Cú Chulainn,Jeanne d'Arc,45.5
+Cú Chulainn,Amakusa Shirou,45.5
+Cú Chulainn,Angra Mainyu,79.1
+Cú Chulainn,Nero Claudius,53.0
+Cú Chulainn,Robin Hood,47.3
+Cú Chulainn,Vlad III (EXTRA),36.8
+Cú Chulainn,Francis Drake,33.6
+Cú Chulainn,Li Shuwen,54.1
+Cú Chulainn,Tamamo no Mae,42.9
+Cú Chulainn,Lu Bu Fengxian,46.2
+Medusa,Artoria Pendragon,34.2
+Medusa,Heracles,40.7
+Medusa,Medea,48.6
+Medusa,Sasaki Kojirou,47.3
+Medusa,EMIYA,46.5
+Medusa,Cú Chulainn,52.1
+Medusa,Medusa,48.3
+Medusa,Hassan of the Cursed Arm,46.3
+Medusa,Gilgamesh,46.5
+Medusa,Iskandar,43.6
+Medusa,Hassan of the Hundred Faces,54.3
+Medusa,Lancelot,37.5
+Medusa,Gilles de Rais,50.9
+Medusa,Diarmuid Ua Duibhne,49.6
+Medusa,Mordred,41.7
+Medusa,Siegfried,47.5
+Medusa,Atalanta,47.9
+Medusa,Chiron,46.6
+Medusa,Vlad III,43.7
+Medusa,Karna,27.0
+Medusa,Achilles,60.5
+Medusa,Astolfo,55.7
+Medusa,Jack the Ripper,45.4
+Medusa,Semiramis,47.9
+Medusa,William Shakespeare,50.7
+Medusa,Avicebron,47.3
+Medusa,Frankenstein,38.1
+Medusa,Spartacus,54.3
+Medusa,Jeanne d'Arc,58.2
+Medusa,Amakusa Shirou,52.0
+Medusa,Angra Mainyu,62.5
+Medusa,Nero Claudius,46.7
+Medusa,Robin Hood,50.7
+Medusa,Vlad III (EXTRA),48.4
+Medusa,Francis Drake,46.5
+Medusa,Li Shuwen,48.9
+Medusa,Tamamo no Mae,47.7
+Medusa,Lu Bu Fengxian,45.7
+Hassan of the Cursed Arm,Artoria Pendragon,41.7
+Hassan of the Cursed Arm,Heracles,53.2
+Hassan of the Cursed Arm,Medea,53.5
+Hassan of the Cursed Arm,Sasaki Kojirou,42.7
+Hassan of the Cursed Arm,EMIYA,50.5
+Hassan of the Cursed Arm,Cú Chulainn,44.8
+Hassan of the Cursed Arm,Medusa,48.9
+Hassan of the Cursed Arm,Hassan of the Cursed Arm,47.7
+Hassan of the Cursed Arm,Gilgamesh,40.6
+Hassan of the Cursed Arm,Iskandar,47.2
+Hassan of the Cursed Arm,Hassan of the Hundred Faces,46.8
+Hassan of the Cursed Arm,Lancelot,40.9
+Hassan of the Cursed Arm,Gilles de Rais,46.9
+Hassan of the Cursed Arm,Diarmuid Ua Duibhne,45.1
+Hassan of the Cursed Arm,Mordred,44.7
+Hassan of the Cursed Arm,Siegfried,45.7
+Hassan of the Cursed Arm,Atalanta,45.9
+Hassan of the Cursed Arm,Chiron,47.9
+Hassan of the Cursed Arm,Vlad III,45.7
+Hassan of the Cursed Arm,Karna,49.2
+Hassan of the Cursed Arm,Achilles,48.3
+Hassan of the Cursed Arm,Astolfo,51.3
+Hassan of the Cursed Arm,Jack the Ripper,53.1
+Hassan of the Cursed Arm,Semiramis,48.7
+Hassan of the Cursed Arm,William Shakespeare,47.9
+Hassan of the Cursed Arm,Avicebron,48.9
+Hassan of the Cursed Arm,Frankenstein,46.2
+Hassan of the Cursed Arm,Spartacus,55.6
+Hassan of the Cursed Arm,Jeanne d'Arc,42.7
+Hassan of the Cursed Arm,Amakusa Shirou,48.6
+Hassan of the Cursed Arm,Angra Mainyu,62.1
+Hassan of the Cursed Arm,Nero Claudius,50.4
+Hassan of the Cursed Arm,Robin Hood,45.8
+Hassan of the Cursed Arm,Vlad III (EXTRA),48.1
+Hassan of the Cursed Arm,Francis Drake,41.5
+Hassan of the Cursed Arm,Li Shuwen,54.2
+Hassan of the Cursed Arm,Tamamo no Mae,42.7
+Hassan of the Cursed Arm,Lu Bu Fengxian,47.9
+Gilgamesh,Artoria Pendragon,68.1
+Gilgamesh,Heracles,60.1
+Gilgamesh,Medea,55.9
+Gilgamesh,Sasaki Kojirou,47.9
+Gilgamesh,EMIYA,53.8
+Gilgamesh,Cú Chulainn,57.1
+Gilgamesh,Medusa,48.9
+Gilgamesh,Hassan of the Cursed Arm,55.2
+Gilgamesh,Gilgamesh,48.0
+Gilgamesh,Iskandar,60.6
+Gilgamesh,Hassan of the Hundred Faces,53.3
+Gilgamesh,Lancelot,59.7
+Gilgamesh,Gilles de Rais,36.5
+Gilgamesh,Diarmuid Ua Duibhne,52.5
+Gilgamesh,Mordred,62.1
+Gilgamesh,Siegfried,61.5
+Gilgamesh,Atalanta,53.9
+Gilgamesh,Chiron,61.5
+Gilgamesh,Vlad III,61.3
+Gilgamesh,Karna,58.3
+Gilgamesh,Achilles,29.7
+Gilgamesh,Astolfo,49.7
+Gilgamesh,Jack the Ripper,60.1
+Gilgamesh,Semiramis,46.5
+Gilgamesh,William Shakespeare,31.9
+Gilgamesh,Avicebron,48.6
+Gilgamesh,Frankenstein,73.7
+Gilgamesh,Spartacus,42.4
+Gilgamesh,Jeanne d'Arc,40.7
+Gilgamesh,Amakusa Shirou,56.6
+Gilgamesh,Angra Mainyu,50.8
+Gilgamesh,Nero Claudius,55.8
+Gilgamesh,Robin Hood,55.7
+Gilgamesh,Vlad III (EXTRA),41.9
+Gilgamesh,Francis Drake,67.3
+Gilgamesh,Li Shuwen,69.8
+Gilgamesh,Tamamo no Mae,40.7
+Gilgamesh,Lu Bu Fengxian,55.1
+Iskandar,Artoria Pendragon,48.2
+Iskandar,Heracles,46.2
+Iskandar,Medea,43.0
+Iskandar,Sasaki Kojirou,48.8
+Iskandar,EMIYA,39.1
+Iskandar,Cú Chulainn,46.5
+Iskandar,Medusa,48.4
+Iskandar,Hassan of the Cursed Arm,48.5
+Iskandar,Gilgamesh,34.1
+Iskandar,Iskandar,46.2
+Iskandar,Hassan of the Hundred Faces,44.3
+Iskandar,Lancelot,40.9
+Iskandar,Gilles de Rais,46.9
+Iskandar,Diarmuid Ua Duibhne,47.9
+Iskandar,Mordred,46.2
+Iskandar,Siegfried,48.5
+Iskandar,Atalanta,44.3
+Iskandar,Chiron,44.2
+Iskandar,Vlad III,45.9
+Iskandar,Karna,36.1
 Iskandar,Achilles,45.5
-Iskandar,Astolfo,49.8
-Iskandar,Jack the Ripper,51.9
-Iskandar,Semiramis,45.4
-Iskandar,William Shakespeare,47.2
-Iskandar,Avicebron,44.2
-Iskandar,Frankenstein,46.5
-Iskandar,Spartacus,52.7
-Iskandar,Jeanne d'Arc,51.7
-Iskandar,Amakusa Shirou,49.2
-Iskandar,Angra Mainyu,55.1
-Hassan of the Hundred Faces,Artoria Pendragon,46.6
-Hassan of the Hundred Faces,Heracles,54.8
-Hassan of the Hundred Faces,Medea,48.4
-Hassan of the Hundred Faces,Sasaki Kojirou,38.3
-Hassan of the Hundred Faces,EMIYA,54.1
-Hassan of the Hundred Faces,Cú Chulainn,46.4
-Hassan of the Hundred Faces,Medusa,43.9
-Hassan of the Hundred Faces,Hassan of the Cursed Arm,49.7
-Hassan of the Hundred Faces,Gilgamesh,48.5
-Hassan of the Hundred Faces,Iskandar,51.3
-Hassan of the Hundred Faces,Hassan of the Hundred Faces,47.3
-Hassan of the Hundred Faces,Lancelot,50.3
-Hassan of the Hundred Faces,Gilles de Rais,44.9
-Hassan of the Hundred Faces,Diarmuid Ua Duibhne,48.3
-Hassan of the Hundred Faces,Mordred,46.9
-Hassan of the Hundred Faces,Siegfried,47.8
-Hassan of the Hundred Faces,Atalanta,47.7
-Hassan of the Hundred Faces,Chiron,54.1
+Iskandar,Astolfo,51.2
+Iskandar,Jack the Ripper,54.5
+Iskandar,Semiramis,44.7
+Iskandar,William Shakespeare,44.2
+Iskandar,Avicebron,45.4
+Iskandar,Frankenstein,45.5
+Iskandar,Spartacus,54.9
+Iskandar,Jeanne d'Arc,53.2
+Iskandar,Amakusa Shirou,50.7
+Iskandar,Angra Mainyu,57.3
+Iskandar,Nero Claudius,46.6
+Iskandar,Robin Hood,48.1
+Iskandar,Vlad III (EXTRA),54.3
+Iskandar,Francis Drake,51.7
+Iskandar,Li Shuwen,49.0
+Iskandar,Tamamo no Mae,52.4
+Iskandar,Lu Bu Fengxian,48.5
+Hassan of the Hundred Faces,Artoria Pendragon,45.1
+Hassan of the Hundred Faces,Heracles,57.1
+Hassan of the Hundred Faces,Medea,51.9
+Hassan of the Hundred Faces,Sasaki Kojirou,35.7
+Hassan of the Hundred Faces,EMIYA,48.8
+Hassan of the Hundred Faces,Cú Chulainn,42.2
+Hassan of the Hundred Faces,Medusa,42.7
+Hassan of the Hundred Faces,Hassan of the Cursed Arm,48.8
+Hassan of the Hundred Faces,Gilgamesh,40.5
+Hassan of the Hundred Faces,Iskandar,48.5
+Hassan of the Hundred Faces,Hassan of the Hundred Faces,44.5
+Hassan of the Hundred Faces,Lancelot,51.0
+Hassan of the Hundred Faces,Gilles de Rais,47.1
+Hassan of the Hundred Faces,Diarmuid Ua Duibhne,46.7
+Hassan of the Hundred Faces,Mordred,46.7
+Hassan of the Hundred Faces,Siegfried,50.7
+Hassan of the Hundred Faces,Atalanta,46.2
+Hassan of the Hundred Faces,Chiron,53.8
 Hassan of the Hundred Faces,Vlad III,48.2
-Hassan of the Hundred Faces,Karna,50.7
-Hassan of the Hundred Faces,Achilles,33.7
-Hassan of the Hundred Faces,Astolfo,52.5
-Hassan of the Hundred Faces,Jack the Ripper,52.3
-Hassan of the Hundred Faces,Semiramis,48.7
-Hassan of the Hundred Faces,William Shakespeare,44.9
-Hassan of the Hundred Faces,Avicebron,47.3
-Hassan of the Hundred Faces,Frankenstein,46.5
-Hassan of the Hundred Faces,Spartacus,42.5
-Hassan of the Hundred Faces,Jeanne d'Arc,45.4
-Hassan of the Hundred Faces,Amakusa Shirou,53.7
-Hassan of the Hundred Faces,Angra Mainyu,53.3
-Lancelot,Artoria Pendragon,40.5
-Lancelot,Heracles,48.2
-Lancelot,Medea,42.1
-Lancelot,Sasaki Kojirou,45.7
-Lancelot,EMIYA,47.0
-Lancelot,Cú Chulainn,49.4
-Lancelot,Medusa,58.2
-Lancelot,Hassan of the Cursed Arm,53.4
-Lancelot,Gilgamesh,39.4
-Lancelot,Iskandar,51.3
-Lancelot,Hassan of the Hundred Faces,45.5
-Lancelot,Lancelot,46.1
-Lancelot,Gilles de Rais,44.5
-Lancelot,Diarmuid Ua Duibhne,38.6
-Lancelot,Mordred,41.9
-Lancelot,Siegfried,47.7
-Lancelot,Atalanta,53.5
-Lancelot,Chiron,42.9
-Lancelot,Vlad III,46.6
-Lancelot,Karna,51.0
-Lancelot,Achilles,48.7
-Lancelot,Astolfo,58.2
-Lancelot,Jack the Ripper,51.5
-Lancelot,Semiramis,38.8
-Lancelot,William Shakespeare,44.9
-Lancelot,Avicebron,45.3
-Lancelot,Frankenstein,43.1
-Lancelot,Spartacus,57.0
-Lancelot,Jeanne d'Arc,43.0
-Lancelot,Amakusa Shirou,54.3
-Lancelot,Angra Mainyu,59.9
-Gilles de Rais,Artoria Pendragon,41.5
-Gilles de Rais,Heracles,47.0
-Gilles de Rais,Medea,48.1
-Gilles de Rais,Sasaki Kojirou,45.1
-Gilles de Rais,EMIYA,43.9
-Gilles de Rais,Cú Chulainn,46.0
-Gilles de Rais,Medusa,44.4
-Gilles de Rais,Hassan of the Cursed Arm,49.1
-Gilles de Rais,Gilgamesh,58.1
+Hassan of the Hundred Faces,Karna,52.2
+Hassan of the Hundred Faces,Achilles,35.5
+Hassan of the Hundred Faces,Astolfo,54.3
+Hassan of the Hundred Faces,Jack the Ripper,52.8
+Hassan of the Hundred Faces,Semiramis,48.0
+Hassan of the Hundred Faces,William Shakespeare,43.9
+Hassan of the Hundred Faces,Avicebron,49.3
+Hassan of the Hundred Faces,Frankenstein,44.5
+Hassan of the Hundred Faces,Spartacus,43.5
+Hassan of the Hundred Faces,Jeanne d'Arc,46.7
+Hassan of the Hundred Faces,Amakusa Shirou,54.8
+Hassan of the Hundred Faces,Angra Mainyu,55.5
+Hassan of the Hundred Faces,Nero Claudius,48.8
+Hassan of the Hundred Faces,Robin Hood,46.6
+Hassan of the Hundred Faces,Vlad III (EXTRA),43.9
+Hassan of the Hundred Faces,Francis Drake,34.7
+Hassan of the Hundred Faces,Li Shuwen,51.7
+Hassan of the Hundred Faces,Tamamo no Mae,48.5
+Hassan of the Hundred Faces,Lu Bu Fengxian,45.8
+Lancelot,Artoria Pendragon,39.9
+Lancelot,Heracles,45.3
+Lancelot,Medea,42.7
+Lancelot,Sasaki Kojirou,47.0
+Lancelot,EMIYA,41.3
+Lancelot,Cú Chulainn,47.5
+Lancelot,Medusa,56.9
+Lancelot,Hassan of the Cursed Arm,53.1
+Lancelot,Gilgamesh,36.9
+Lancelot,Iskandar,48.9
+Lancelot,Hassan of the Hundred Faces,43.3
+Lancelot,Lancelot,43.9
+Lancelot,Gilles de Rais,44.8
+Lancelot,Diarmuid Ua Duibhne,36.7
+Lancelot,Mordred,42.8
+Lancelot,Siegfried,47.5
+Lancelot,Atalanta,51.5
+Lancelot,Chiron,46.6
+Lancelot,Vlad III,45.4
+Lancelot,Karna,50.3
+Lancelot,Achilles,48.3
+Lancelot,Astolfo,59.7
+Lancelot,Jack the Ripper,49.1
+Lancelot,Semiramis,37.3
+Lancelot,William Shakespeare,44.0
+Lancelot,Avicebron,45.1
+Lancelot,Frankenstein,41.9
+Lancelot,Spartacus,56.7
+Lancelot,Jeanne d'Arc,43.3
+Lancelot,Amakusa Shirou,53.4
+Lancelot,Angra Mainyu,60.7
+Lancelot,Nero Claudius,46.1
+Lancelot,Robin Hood,43.5
+Lancelot,Vlad III (EXTRA),54.2
+Lancelot,Francis Drake,52.1
+Lancelot,Li Shuwen,41.9
+Lancelot,Tamamo no Mae,40.9
+Lancelot,Lu Bu Fengxian,47.9
+Gilles de Rais,Artoria Pendragon,43.7
+Gilles de Rais,Heracles,47.9
+Gilles de Rais,Medea,48.9
+Gilles de Rais,Sasaki Kojirou,45.4
+Gilles de Rais,EMIYA,42.5
+Gilles de Rais,Cú Chulainn,44.5
+Gilles de Rais,Medusa,44.1
+Gilles de Rais,Hassan of the Cursed Arm,46.0
+Gilles de Rais,Gilgamesh,57.8
 Gilles de Rais,Iskandar,46.6
-Gilles de Rais,Hassan of the Hundred Faces,49.3
-Gilles de Rais,Lancelot,52.9
-Gilles de Rais,Gilles de Rais,48.4
-Gilles de Rais,Diarmuid Ua Duibhne,43.9
-Gilles de Rais,Mordred,40.9
-Gilles de Rais,Siegfried,51.2
-Gilles de Rais,Atalanta,43.9
-Gilles de Rais,Chiron,39.6
-Gilles de Rais,Vlad III,51.1
-Gilles de Rais,Karna,49.9
-Gilles de Rais,Achilles,40.7
-Gilles de Rais,Astolfo,39.3
-Gilles de Rais,Jack the Ripper,56.3
-Gilles de Rais,Semiramis,49.3
-Gilles de Rais,William Shakespeare,46.6
-Gilles de Rais,Avicebron,51.1
-Gilles de Rais,Frankenstein,53.3
-Gilles de Rais,Spartacus,56.7
-Gilles de Rais,Jeanne d'Arc,45.5
-Gilles de Rais,Amakusa Shirou,49.7
-Gilles de Rais,Angra Mainyu,42.6
-Diarmuid Ua Duibhne,Artoria Pendragon,40.8
-Diarmuid Ua Duibhne,Heracles,48.5
-Diarmuid Ua Duibhne,Medea,40.3
-Diarmuid Ua Duibhne,Sasaki Kojirou,43.7
-Diarmuid Ua Duibhne,EMIYA,52.5
-Diarmuid Ua Duibhne,Cú Chulainn,54.1
-Diarmuid Ua Duibhne,Medusa,45.3
-Diarmuid Ua Duibhne,Hassan of the Cursed Arm,48.5
-Diarmuid Ua Duibhne,Gilgamesh,43.2
-Diarmuid Ua Duibhne,Iskandar,44.5
-Diarmuid Ua Duibhne,Hassan of the Hundred Faces,46.5
-Diarmuid Ua Duibhne,Lancelot,50.4
-Diarmuid Ua Duibhne,Gilles de Rais,54.1
-Diarmuid Ua Duibhne,Diarmuid Ua Duibhne,45.8
-Diarmuid Ua Duibhne,Mordred,43.5
-Diarmuid Ua Duibhne,Siegfried,48.5
-Diarmuid Ua Duibhne,Atalanta,48.7
-Diarmuid Ua Duibhne,Chiron,44.6
-Diarmuid Ua Duibhne,Vlad III,56.8
-Diarmuid Ua Duibhne,Karna,48.6
-Diarmuid Ua Duibhne,Achilles,38.7
-Diarmuid Ua Duibhne,Astolfo,40.6
-Diarmuid Ua Duibhne,Jack the Ripper,44.3
-Diarmuid Ua Duibhne,Semiramis,48.0
-Diarmuid Ua Duibhne,William Shakespeare,50.4
-Diarmuid Ua Duibhne,Avicebron,47.9
-Diarmuid Ua Duibhne,Frankenstein,43.1
-Diarmuid Ua Duibhne,Spartacus,46.5
-Diarmuid Ua Duibhne,Jeanne d'Arc,45.1
-Diarmuid Ua Duibhne,Amakusa Shirou,43.1
-Diarmuid Ua Duibhne,Angra Mainyu,64.7
-Mordred,Artoria Pendragon,62.1
+Gilles de Rais,Hassan of the Hundred Faces,50.3
+Gilles de Rais,Lancelot,54.2
+Gilles de Rais,Gilles de Rais,48.2
+Gilles de Rais,Diarmuid Ua Duibhne,42.9
+Gilles de Rais,Mordred,39.3
+Gilles de Rais,Siegfried,53.3
+Gilles de Rais,Atalanta,44.1
+Gilles de Rais,Chiron,42.1
+Gilles de Rais,Vlad III,51.8
+Gilles de Rais,Karna,49.2
+Gilles de Rais,Achilles,39.7
+Gilles de Rais,Astolfo,40.0
+Gilles de Rais,Jack the Ripper,56.2
+Gilles de Rais,Semiramis,49.7
+Gilles de Rais,William Shakespeare,48.1
+Gilles de Rais,Avicebron,50.6
+Gilles de Rais,Frankenstein,54.7
+Gilles de Rais,Spartacus,58.3
+Gilles de Rais,Jeanne d'Arc,47.7
+Gilles de Rais,Amakusa Shirou,49.4
+Gilles de Rais,Angra Mainyu,43.3
+Gilles de Rais,Nero Claudius,48.3
+Gilles de Rais,Robin Hood,45.5
+Gilles de Rais,Vlad III (EXTRA),43.8
+Gilles de Rais,Francis Drake,58.5
+Gilles de Rais,Li Shuwen,53.3
+Gilles de Rais,Tamamo no Mae,50.1
+Gilles de Rais,Lu Bu Fengxian,49.3
+Diarmuid Ua Duibhne,Artoria Pendragon,40.6
+Diarmuid Ua Duibhne,Heracles,48.4
+Diarmuid Ua Duibhne,Medea,43.7
+Diarmuid Ua Duibhne,Sasaki Kojirou,43.3
+Diarmuid Ua Duibhne,EMIYA,50.3
+Diarmuid Ua Duibhne,Cú Chulainn,46.9
+Diarmuid Ua Duibhne,Medusa,47.0
+Diarmuid Ua Duibhne,Hassan of the Cursed Arm,48.8
+Diarmuid Ua Duibhne,Gilgamesh,39.1
+Diarmuid Ua Duibhne,Iskandar,48.0
+Diarmuid Ua Duibhne,Hassan of the Hundred Faces,47.1
+Diarmuid Ua Duibhne,Lancelot,49.6
+Diarmuid Ua Duibhne,Gilles de Rais,52.8
+Diarmuid Ua Duibhne,Diarmuid Ua Duibhne,45.5
+Diarmuid Ua Duibhne,Mordred,43.9
+Diarmuid Ua Duibhne,Siegfried,46.5
+Diarmuid Ua Duibhne,Atalanta,49.1
+Diarmuid Ua Duibhne,Chiron,41.3
+Diarmuid Ua Duibhne,Vlad III,56.7
+Diarmuid Ua Duibhne,Karna,46.9
+Diarmuid Ua Duibhne,Achilles,39.1
+Diarmuid Ua Duibhne,Astolfo,40.7
+Diarmuid Ua Duibhne,Jack the Ripper,48.1
+Diarmuid Ua Duibhne,Semiramis,48.8
+Diarmuid Ua Duibhne,William Shakespeare,50.6
+Diarmuid Ua Duibhne,Avicebron,51.3
+Diarmuid Ua Duibhne,Frankenstein,42.5
+Diarmuid Ua Duibhne,Spartacus,45.3
+Diarmuid Ua Duibhne,Jeanne d'Arc,46.4
+Diarmuid Ua Duibhne,Amakusa Shirou,43.8
+Diarmuid Ua Duibhne,Angra Mainyu,66.4
+Diarmuid Ua Duibhne,Nero Claudius,50.7
+Diarmuid Ua Duibhne,Robin Hood,45.9
+Diarmuid Ua Duibhne,Vlad III (EXTRA),48.2
+Diarmuid Ua Duibhne,Francis Drake,38.7
+Diarmuid Ua Duibhne,Li Shuwen,46.1
+Diarmuid Ua Duibhne,Tamamo no Mae,44.3
+Diarmuid Ua Duibhne,Lu Bu Fengxian,41.1
+Mordred,Artoria Pendragon,61.1
 Mordred,Heracles,50.7
-Mordred,Medea,40.5
-Mordred,Sasaki Kojirou,54.3
-Mordred,EMIYA,40.4
-Mordred,Cú Chulainn,50.0
-Mordred,Medusa,52.7
-Mordred,Hassan of the Cursed Arm,50.3
-Mordred,Gilgamesh,33.1
-Mordred,Iskandar,45.5
-Mordred,Hassan of the Hundred Faces,48.4
-Mordred,Lancelot,50.4
-Mordred,Gilles de Rais,54.8
-Mordred,Diarmuid Ua Duibhne,50.6
-Mordred,Mordred,46.1
-Mordred,Siegfried,47.7
-Mordred,Atalanta,50.9
-Mordred,Chiron,39.5
-Mordred,Vlad III,41.8
-Mordred,Karna,54.3
-Mordred,Achilles,39.8
-Mordred,Astolfo,44.2
-Mordred,Jack the Ripper,40.9
-Mordred,Semiramis,50.9
-Mordred,William Shakespeare,40.8
-Mordred,Avicebron,43.5
-Mordred,Frankenstein,48.1
-Mordred,Spartacus,42.3
-Mordred,Jeanne d'Arc,40.5
-Mordred,Amakusa Shirou,50.6
-Mordred,Angra Mainyu,57.5
-Siegfried,Artoria Pendragon,44.3
-Siegfried,Heracles,44.2
-Siegfried,Medea,42.4
-Siegfried,Sasaki Kojirou,45.9
-Siegfried,EMIYA,83.6
-Siegfried,Cú Chulainn,47.8
-Siegfried,Medusa,51.4
-Siegfried,Hassan of the Cursed Arm,45.3
-Siegfried,Gilgamesh,33.1
-Siegfried,Iskandar,45.9
-Siegfried,Hassan of the Hundred Faces,46.4
-Siegfried,Lancelot,49.4
-Siegfried,Gilles de Rais,44.1
-Siegfried,Diarmuid Ua Duibhne,43.4
-Siegfried,Mordred,47.7
-Siegfried,Siegfried,45.1
-Siegfried,Atalanta,46.3
-Siegfried,Chiron,45.9
-Siegfried,Vlad III,40.5
-Siegfried,Karna,50.4
-Siegfried,Achilles,44.9
-Siegfried,Astolfo,45.1
-Siegfried,Jack the Ripper,52.8
-Siegfried,Semiramis,44.2
-Siegfried,William Shakespeare,43.4
-Siegfried,Avicebron,42.0
-Siegfried,Frankenstein,46.7
-Siegfried,Spartacus,49.3
-Siegfried,Jeanne d'Arc,40.8
-Siegfried,Amakusa Shirou,47.2
-Siegfried,Angra Mainyu,63.0
-Atalanta,Artoria Pendragon,39.9
-Atalanta,Heracles,47.0
-Atalanta,Medea,48.5
-Atalanta,Sasaki Kojirou,44.0
-Atalanta,EMIYA,46.7
-Atalanta,Cú Chulainn,46.4
-Atalanta,Medusa,47.9
-Atalanta,Hassan of the Cursed Arm,47.8
-Atalanta,Gilgamesh,41.5
-Atalanta,Iskandar,48.5
-Atalanta,Hassan of the Hundred Faces,48.7
-Atalanta,Lancelot,42.1
-Atalanta,Gilles de Rais,50.5
-Atalanta,Diarmuid Ua Duibhne,47.5
-Atalanta,Mordred,42.4
-Atalanta,Siegfried,47.1
-Atalanta,Atalanta,49.0
-Atalanta,Chiron,43.6
-Atalanta,Vlad III,46.9
-Atalanta,Karna,50.2
-Atalanta,Achilles,53.0
-Atalanta,Astolfo,53.9
-Atalanta,Jack the Ripper,39.9
-Atalanta,Semiramis,46.3
-Atalanta,William Shakespeare,48.2
-Atalanta,Avicebron,45.7
+Mordred,Medea,44.5
+Mordred,Sasaki Kojirou,54.8
+Mordred,EMIYA,38.4
+Mordred,Cú Chulainn,49.1
+Mordred,Medusa,51.6
+Mordred,Hassan of the Cursed Arm,51.7
+Mordred,Gilgamesh,30.1
+Mordred,Iskandar,48.5
+Mordred,Hassan of the Hundred Faces,49.7
+Mordred,Lancelot,51.3
+Mordred,Gilles de Rais,57.0
+Mordred,Diarmuid Ua Duibhne,51.6
+Mordred,Mordred,47.2
+Mordred,Siegfried,51.9
+Mordred,Atalanta,49.4
+Mordred,Chiron,38.5
+Mordred,Vlad III,42.3
+Mordred,Karna,53.6
+Mordred,Achilles,41.2
+Mordred,Astolfo,48.9
+Mordred,Jack the Ripper,42.6
+Mordred,Semiramis,51.2
+Mordred,William Shakespeare,41.0
+Mordred,Avicebron,44.0
+Mordred,Frankenstein,48.7
+Mordred,Spartacus,42.9
+Mordred,Jeanne d'Arc,41.8
+Mordred,Amakusa Shirou,53.4
+Mordred,Angra Mainyu,57.8
+Mordred,Nero Claudius,39.7
+Mordred,Robin Hood,48.7
+Mordred,Vlad III (EXTRA),49.4
+Mordred,Francis Drake,51.5
+Mordred,Li Shuwen,42.9
+Mordred,Tamamo no Mae,38.0
+Mordred,Lu Bu Fengxian,41.4
+Siegfried,Artoria Pendragon,43.4
+Siegfried,Heracles,49.1
+Siegfried,Medea,42.1
+Siegfried,Sasaki Kojirou,48.5
+Siegfried,EMIYA,83.3
+Siegfried,Cú Chulainn,46.1
+Siegfried,Medusa,48.9
+Siegfried,Hassan of the Cursed Arm,46.6
+Siegfried,Gilgamesh,33.7
+Siegfried,Iskandar,44.7
+Siegfried,Hassan of the Hundred Faces,47.0
+Siegfried,Lancelot,46.5
+Siegfried,Gilles de Rais,43.8
+Siegfried,Diarmuid Ua Duibhne,43.5
+Siegfried,Mordred,43.2
+Siegfried,Siegfried,45.8
+Siegfried,Atalanta,48.7
+Siegfried,Chiron,47.8
+Siegfried,Vlad III,39.5
+Siegfried,Karna,50.7
+Siegfried,Achilles,44.5
+Siegfried,Astolfo,46.0
+Siegfried,Jack the Ripper,52.1
+Siegfried,Semiramis,45.4
+Siegfried,William Shakespeare,43.9
+Siegfried,Avicebron,45.0
+Siegfried,Frankenstein,50.9
+Siegfried,Spartacus,50.6
+Siegfried,Jeanne d'Arc,39.3
+Siegfried,Amakusa Shirou,44.6
+Siegfried,Angra Mainyu,64.6
+Siegfried,Nero Claudius,42.7
+Siegfried,Robin Hood,46.7
+Siegfried,Vlad III (EXTRA),44.1
+Siegfried,Francis Drake,51.7
+Siegfried,Li Shuwen,46.7
+Siegfried,Tamamo no Mae,42.1
+Siegfried,Lu Bu Fengxian,43.3
+Atalanta,Artoria Pendragon,40.7
+Atalanta,Heracles,43.9
+Atalanta,Medea,48.1
+Atalanta,Sasaki Kojirou,44.5
+Atalanta,EMIYA,46.2
+Atalanta,Cú Chulainn,47.5
+Atalanta,Medusa,47.5
+Atalanta,Hassan of the Cursed Arm,52.0
+Atalanta,Gilgamesh,41.0
+Atalanta,Iskandar,50.7
+Atalanta,Hassan of the Hundred Faces,49.0
+Atalanta,Lancelot,43.8
+Atalanta,Gilles de Rais,51.7
+Atalanta,Diarmuid Ua Duibhne,48.3
+Atalanta,Mordred,42.5
+Atalanta,Siegfried,47.5
+Atalanta,Atalanta,46.6
+Atalanta,Chiron,49.4
+Atalanta,Vlad III,46.7
+Atalanta,Karna,52.7
+Atalanta,Achilles,50.9
+Atalanta,Astolfo,53.1
+Atalanta,Jack the Ripper,40.9
+Atalanta,Semiramis,45.9
+Atalanta,William Shakespeare,48.4
+Atalanta,Avicebron,48.6
 Atalanta,Frankenstein,41.7
-Atalanta,Spartacus,48.7
-Atalanta,Jeanne d'Arc,47.5
-Atalanta,Amakusa Shirou,52.2
-Atalanta,Angra Mainyu,67.6
-Chiron,Artoria Pendragon,42.8
-Chiron,Heracles,49.1
-Chiron,Medea,30.1
-Chiron,Sasaki Kojirou,49.1
-Chiron,EMIYA,40.9
-Chiron,Cú Chulainn,48.3
-Chiron,Medusa,50.0
-Chiron,Hassan of the Cursed Arm,47.3
-Chiron,Gilgamesh,31.5
-Chiron,Iskandar,53.0
-Chiron,Hassan of the Hundred Faces,39.8
-Chiron,Lancelot,48.3
-Chiron,Gilles de Rais,52.3
-Chiron,Diarmuid Ua Duibhne,54.1
-Chiron,Mordred,55.7
-Chiron,Siegfried,49.7
-Chiron,Atalanta,47.5
-Chiron,Chiron,46.1
-Chiron,Vlad III,50.6
-Chiron,Karna,37.4
-Chiron,Achilles,67.1
-Chiron,Astolfo,45.0
-Chiron,Jack the Ripper,37.1
-Chiron,Semiramis,51.1
-Chiron,William Shakespeare,62.9
-Chiron,Avicebron,44.3
-Chiron,Frankenstein,39.9
-Chiron,Spartacus,47.1
-Chiron,Jeanne d'Arc,45.4
-Chiron,Amakusa Shirou,46.1
-Chiron,Angra Mainyu,69.7
+Atalanta,Spartacus,54.0
+Atalanta,Jeanne d'Arc,47.1
+Atalanta,Amakusa Shirou,54.5
+Atalanta,Angra Mainyu,66.4
+Atalanta,Nero Claudius,47.9
+Atalanta,Robin Hood,48.4
+Atalanta,Vlad III (EXTRA),48.8
+Atalanta,Francis Drake,34.7
+Atalanta,Li Shuwen,50.7
+Atalanta,Tamamo no Mae,46.9
+Atalanta,Lu Bu Fengxian,44.3
+Chiron,Artoria Pendragon,42.5
+Chiron,Heracles,48.9
+Chiron,Medea,29.5
+Chiron,Sasaki Kojirou,45.7
+Chiron,EMIYA,37.0
+Chiron,Cú Chulainn,47.9
+Chiron,Medusa,44.1
+Chiron,Hassan of the Cursed Arm,45.9
+Chiron,Gilgamesh,33.7
+Chiron,Iskandar,48.2
+Chiron,Hassan of the Hundred Faces,39.9
+Chiron,Lancelot,49.1
+Chiron,Gilles de Rais,53.3
+Chiron,Diarmuid Ua Duibhne,53.6
+Chiron,Mordred,54.0
+Chiron,Siegfried,48.8
+Chiron,Atalanta,48.3
+Chiron,Chiron,48.5
+Chiron,Vlad III,50.7
+Chiron,Karna,35.9
+Chiron,Achilles,66.1
+Chiron,Astolfo,48.1
+Chiron,Jack the Ripper,36.7
+Chiron,Semiramis,52.1
+Chiron,William Shakespeare,63.6
+Chiron,Avicebron,45.1
+Chiron,Frankenstein,40.5
+Chiron,Spartacus,45.3
+Chiron,Jeanne d'Arc,45.1
+Chiron,Amakusa Shirou,48.3
+Chiron,Angra Mainyu,70.1
+Chiron,Nero Claudius,48.0
+Chiron,Robin Hood,44.1
+Chiron,Vlad III (EXTRA),54.3
+Chiron,Francis Drake,36.7
+Chiron,Li Shuwen,38.1
+Chiron,Tamamo no Mae,45.9
+Chiron,Lu Bu Fengxian,52.9
 Vlad III,Artoria Pendragon,46.5
-Vlad III,Heracles,51.0
-Vlad III,Medea,39.5
-Vlad III,Sasaki Kojirou,50.6
-Vlad III,EMIYA,51.7
-Vlad III,Cú Chulainn,44.3
-Vlad III,Medusa,52.5
-Vlad III,Hassan of the Cursed Arm,49.9
-Vlad III,Gilgamesh,33.5
-Vlad III,Iskandar,49.4
-Vlad III,Hassan of the Hundred Faces,44.5
-Vlad III,Lancelot,47.4
-Vlad III,Gilles de Rais,42.0
-Vlad III,Diarmuid Ua Duibhne,37.6
-Vlad III,Mordred,54.4
-Vlad III,Siegfried,53.1
-Vlad III,Atalanta,50.3
-Vlad III,Chiron,42.7
-Vlad III,Vlad III,43.9
+Vlad III,Heracles,48.8
+Vlad III,Medea,41.1
+Vlad III,Sasaki Kojirou,53.0
+Vlad III,EMIYA,50.5
+Vlad III,Cú Chulainn,44.5
+Vlad III,Medusa,51.4
+Vlad III,Hassan of the Cursed Arm,47.7
+Vlad III,Gilgamesh,31.7
+Vlad III,Iskandar,48.2
+Vlad III,Hassan of the Hundred Faces,48.9
+Vlad III,Lancelot,50.5
+Vlad III,Gilles de Rais,41.5
+Vlad III,Diarmuid Ua Duibhne,38.8
+Vlad III,Mordred,55.0
+Vlad III,Siegfried,52.5
+Vlad III,Atalanta,47.2
+Vlad III,Chiron,42.8
+Vlad III,Vlad III,45.9
 Vlad III,Karna,55.4
-Vlad III,Achilles,48.0
-Vlad III,Astolfo,46.7
-Vlad III,Jack the Ripper,47.1
-Vlad III,Semiramis,39.5
-Vlad III,William Shakespeare,41.3
-Vlad III,Avicebron,43.7
-Vlad III,Frankenstein,53.9
-Vlad III,Spartacus,49.0
-Vlad III,Jeanne d'Arc,36.1
-Vlad III,Amakusa Shirou,49.2
-Vlad III,Angra Mainyu,51.3
-Karna,Artoria Pendragon,37.0
-Karna,Heracles,57.3
-Karna,Medea,45.3
-Karna,Sasaki Kojirou,44.1
-Karna,EMIYA,32.4
-Karna,Cú Chulainn,58.2
-Karna,Medusa,67.9
-Karna,Hassan of the Cursed Arm,46.1
-Karna,Gilgamesh,36.2
-Karna,Iskandar,58.4
-Karna,Hassan of the Hundred Faces,43.3
-Karna,Lancelot,41.4
-Karna,Gilles de Rais,44.3
-Karna,Diarmuid Ua Duibhne,46.5
-Karna,Mordred,39.5
-Karna,Siegfried,44.7
-Karna,Atalanta,46.7
-Karna,Chiron,54.7
-Karna,Vlad III,40.7
-Karna,Karna,44.8
-Karna,Achilles,60.2
-Karna,Astolfo,50.2
-Karna,Jack the Ripper,50.9
-Karna,Semiramis,51.3
-Karna,William Shakespeare,44.6
-Karna,Avicebron,41.7
-Karna,Frankenstein,44.5
-Karna,Spartacus,49.6
-Karna,Jeanne d'Arc,44.0
-Karna,Amakusa Shirou,51.2
-Karna,Angra Mainyu,53.0
-Achilles,Artoria Pendragon,44.1
-Achilles,Heracles,49.6
-Achilles,Medea,27.9
-Achilles,Sasaki Kojirou,40.7
-Achilles,EMIYA,44.1
-Achilles,Cú Chulainn,38.7
-Achilles,Medusa,35.5
-Achilles,Hassan of the Cursed Arm,45.2
-Achilles,Gilgamesh,61.2
-Achilles,Iskandar,44.2
-Achilles,Hassan of the Hundred Faces,56.9
-Achilles,Lancelot,46.3
-Achilles,Gilles de Rais,51.9
-Achilles,Diarmuid Ua Duibhne,50.7
-Achilles,Mordred,50.1
-Achilles,Siegfried,47.4
-Achilles,Atalanta,42.1
-Achilles,Chiron,20.3
-Achilles,Vlad III,45.2
-Achilles,Karna,33.0
-Achilles,Achilles,46.5
-Achilles,Astolfo,42.9
-Achilles,Jack the Ripper,58.1
-Achilles,Semiramis,49.4
-Achilles,William Shakespeare,58.2
-Achilles,Avicebron,53.1
-Achilles,Frankenstein,41.4
-Achilles,Spartacus,51.2
-Achilles,Jeanne d'Arc,66.4
-Achilles,Amakusa Shirou,22.6
-Achilles,Angra Mainyu,79.5
-Astolfo,Artoria Pendragon,55.9
-Astolfo,Heracles,45.0
-Astolfo,Medea,44.1
-Astolfo,Sasaki Kojirou,44.5
-Astolfo,EMIYA,51.3
-Astolfo,Cú Chulainn,41.3
-Astolfo,Medusa,41.3
-Astolfo,Hassan of the Cursed Arm,47.5
-Astolfo,Gilgamesh,46.3
-Astolfo,Iskandar,42.6
-Astolfo,Hassan of the Hundred Faces,43.0
-Astolfo,Lancelot,38.6
-Astolfo,Gilles de Rais,58.1
-Astolfo,Diarmuid Ua Duibhne,50.8
-Astolfo,Mordred,45.9
-Astolfo,Siegfried,47.9
-Astolfo,Atalanta,42.9
-Astolfo,Chiron,46.9
-Astolfo,Vlad III,48.8
-Astolfo,Karna,43.9
-Astolfo,Achilles,52.9
-Astolfo,Astolfo,46.9
-Astolfo,Jack the Ripper,50.9
-Astolfo,Semiramis,50.6
-Astolfo,William Shakespeare,50.3
-Astolfo,Avicebron,49.0
-Astolfo,Frankenstein,44.9
-Astolfo,Spartacus,50.0
-Astolfo,Jeanne d'Arc,51.2
-Astolfo,Amakusa Shirou,45.5
-Astolfo,Angra Mainyu,57.6
-Jack the Ripper,Artoria Pendragon,68.5
-Jack the Ripper,Heracles,46.5
-Jack the Ripper,Medea,59.9
-Jack the Ripper,Sasaki Kojirou,42.6
-Jack the Ripper,EMIYA,53.7
-Jack the Ripper,Cú Chulainn,44.9
-Jack the Ripper,Medusa,46.8
-Jack the Ripper,Hassan of the Cursed Arm,42.7
-Jack the Ripper,Gilgamesh,36.9
-Jack the Ripper,Iskandar,43.7
-Jack the Ripper,Hassan of the Hundred Faces,40.9
-Jack the Ripper,Lancelot,43.4
-Jack the Ripper,Gilles de Rais,39.7
-Jack the Ripper,Diarmuid Ua Duibhne,48.5
-Jack the Ripper,Mordred,56.6
-Jack the Ripper,Siegfried,41.5
-Jack the Ripper,Atalanta,53.7
-Jack the Ripper,Chiron,58.9
-Jack the Ripper,Vlad III,47.4
-Jack the Ripper,Karna,44.9
-Jack the Ripper,Achilles,31.4
-Jack the Ripper,Astolfo,45.7
-Jack the Ripper,Jack the Ripper,46.8
-Jack the Ripper,Semiramis,57.8
-Jack the Ripper,William Shakespeare,38.8
-Jack the Ripper,Avicebron,38.9
-Jack the Ripper,Frankenstein,49.5
-Jack the Ripper,Spartacus,45.5
-Jack the Ripper,Jeanne d'Arc,56.1
-Jack the Ripper,Amakusa Shirou,46.1
-Jack the Ripper,Angra Mainyu,52.1
-Semiramis,Artoria Pendragon,43.7
-Semiramis,Heracles,50.3
-Semiramis,Medea,47.7
-Semiramis,Sasaki Kojirou,48.0
-Semiramis,EMIYA,47.7
-Semiramis,Cú Chulainn,49.7
-Semiramis,Medusa,48.9
-Semiramis,Hassan of the Cursed Arm,47.6
-Semiramis,Gilgamesh,48.6
-Semiramis,Iskandar,51.7
-Semiramis,Hassan of the Hundred Faces,46.7
-Semiramis,Lancelot,57.0
-Semiramis,Gilles de Rais,43.2
-Semiramis,Diarmuid Ua Duibhne,44.4
-Semiramis,Mordred,44.8
-Semiramis,Siegfried,47.3
-Semiramis,Atalanta,47.3
-Semiramis,Chiron,46.2
-Semiramis,Vlad III,55.6
-Semiramis,Karna,42.1
-Semiramis,Achilles,43.5
+Vlad III,Achilles,49.3
+Vlad III,Astolfo,46.2
+Vlad III,Jack the Ripper,49.7
+Vlad III,Semiramis,43.3
+Vlad III,William Shakespeare,44.2
+Vlad III,Avicebron,47.4
+Vlad III,Frankenstein,54.1
+Vlad III,Spartacus,52.0
+Vlad III,Jeanne d'Arc,38.5
+Vlad III,Amakusa Shirou,48.4
+Vlad III,Angra Mainyu,53.7
+Vlad III,Nero Claudius,41.8
+Vlad III,Robin Hood,45.7
+Vlad III,Vlad III (EXTRA),43.2
+Vlad III,Francis Drake,55.5
+Vlad III,Li Shuwen,39.9
+Vlad III,Tamamo no Mae,40.3
+Vlad III,Lu Bu Fengxian,40.3
+Karna,Artoria Pendragon,39.2
+Karna,Heracles,49.4
+Karna,Medea,45.6
+Karna,Sasaki Kojirou,43.9
+Karna,EMIYA,29.0
+Karna,Cú Chulainn,60.5
+Karna,Medusa,65.4
+Karna,Hassan of the Cursed Arm,44.0
+Karna,Gilgamesh,38.3
+Karna,Iskandar,58.7
+Karna,Hassan of the Hundred Faces,43.1
+Karna,Lancelot,42.3
+Karna,Gilles de Rais,46.7
+Karna,Diarmuid Ua Duibhne,45.8
+Karna,Mordred,37.7
+Karna,Siegfried,42.9
+Karna,Atalanta,41.3
+Karna,Chiron,54.8
+Karna,Vlad III,37.7
+Karna,Karna,45.7
+Karna,Achilles,61.7
+Karna,Astolfo,52.9
+Karna,Jack the Ripper,50.5
+Karna,Semiramis,52.5
+Karna,William Shakespeare,46.7
+Karna,Avicebron,39.3
+Karna,Frankenstein,41.5
+Karna,Spartacus,49.7
+Karna,Jeanne d'Arc,48.3
+Karna,Amakusa Shirou,50.2
+Karna,Angra Mainyu,53.7
+Karna,Nero Claudius,42.7
+Karna,Robin Hood,43.5
+Karna,Vlad III (EXTRA),47.7
+Karna,Francis Drake,47.5
+Karna,Li Shuwen,44.5
+Karna,Tamamo no Mae,56.1
+Karna,Lu Bu Fengxian,43.7
+Achilles,Artoria Pendragon,41.3
+Achilles,Heracles,53.1
+Achilles,Medea,31.0
+Achilles,Sasaki Kojirou,39.2
+Achilles,EMIYA,41.1
+Achilles,Cú Chulainn,38.4
+Achilles,Medusa,35.1
+Achilles,Hassan of the Cursed Arm,44.5
+Achilles,Gilgamesh,63.6
+Achilles,Iskandar,44.7
+Achilles,Hassan of the Hundred Faces,57.0
+Achilles,Lancelot,43.1
+Achilles,Gilles de Rais,51.0
+Achilles,Diarmuid Ua Duibhne,49.6
+Achilles,Mordred,49.0
+Achilles,Siegfried,47.7
+Achilles,Atalanta,44.4
+Achilles,Chiron,19.9
+Achilles,Vlad III,45.6
+Achilles,Karna,32.3
+Achilles,Achilles,44.3
+Achilles,Astolfo,43.2
+Achilles,Jack the Ripper,59.3
+Achilles,Semiramis,48.2
+Achilles,William Shakespeare,57.3
+Achilles,Avicebron,50.2
+Achilles,Frankenstein,40.1
+Achilles,Spartacus,50.7
+Achilles,Jeanne d'Arc,64.4
+Achilles,Amakusa Shirou,25.3
+Achilles,Angra Mainyu,79.7
+Achilles,Nero Claudius,45.4
+Achilles,Robin Hood,47.3
+Achilles,Vlad III (EXTRA),33.2
+Achilles,Francis Drake,44.5
+Achilles,Li Shuwen,46.8
+Achilles,Tamamo no Mae,57.9
+Achilles,Lu Bu Fengxian,48.5
+Astolfo,Artoria Pendragon,56.2
+Astolfo,Heracles,43.1
+Astolfo,Medea,44.2
+Astolfo,Sasaki Kojirou,42.3
+Astolfo,EMIYA,49.4
+Astolfo,Cú Chulainn,38.4
+Astolfo,Medusa,35.3
+Astolfo,Hassan of the Cursed Arm,44.6
+Astolfo,Gilgamesh,43.9
+Astolfo,Iskandar,41.6
+Astolfo,Hassan of the Hundred Faces,40.1
+Astolfo,Lancelot,36.7
+Astolfo,Gilles de Rais,56.0
+Astolfo,Diarmuid Ua Duibhne,50.7
+Astolfo,Mordred,42.2
+Astolfo,Siegfried,49.7
+Astolfo,Atalanta,39.2
+Astolfo,Chiron,42.4
+Astolfo,Vlad III,44.9
+Astolfo,Karna,44.8
+Astolfo,Achilles,52.3
+Astolfo,Astolfo,47.3
+Astolfo,Jack the Ripper,52.7
+Astolfo,Semiramis,50.5
+Astolfo,William Shakespeare,50.9
+Astolfo,Avicebron,49.5
+Astolfo,Frankenstein,42.7
+Astolfo,Spartacus,49.5
+Astolfo,Jeanne d'Arc,52.5
+Astolfo,Amakusa Shirou,44.5
+Astolfo,Angra Mainyu,56.1
+Astolfo,Nero Claudius,55.7
+Astolfo,Robin Hood,45.4
+Astolfo,Vlad III (EXTRA),53.1
+Astolfo,Francis Drake,30.9
+Astolfo,Li Shuwen,48.7
+Astolfo,Tamamo no Mae,56.0
+Astolfo,Lu Bu Fengxian,55.7
+Jack the Ripper,Artoria Pendragon,67.1
+Jack the Ripper,Heracles,47.7
+Jack the Ripper,Medea,58.9
+Jack the Ripper,Sasaki Kojirou,42.9
+Jack the Ripper,EMIYA,51.3
+Jack the Ripper,Cú Chulainn,40.9
+Jack the Ripper,Medusa,50.0
+Jack the Ripper,Hassan of the Cursed Arm,41.6
+Jack the Ripper,Gilgamesh,36.7
+Jack the Ripper,Iskandar,40.4
+Jack the Ripper,Hassan of the Hundred Faces,41.2
+Jack the Ripper,Lancelot,43.6
+Jack the Ripper,Gilles de Rais,39.1
+Jack the Ripper,Diarmuid Ua Duibhne,47.7
+Jack the Ripper,Mordred,55.9
+Jack the Ripper,Siegfried,40.9
+Jack the Ripper,Atalanta,54.7
+Jack the Ripper,Chiron,55.1
+Jack the Ripper,Vlad III,42.7
+Jack the Ripper,Karna,43.9
+Jack the Ripper,Achilles,34.8
+Jack the Ripper,Astolfo,45.8
+Jack the Ripper,Jack the Ripper,49.9
+Jack the Ripper,Semiramis,59.5
+Jack the Ripper,William Shakespeare,36.1
+Jack the Ripper,Avicebron,41.7
+Jack the Ripper,Frankenstein,49.2
+Jack the Ripper,Spartacus,46.7
+Jack the Ripper,Jeanne d'Arc,57.8
+Jack the Ripper,Amakusa Shirou,46.0
+Jack the Ripper,Angra Mainyu,51.9
+Jack the Ripper,Nero Claudius,62.1
+Jack the Ripper,Robin Hood,42.5
+Jack the Ripper,Vlad III (EXTRA),41.7
+Jack the Ripper,Francis Drake,51.1
+Jack the Ripper,Li Shuwen,43.2
+Jack the Ripper,Tamamo no Mae,64.8
+Jack the Ripper,Lu Bu Fengxian,48.5
+Semiramis,Artoria Pendragon,41.7
+Semiramis,Heracles,50.6
+Semiramis,Medea,47.6
+Semiramis,Sasaki Kojirou,51.6
+Semiramis,EMIYA,45.7
+Semiramis,Cú Chulainn,52.1
+Semiramis,Medusa,47.1
+Semiramis,Hassan of the Cursed Arm,45.3
+Semiramis,Gilgamesh,47.4
+Semiramis,Iskandar,51.4
+Semiramis,Hassan of the Hundred Faces,45.3
+Semiramis,Lancelot,56.9
+Semiramis,Gilles de Rais,43.8
+Semiramis,Diarmuid Ua Duibhne,46.9
+Semiramis,Mordred,43.9
+Semiramis,Siegfried,48.6
+Semiramis,Atalanta,46.0
+Semiramis,Chiron,43.4
+Semiramis,Vlad III,51.3
+Semiramis,Karna,42.9
+Semiramis,Achilles,42.9
 Semiramis,Astolfo,44.5
-Semiramis,Jack the Ripper,32.7
-Semiramis,Semiramis,43.5
-Semiramis,William Shakespeare,46.7
-Semiramis,Avicebron,48.9
-Semiramis,Frankenstein,49.4
-Semiramis,Spartacus,47.8
-Semiramis,Jeanne d'Arc,45.2
-Semiramis,Amakusa Shirou,51.3
-Semiramis,Angra Mainyu,58.0
-William Shakespeare,Artoria Pendragon,44.7
-William Shakespeare,Heracles,49.3
-William Shakespeare,Medea,36.1
+Semiramis,Jack the Ripper,36.7
+Semiramis,Semiramis,47.1
+Semiramis,William Shakespeare,46.9
+Semiramis,Avicebron,47.7
+Semiramis,Frankenstein,45.5
+Semiramis,Spartacus,48.5
+Semiramis,Jeanne d'Arc,48.1
+Semiramis,Amakusa Shirou,50.8
+Semiramis,Angra Mainyu,60.3
+Semiramis,Nero Claudius,45.6
+Semiramis,Robin Hood,41.1
+Semiramis,Vlad III (EXTRA),46.1
+Semiramis,Francis Drake,55.1
+Semiramis,Li Shuwen,42.0
+Semiramis,Tamamo no Mae,50.7
+Semiramis,Lu Bu Fengxian,43.2
+William Shakespeare,Artoria Pendragon,44.9
+William Shakespeare,Heracles,49.7
+William Shakespeare,Medea,37.0
 William Shakespeare,Sasaki Kojirou,49.3
-William Shakespeare,EMIYA,43.5
-William Shakespeare,Cú Chulainn,49.1
-William Shakespeare,Medusa,43.3
-William Shakespeare,Hassan of the Cursed Arm,48.6
-William Shakespeare,Gilgamesh,62.7
-William Shakespeare,Iskandar,47.8
-William Shakespeare,Hassan of the Hundred Faces,48.3
-William Shakespeare,Lancelot,50.3
-William Shakespeare,Gilles de Rais,46.5
-William Shakespeare,Diarmuid Ua Duibhne,43.1
-William Shakespeare,Mordred,51.5
-William Shakespeare,Siegfried,52.2
-William Shakespeare,Atalanta,47.3
+William Shakespeare,EMIYA,44.1
+William Shakespeare,Cú Chulainn,50.5
+William Shakespeare,Medusa,41.3
+William Shakespeare,Hassan of the Cursed Arm,49.1
+William Shakespeare,Gilgamesh,63.3
+William Shakespeare,Iskandar,49.4
+William Shakespeare,Hassan of the Hundred Faces,51.6
+William Shakespeare,Lancelot,50.2
+William Shakespeare,Gilles de Rais,48.1
+William Shakespeare,Diarmuid Ua Duibhne,46.9
+William Shakespeare,Mordred,52.1
+William Shakespeare,Siegfried,54.7
+William Shakespeare,Atalanta,45.7
 William Shakespeare,Chiron,30.3
-William Shakespeare,Vlad III,52.7
-William Shakespeare,Karna,47.8
-William Shakespeare,Achilles,33.2
-William Shakespeare,Astolfo,44.4
-William Shakespeare,Jack the Ripper,55.1
-William Shakespeare,Semiramis,48.7
-William Shakespeare,William Shakespeare,46.3
-William Shakespeare,Avicebron,50.1
-William Shakespeare,Frankenstein,50.7
-William Shakespeare,Spartacus,58.5
-William Shakespeare,Jeanne d'Arc,42.9
-William Shakespeare,Amakusa Shirou,35.3
-William Shakespeare,Angra Mainyu,60.1
-Avicebron,Artoria Pendragon,43.5
-Avicebron,Heracles,50.5
-Avicebron,Medea,48.3
-Avicebron,Sasaki Kojirou,45.9
-Avicebron,EMIYA,49.6
-Avicebron,Cú Chulainn,45.2
-Avicebron,Medusa,47.6
-Avicebron,Hassan of the Cursed Arm,44.9
-Avicebron,Gilgamesh,44.9
-Avicebron,Iskandar,49.7
-Avicebron,Hassan of the Hundred Faces,47.3
-Avicebron,Lancelot,49.5
-Avicebron,Gilles de Rais,43.7
-Avicebron,Diarmuid Ua Duibhne,42.8
-Avicebron,Mordred,51.7
-Avicebron,Siegfried,46.6
-Avicebron,Atalanta,45.6
-Avicebron,Chiron,47.5
-Avicebron,Vlad III,48.2
-Avicebron,Karna,51.3
-Avicebron,Achilles,38.5
-Avicebron,Astolfo,44.0
-Avicebron,Jack the Ripper,55.1
-Avicebron,Semiramis,43.2
-Avicebron,William Shakespeare,44.9
-Avicebron,Avicebron,45.0
-Avicebron,Frankenstein,50.9
-Avicebron,Spartacus,53.5
-Avicebron,Jeanne d'Arc,43.9
-Avicebron,Amakusa Shirou,53.0
-Avicebron,Angra Mainyu,57.2
-Frankenstein,Artoria Pendragon,41.2
-Frankenstein,Heracles,47.1
-Frankenstein,Medea,47.6
-Frankenstein,Sasaki Kojirou,52.6
-Frankenstein,EMIYA,49.9
+William Shakespeare,Vlad III,50.1
+William Shakespeare,Karna,49.7
+William Shakespeare,Achilles,33.1
+William Shakespeare,Astolfo,46.7
+William Shakespeare,Jack the Ripper,56.9
+William Shakespeare,Semiramis,47.9
+William Shakespeare,William Shakespeare,45.6
+William Shakespeare,Avicebron,51.3
+William Shakespeare,Frankenstein,52.0
+William Shakespeare,Spartacus,61.5
+William Shakespeare,Jeanne d'Arc,40.1
+William Shakespeare,Amakusa Shirou,34.7
+William Shakespeare,Angra Mainyu,59.9
+William Shakespeare,Nero Claudius,51.1
+William Shakespeare,Robin Hood,50.0
+William Shakespeare,Vlad III (EXTRA),26.9
+William Shakespeare,Francis Drake,47.3
+William Shakespeare,Li Shuwen,50.9
+William Shakespeare,Tamamo no Mae,50.1
+William Shakespeare,Lu Bu Fengxian,46.5
+Avicebron,Artoria Pendragon,45.8
+Avicebron,Heracles,48.7
+Avicebron,Medea,49.6
+Avicebron,Sasaki Kojirou,44.9
+Avicebron,EMIYA,48.1
+Avicebron,Cú Chulainn,44.3
+Avicebron,Medusa,45.7
+Avicebron,Hassan of the Cursed Arm,44.5
+Avicebron,Gilgamesh,43.5
+Avicebron,Iskandar,47.7
+Avicebron,Hassan of the Hundred Faces,46.2
+Avicebron,Lancelot,48.6
+Avicebron,Gilles de Rais,41.1
+Avicebron,Diarmuid Ua Duibhne,41.6
+Avicebron,Mordred,48.7
+Avicebron,Siegfried,46.2
+Avicebron,Atalanta,44.0
+Avicebron,Chiron,48.1
+Avicebron,Vlad III,46.9
+Avicebron,Karna,52.5
+Avicebron,Achilles,38.2
+Avicebron,Astolfo,46.2
+Avicebron,Jack the Ripper,52.5
+Avicebron,Semiramis,43.1
+Avicebron,William Shakespeare,42.2
+Avicebron,Avicebron,45.7
+Avicebron,Frankenstein,51.1
+Avicebron,Spartacus,54.3
+Avicebron,Jeanne d'Arc,47.7
+Avicebron,Amakusa Shirou,50.5
+Avicebron,Angra Mainyu,56.8
+Avicebron,Nero Claudius,45.5
+Avicebron,Robin Hood,48.0
+Avicebron,Vlad III (EXTRA),41.5
+Avicebron,Francis Drake,53.7
+Avicebron,Li Shuwen,47.3
+Avicebron,Tamamo no Mae,39.4
+Avicebron,Lu Bu Fengxian,47.9
+Frankenstein,Artoria Pendragon,39.7
+Frankenstein,Heracles,45.8
+Frankenstein,Medea,51.3
+Frankenstein,Sasaki Kojirou,56.2
+Frankenstein,EMIYA,50.5
 Frankenstein,Cú Chulainn,46.7
-Frankenstein,Medusa,56.1
-Frankenstein,Hassan of the Cursed Arm,48.1
-Frankenstein,Gilgamesh,21.5
-Frankenstein,Iskandar,47.9
-Frankenstein,Hassan of the Hundred Faces,46.5
-Frankenstein,Lancelot,49.4
-Frankenstein,Gilles de Rais,39.3
-Frankenstein,Diarmuid Ua Duibhne,50.0
-Frankenstein,Mordred,45.9
-Frankenstein,Siegfried,46.9
-Frankenstein,Atalanta,52.3
-Frankenstein,Chiron,50.1
+Frankenstein,Medusa,57.3
+Frankenstein,Hassan of the Cursed Arm,48.2
+Frankenstein,Gilgamesh,23.1
+Frankenstein,Iskandar,49.8
+Frankenstein,Hassan of the Hundred Faces,50.8
+Frankenstein,Lancelot,49.5
+Frankenstein,Gilles de Rais,40.7
+Frankenstein,Diarmuid Ua Duibhne,48.7
+Frankenstein,Mordred,43.9
+Frankenstein,Siegfried,46.7
+Frankenstein,Atalanta,52.7
+Frankenstein,Chiron,54.5
 Frankenstein,Vlad III,39.5
-Frankenstein,Karna,51.1
-Frankenstein,Achilles,56.7
-Frankenstein,Astolfo,48.0
-Frankenstein,Jack the Ripper,41.6
-Frankenstein,Semiramis,45.7
-Frankenstein,William Shakespeare,45.2
-Frankenstein,Avicebron,40.6
-Frankenstein,Frankenstein,47.9
-Frankenstein,Spartacus,51.9
-Frankenstein,Jeanne d'Arc,30.5
-Frankenstein,Amakusa Shirou,54.5
-Frankenstein,Angra Mainyu,57.0
-Spartacus,Artoria Pendragon,66.5
-Spartacus,Heracles,43.7
-Spartacus,Medea,45.1
-Spartacus,Sasaki Kojirou,52.9
-Spartacus,EMIYA,53.9
-Spartacus,Cú Chulainn,52.7
-Spartacus,Medusa,47.3
-Spartacus,Hassan of the Cursed Arm,49.5
-Spartacus,Gilgamesh,50.4
-Spartacus,Iskandar,47.3
+Frankenstein,Karna,54.6
+Frankenstein,Achilles,52.8
+Frankenstein,Astolfo,50.0
+Frankenstein,Jack the Ripper,41.9
+Frankenstein,Semiramis,48.2
+Frankenstein,William Shakespeare,47.5
+Frankenstein,Avicebron,42.7
+Frankenstein,Frankenstein,44.7
+Frankenstein,Spartacus,53.3
+Frankenstein,Jeanne d'Arc,31.4
+Frankenstein,Amakusa Shirou,56.1
+Frankenstein,Angra Mainyu,57.3
+Frankenstein,Nero Claudius,40.5
+Frankenstein,Robin Hood,47.0
+Frankenstein,Vlad III (EXTRA),42.9
+Frankenstein,Francis Drake,55.1
+Frankenstein,Li Shuwen,48.1
+Frankenstein,Tamamo no Mae,36.1
+Frankenstein,Lu Bu Fengxian,45.9
+Spartacus,Artoria Pendragon,61.3
+Spartacus,Heracles,39.7
+Spartacus,Medea,42.2
+Spartacus,Sasaki Kojirou,51.5
+Spartacus,EMIYA,53.1
+Spartacus,Cú Chulainn,49.8
+Spartacus,Medusa,47.1
+Spartacus,Hassan of the Cursed Arm,44.9
+Spartacus,Gilgamesh,51.4
+Spartacus,Iskandar,44.9
 Spartacus,Hassan of the Hundred Faces,53.5
-Spartacus,Lancelot,42.6
-Spartacus,Gilles de Rais,44.9
-Spartacus,Diarmuid Ua Duibhne,56.1
-Spartacus,Mordred,57.3
-Spartacus,Siegfried,50.6
-Spartacus,Atalanta,48.4
-Spartacus,Chiron,54.3
-Spartacus,Vlad III,49.6
+Spartacus,Lancelot,43.5
+Spartacus,Gilles de Rais,43.9
+Spartacus,Diarmuid Ua Duibhne,54.5
+Spartacus,Mordred,55.1
+Spartacus,Siegfried,51.7
+Spartacus,Atalanta,46.0
+Spartacus,Chiron,53.2
+Spartacus,Vlad III,50.6
 Spartacus,Karna,46.9
-Spartacus,Achilles,52.7
+Spartacus,Achilles,49.3
 Spartacus,Astolfo,50.8
-Spartacus,Jack the Ripper,52.2
-Spartacus,Semiramis,50.4
-Spartacus,William Shakespeare,39.6
-Spartacus,Avicebron,44.9
-Spartacus,Frankenstein,45.7
-Spartacus,Spartacus,47.3
-Spartacus,Jeanne d'Arc,31.9
-Spartacus,Amakusa Shirou,46.7
-Spartacus,Angra Mainyu,71.7
-Jeanne d'Arc,Artoria Pendragon,48.7
-Jeanne d'Arc,Heracles,51.1
-Jeanne d'Arc,Medea,20.9
-Jeanne d'Arc,Sasaki Kojirou,57.3
-Jeanne d'Arc,EMIYA,23.5
-Jeanne d'Arc,Cú Chulainn,54.3
-Jeanne d'Arc,Medusa,40.8
-Jeanne d'Arc,Hassan of the Cursed Arm,50.5
-Jeanne d'Arc,Gilgamesh,57.1
-Jeanne d'Arc,Iskandar,45.9
-Jeanne d'Arc,Hassan of the Hundred Faces,52.1
-Jeanne d'Arc,Lancelot,54.1
-Jeanne d'Arc,Gilles de Rais,47.3
-Jeanne d'Arc,Diarmuid Ua Duibhne,37.7
-Jeanne d'Arc,Mordred,51.1
-Jeanne d'Arc,Siegfried,54.3
-Jeanne d'Arc,Atalanta,49.3
-Jeanne d'Arc,Chiron,51.5
-Jeanne d'Arc,Vlad III,57.5
-Jeanne d'Arc,Karna,51.8
-Jeanne d'Arc,Achilles,29.8
-Jeanne d'Arc,Astolfo,45.5
-Jeanne d'Arc,Jack the Ripper,38.7
-Jeanne d'Arc,Semiramis,49.2
-Jeanne d'Arc,William Shakespeare,54.1
-Jeanne d'Arc,Avicebron,49.7
-Jeanne d'Arc,Frankenstein,65.1
-Jeanne d'Arc,Spartacus,68.9
-Jeanne d'Arc,Jeanne d'Arc,47.0
-Jeanne d'Arc,Amakusa Shirou,23.3
-Jeanne d'Arc,Angra Mainyu,43.3
-Amakusa Shirou,Artoria Pendragon,37.9
-Amakusa Shirou,Heracles,42.3
-Amakusa Shirou,Medea,41.0
-Amakusa Shirou,Sasaki Kojirou,47.7
-Amakusa Shirou,EMIYA,51.3
-Amakusa Shirou,Cú Chulainn,50.1
-Amakusa Shirou,Medusa,43.5
-Amakusa Shirou,Hassan of the Cursed Arm,43.8
-Amakusa Shirou,Gilgamesh,41.7
-Amakusa Shirou,Iskandar,42.4
-Amakusa Shirou,Hassan of the Hundred Faces,40.0
-Amakusa Shirou,Lancelot,41.8
-Amakusa Shirou,Gilles de Rais,45.9
-Amakusa Shirou,Diarmuid Ua Duibhne,54.3
-Amakusa Shirou,Mordred,43.5
-Amakusa Shirou,Siegfried,47.1
-Amakusa Shirou,Atalanta,42.3
-Amakusa Shirou,Chiron,46.9
-Amakusa Shirou,Vlad III,48.3
-Amakusa Shirou,Karna,41.3
-Amakusa Shirou,Achilles,66.9
-Amakusa Shirou,Astolfo,50.1
-Amakusa Shirou,Jack the Ripper,47.0
-Amakusa Shirou,Semiramis,45.6
-Amakusa Shirou,William Shakespeare,60.0
-Amakusa Shirou,Avicebron,41.0
-Amakusa Shirou,Frankenstein,39.5
-Amakusa Shirou,Spartacus,49.8
-Amakusa Shirou,Jeanne d'Arc,71.4
-Amakusa Shirou,Amakusa Shirou,47.2
-Amakusa Shirou,Angra Mainyu,49.9
-Angra Mainyu,Artoria Pendragon,31.3
-Angra Mainyu,Heracles,29.5
-Angra Mainyu,Medea,37.7
-Angra Mainyu,Sasaki Kojirou,28.4
-Angra Mainyu,EMIYA,25.3
-Angra Mainyu,Cú Chulainn,17.7
-Angra Mainyu,Medusa,34.3
-Angra Mainyu,Hassan of the Cursed Arm,33.7
-Angra Mainyu,Gilgamesh,42.0
-Angra Mainyu,Iskandar,36.1
-Angra Mainyu,Hassan of the Hundred Faces,39.1
-Angra Mainyu,Lancelot,32.5
-Angra Mainyu,Gilles de Rais,53.1
-Angra Mainyu,Diarmuid Ua Duibhne,27.6
-Angra Mainyu,Mordred,38.5
-Angra Mainyu,Siegfried,31.5
-Angra Mainyu,Atalanta,28.9
-Angra Mainyu,Chiron,26.3
-Angra Mainyu,Vlad III,39.9
-Angra Mainyu,Karna,40.7
-Angra Mainyu,Achilles,20.7
-Angra Mainyu,Astolfo,39.0
-Angra Mainyu,Jack the Ripper,40.6
-Angra Mainyu,Semiramis,36.5
-Angra Mainyu,William Shakespeare,29.5
-Angra Mainyu,Avicebron,36.3
-Angra Mainyu,Frankenstein,39.7
-Angra Mainyu,Spartacus,23.6
-Angra Mainyu,Jeanne d'Arc,50.9
-Angra Mainyu,Amakusa Shirou,45.3
-Angra Mainyu,Angra Mainyu,43.7
+Spartacus,Jack the Ripper,55.9
+Spartacus,Semiramis,51.1
+Spartacus,William Shakespeare,38.3
+Spartacus,Avicebron,41.9
+Spartacus,Frankenstein,48.9
+Spartacus,Spartacus,46.3
+Spartacus,Jeanne d'Arc,32.0
+Spartacus,Amakusa Shirou,45.2
+Spartacus,Angra Mainyu,72.0
+Spartacus,Nero Claudius,52.9
+Spartacus,Robin Hood,55.3
+Spartacus,Vlad III (EXTRA),48.6
+Spartacus,Francis Drake,48.3
+Spartacus,Li Shuwen,44.5
+Spartacus,Tamamo no Mae,58.3
+Spartacus,Lu Bu Fengxian,45.5
+Jeanne d'Arc,Artoria Pendragon,47.7
+Jeanne d'Arc,Heracles,50.5
+Jeanne d'Arc,Medea,20.4
+Jeanne d'Arc,Sasaki Kojirou,53.5
+Jeanne d'Arc,EMIYA,24.9
+Jeanne d'Arc,Cú Chulainn,53.1
+Jeanne d'Arc,Medusa,41.6
+Jeanne d'Arc,Hassan of the Cursed Arm,52.8
+Jeanne d'Arc,Gilgamesh,53.5
+Jeanne d'Arc,Iskandar,42.9
+Jeanne d'Arc,Hassan of the Hundred Faces,48.6
+Jeanne d'Arc,Lancelot,52.5
+Jeanne d'Arc,Gilles de Rais,46.4
+Jeanne d'Arc,Diarmuid Ua Duibhne,34.4
+Jeanne d'Arc,Mordred,50.7
+Jeanne d'Arc,Siegfried,52.9
+Jeanne d'Arc,Atalanta,46.9
+Jeanne d'Arc,Chiron,49.4
+Jeanne d'Arc,Vlad III,54.8
+Jeanne d'Arc,Karna,50.4
+Jeanne d'Arc,Achilles,32.1
+Jeanne d'Arc,Astolfo,46.7
+Jeanne d'Arc,Jack the Ripper,40.7
+Jeanne d'Arc,Semiramis,49.7
+Jeanne d'Arc,William Shakespeare,55.5
+Jeanne d'Arc,Avicebron,49.5
+Jeanne d'Arc,Frankenstein,64.1
+Jeanne d'Arc,Spartacus,65.1
+Jeanne d'Arc,Jeanne d'Arc,47.6
+Jeanne d'Arc,Amakusa Shirou,23.7
+Jeanne d'Arc,Angra Mainyu,40.1
+Jeanne d'Arc,Nero Claudius,52.1
+Jeanne d'Arc,Robin Hood,54.9
+Jeanne d'Arc,Vlad III (EXTRA),49.5
+Jeanne d'Arc,Francis Drake,59.0
+Jeanne d'Arc,Li Shuwen,57.9
+Jeanne d'Arc,Tamamo no Mae,51.4
+Jeanne d'Arc,Lu Bu Fengxian,58.1
+Amakusa Shirou,Artoria Pendragon,37.3
+Amakusa Shirou,Heracles,43.7
+Amakusa Shirou,Medea,42.9
+Amakusa Shirou,Sasaki Kojirou,51.1
+Amakusa Shirou,EMIYA,49.4
+Amakusa Shirou,Cú Chulainn,50.8
+Amakusa Shirou,Medusa,40.5
+Amakusa Shirou,Hassan of the Cursed Arm,42.4
+Amakusa Shirou,Gilgamesh,38.3
+Amakusa Shirou,Iskandar,42.7
+Amakusa Shirou,Hassan of the Hundred Faces,40.5
+Amakusa Shirou,Lancelot,40.6
+Amakusa Shirou,Gilles de Rais,44.8
+Amakusa Shirou,Diarmuid Ua Duibhne,52.9
+Amakusa Shirou,Mordred,43.1
+Amakusa Shirou,Siegfried,44.2
+Amakusa Shirou,Atalanta,40.0
+Amakusa Shirou,Chiron,47.3
+Amakusa Shirou,Vlad III,47.9
+Amakusa Shirou,Karna,42.1
+Amakusa Shirou,Achilles,69.3
+Amakusa Shirou,Astolfo,53.2
+Amakusa Shirou,Jack the Ripper,51.9
+Amakusa Shirou,Semiramis,44.1
+Amakusa Shirou,William Shakespeare,62.7
+Amakusa Shirou,Avicebron,38.7
+Amakusa Shirou,Frankenstein,40.0
+Amakusa Shirou,Spartacus,51.1
+Amakusa Shirou,Jeanne d'Arc,72.4
+Amakusa Shirou,Amakusa Shirou,47.9
+Amakusa Shirou,Angra Mainyu,46.2
+Amakusa Shirou,Nero Claudius,50.5
+Amakusa Shirou,Robin Hood,42.9
+Amakusa Shirou,Vlad III (EXTRA),50.5
+Amakusa Shirou,Francis Drake,46.9
+Amakusa Shirou,Li Shuwen,44.4
+Amakusa Shirou,Tamamo no Mae,44.9
+Amakusa Shirou,Lu Bu Fengxian,50.0
+Angra Mainyu,Artoria Pendragon,29.5
+Angra Mainyu,Heracles,28.9
+Angra Mainyu,Medea,34.3
+Angra Mainyu,Sasaki Kojirou,27.9
+Angra Mainyu,EMIYA,23.5
+Angra Mainyu,Cú Chulainn,19.0
+Angra Mainyu,Medusa,35.3
+Angra Mainyu,Hassan of the Cursed Arm,33.4
+Angra Mainyu,Gilgamesh,43.3
+Angra Mainyu,Iskandar,36.9
+Angra Mainyu,Hassan of the Hundred Faces,38.7
+Angra Mainyu,Lancelot,34.0
+Angra Mainyu,Gilles de Rais,51.3
+Angra Mainyu,Diarmuid Ua Duibhne,26.1
+Angra Mainyu,Mordred,37.1
+Angra Mainyu,Siegfried,31.2
+Angra Mainyu,Atalanta,29.1
+Angra Mainyu,Chiron,24.9
+Angra Mainyu,Vlad III,40.3
+Angra Mainyu,Karna,41.2
+Angra Mainyu,Achilles,19.0
+Angra Mainyu,Astolfo,38.9
+Angra Mainyu,Jack the Ripper,40.0
+Angra Mainyu,Semiramis,32.4
+Angra Mainyu,William Shakespeare,30.3
+Angra Mainyu,Avicebron,36.1
+Angra Mainyu,Frankenstein,37.4
+Angra Mainyu,Spartacus,24.5
+Angra Mainyu,Jeanne d'Arc,50.8
+Angra Mainyu,Amakusa Shirou,44.5
+Angra Mainyu,Angra Mainyu,42.6
+Angra Mainyu,Nero Claudius,27.3
+Angra Mainyu,Robin Hood,12.3
+Angra Mainyu,Vlad III (EXTRA),42.7
+Angra Mainyu,Francis Drake,34.3
+Angra Mainyu,Li Shuwen,41.0
+Angra Mainyu,Tamamo no Mae,47.9
+Angra Mainyu,Lu Bu Fengxian,35.0
+Nero Claudius,Artoria Pendragon,55.8
+Nero Claudius,Heracles,43.5
+Nero Claudius,Medea,36.5
+Nero Claudius,Sasaki Kojirou,49.5
+Nero Claudius,EMIYA,51.8
+Nero Claudius,Cú Chulainn,44.4
+Nero Claudius,Medusa,48.4
+Nero Claudius,Hassan of the Cursed Arm,42.3
+Nero Claudius,Gilgamesh,39.5
+Nero Claudius,Iskandar,43.7
+Nero Claudius,Hassan of the Hundred Faces,41.9
+Nero Claudius,Lancelot,48.4
+Nero Claudius,Gilles de Rais,47.8
+Nero Claudius,Diarmuid Ua Duibhne,42.6
+Nero Claudius,Mordred,54.1
+Nero Claudius,Siegfried,52.9
+Nero Claudius,Atalanta,45.1
+Nero Claudius,Chiron,46.7
+Nero Claudius,Vlad III,48.5
+Nero Claudius,Karna,51.3
+Nero Claudius,Achilles,46.9
+Nero Claudius,Astolfo,43.9
+Nero Claudius,Jack the Ripper,33.5
+Nero Claudius,Semiramis,48.2
+Nero Claudius,William Shakespeare,43.9
+Nero Claudius,Avicebron,44.5
+Nero Claudius,Frankenstein,50.3
+Nero Claudius,Spartacus,48.5
+Nero Claudius,Jeanne d'Arc,41.1
+Nero Claudius,Amakusa Shirou,43.1
+Nero Claudius,Angra Mainyu,66.0
+Nero Claudius,Nero Claudius,45.2
+Nero Claudius,Robin Hood,47.2
+Nero Claudius,Vlad III (EXTRA),49.3
+Nero Claudius,Francis Drake,50.7
+Nero Claudius,Li Shuwen,43.7
+Nero Claudius,Tamamo no Mae,52.3
+Nero Claudius,Lu Bu Fengxian,50.4
+Robin Hood,Artoria Pendragon,41.5
+Robin Hood,Heracles,53.7
+Robin Hood,Medea,44.8
+Robin Hood,Sasaki Kojirou,39.6
+Robin Hood,EMIYA,47.8
+Robin Hood,Cú Chulainn,46.3
+Robin Hood,Medusa,39.8
+Robin Hood,Hassan of the Cursed Arm,48.5
+Robin Hood,Gilgamesh,38.8
+Robin Hood,Iskandar,46.8
+Robin Hood,Hassan of the Hundred Faces,47.6
+Robin Hood,Lancelot,51.6
+Robin Hood,Gilles de Rais,43.9
+Robin Hood,Diarmuid Ua Duibhne,46.7
+Robin Hood,Mordred,46.7
+Robin Hood,Siegfried,45.3
+Robin Hood,Atalanta,49.4
+Robin Hood,Chiron,48.8
+Robin Hood,Vlad III,44.5
+Robin Hood,Karna,49.7
+Robin Hood,Achilles,45.5
+Robin Hood,Astolfo,47.1
+Robin Hood,Jack the Ripper,50.7
+Robin Hood,Semiramis,50.3
+Robin Hood,William Shakespeare,43.9
+Robin Hood,Avicebron,42.4
+Robin Hood,Frankenstein,44.7
+Robin Hood,Spartacus,44.9
+Robin Hood,Jeanne d'Arc,41.7
+Robin Hood,Amakusa Shirou,49.4
+Robin Hood,Angra Mainyu,82.2
+Robin Hood,Nero Claudius,41.9
+Robin Hood,Robin Hood,41.9
+Robin Hood,Vlad III (EXTRA),42.3
+Robin Hood,Francis Drake,39.7
+Robin Hood,Li Shuwen,48.3
+Robin Hood,Tamamo no Mae,41.5
+Robin Hood,Lu Bu Fengxian,45.9
+Vlad III (EXTRA),Artoria Pendragon,41.8
+Vlad III (EXTRA),Heracles,45.1
+Vlad III (EXTRA),Medea,40.4
+Vlad III (EXTRA),Sasaki Kojirou,47.4
+Vlad III (EXTRA),EMIYA,41.3
+Vlad III (EXTRA),Cú Chulainn,55.1
+Vlad III (EXTRA),Medusa,46.5
+Vlad III (EXTRA),Hassan of the Cursed Arm,48.7
+Vlad III (EXTRA),Gilgamesh,52.7
+Vlad III (EXTRA),Iskandar,41.5
+Vlad III (EXTRA),Hassan of the Hundred Faces,49.5
+Vlad III (EXTRA),Lancelot,42.3
+Vlad III (EXTRA),Gilles de Rais,52.2
+Vlad III (EXTRA),Diarmuid Ua Duibhne,47.5
+Vlad III (EXTRA),Mordred,43.5
+Vlad III (EXTRA),Siegfried,47.1
+Vlad III (EXTRA),Atalanta,49.9
+Vlad III (EXTRA),Chiron,37.8
+Vlad III (EXTRA),Vlad III,47.2
+Vlad III (EXTRA),Karna,46.5
+Vlad III (EXTRA),Achilles,54.3
+Vlad III (EXTRA),Astolfo,40.3
+Vlad III (EXTRA),Jack the Ripper,50.5
+Vlad III (EXTRA),Semiramis,45.1
+Vlad III (EXTRA),William Shakespeare,65.3
+Vlad III (EXTRA),Avicebron,50.5
+Vlad III (EXTRA),Frankenstein,45.7
+Vlad III (EXTRA),Spartacus,48.5
+Vlad III (EXTRA),Jeanne d'Arc,42.5
+Vlad III (EXTRA),Amakusa Shirou,41.9
+Vlad III (EXTRA),Angra Mainyu,50.1
+Vlad III (EXTRA),Nero Claudius,41.1
+Vlad III (EXTRA),Robin Hood,49.0
+Vlad III (EXTRA),Vlad III (EXTRA),45.1
+Vlad III (EXTRA),Francis Drake,48.8
+Vlad III (EXTRA),Li Shuwen,45.5
+Vlad III (EXTRA),Tamamo no Mae,50.5
+Vlad III (EXTRA),Lu Bu Fengxian,42.7
+Francis Drake,Artoria Pendragon,40.8
+Francis Drake,Heracles,44.9
+Francis Drake,Medea,35.9
+Francis Drake,Sasaki Kojirou,59.8
+Francis Drake,EMIYA,60.7
+Francis Drake,Cú Chulainn,60.5
+Francis Drake,Medusa,47.3
+Francis Drake,Hassan of the Cursed Arm,53.1
+Francis Drake,Gilgamesh,30.3
+Francis Drake,Iskandar,42.6
+Francis Drake,Hassan of the Hundred Faces,59.1
+Francis Drake,Lancelot,43.3
+Francis Drake,Gilles de Rais,41.0
+Francis Drake,Diarmuid Ua Duibhne,53.0
+Francis Drake,Mordred,43.1
+Francis Drake,Siegfried,38.3
+Francis Drake,Atalanta,56.6
+Francis Drake,Chiron,58.5
+Francis Drake,Vlad III,38.8
+Francis Drake,Karna,48.9
+Francis Drake,Achilles,47.5
+Francis Drake,Astolfo,64.4
+Francis Drake,Jack the Ripper,39.6
+Francis Drake,Semiramis,41.5
+Francis Drake,William Shakespeare,45.7
+Francis Drake,Avicebron,38.6
+Francis Drake,Frankenstein,39.5
+Francis Drake,Spartacus,47.9
+Francis Drake,Jeanne d'Arc,37.5
+Francis Drake,Amakusa Shirou,49.3
+Francis Drake,Angra Mainyu,58.1
+Francis Drake,Nero Claudius,41.5
+Francis Drake,Robin Hood,55.0
+Francis Drake,Vlad III (EXTRA),46.0
+Francis Drake,Francis Drake,48.1
+Francis Drake,Li Shuwen,53.1
+Francis Drake,Tamamo no Mae,40.7
+Francis Drake,Lu Bu Fengxian,45.3
+Li Shuwen,Artoria Pendragon,53.5
+Li Shuwen,Heracles,54.3
+Li Shuwen,Medea,48.1
+Li Shuwen,Sasaki Kojirou,40.5
+Li Shuwen,EMIYA,52.9
+Li Shuwen,Cú Chulainn,43.7
+Li Shuwen,Medusa,47.9
+Li Shuwen,Hassan of the Cursed Arm,43.3
+Li Shuwen,Gilgamesh,24.7
+Li Shuwen,Iskandar,50.3
+Li Shuwen,Hassan of the Hundred Faces,41.7
+Li Shuwen,Lancelot,49.7
+Li Shuwen,Gilles de Rais,42.7
+Li Shuwen,Diarmuid Ua Duibhne,47.4
+Li Shuwen,Mordred,50.3
+Li Shuwen,Siegfried,49.2
+Li Shuwen,Atalanta,47.1
+Li Shuwen,Chiron,53.9
+Li Shuwen,Vlad III,54.8
+Li Shuwen,Karna,51.5
+Li Shuwen,Achilles,44.8
+Li Shuwen,Astolfo,47.0
+Li Shuwen,Jack the Ripper,51.3
+Li Shuwen,Semiramis,48.4
+Li Shuwen,William Shakespeare,42.8
+Li Shuwen,Avicebron,47.9
+Li Shuwen,Frankenstein,45.7
+Li Shuwen,Spartacus,54.5
+Li Shuwen,Jeanne d'Arc,37.1
+Li Shuwen,Amakusa Shirou,52.1
+Li Shuwen,Angra Mainyu,51.2
+Li Shuwen,Nero Claudius,50.7
+Li Shuwen,Robin Hood,45.1
+Li Shuwen,Vlad III (EXTRA),49.3
+Li Shuwen,Francis Drake,45.1
+Li Shuwen,Li Shuwen,47.8
+Li Shuwen,Tamamo no Mae,52.3
+Li Shuwen,Lu Bu Fengxian,58.9
+Tamamo no Mae,Artoria Pendragon,49.6
+Tamamo no Mae,Heracles,53.3
+Tamamo no Mae,Medea,51.5
+Tamamo no Mae,Sasaki Kojirou,55.7
+Tamamo no Mae,EMIYA,55.3
+Tamamo no Mae,Cú Chulainn,51.9
+Tamamo no Mae,Medusa,48.8
+Tamamo no Mae,Hassan of the Cursed Arm,51.9
+Tamamo no Mae,Gilgamesh,52.5
+Tamamo no Mae,Iskandar,45.1
+Tamamo no Mae,Hassan of the Hundred Faces,50.5
+Tamamo no Mae,Lancelot,57.1
+Tamamo no Mae,Gilles de Rais,45.8
+Tamamo no Mae,Diarmuid Ua Duibhne,50.0
+Tamamo no Mae,Mordred,57.9
+Tamamo no Mae,Siegfried,53.7
+Tamamo no Mae,Atalanta,50.5
+Tamamo no Mae,Chiron,48.7
+Tamamo no Mae,Vlad III,53.3
+Tamamo no Mae,Karna,40.3
+Tamamo no Mae,Achilles,33.9
+Tamamo no Mae,Astolfo,38.1
+Tamamo no Mae,Jack the Ripper,27.7
+Tamamo no Mae,Semiramis,45.7
+Tamamo no Mae,William Shakespeare,47.1
+Tamamo no Mae,Avicebron,53.0
+Tamamo no Mae,Frankenstein,57.7
+Tamamo no Mae,Spartacus,40.9
+Tamamo no Mae,Jeanne d'Arc,47.0
+Tamamo no Mae,Amakusa Shirou,52.7
+Tamamo no Mae,Angra Mainyu,44.6
+Tamamo no Mae,Nero Claudius,41.0
+Tamamo no Mae,Robin Hood,52.9
+Tamamo no Mae,Vlad III (EXTRA),44.5
+Tamamo no Mae,Francis Drake,54.7
+Tamamo no Mae,Li Shuwen,44.9
+Tamamo no Mae,Tamamo no Mae,47.1
+Tamamo no Mae,Lu Bu Fengxian,39.9
+Lu Bu Fengxian,Artoria Pendragon,58.6
+Lu Bu Fengxian,Heracles,53.1
+Lu Bu Fengxian,Medea,37.2
+Lu Bu Fengxian,Sasaki Kojirou,52.2
+Lu Bu Fengxian,EMIYA,47.0
+Lu Bu Fengxian,Cú Chulainn,51.1
+Lu Bu Fengxian,Medusa,49.9
+Lu Bu Fengxian,Hassan of the Cursed Arm,47.3
+Lu Bu Fengxian,Gilgamesh,38.1
+Lu Bu Fengxian,Iskandar,46.1
+Lu Bu Fengxian,Hassan of the Hundred Faces,45.7
+Lu Bu Fengxian,Lancelot,48.2
+Lu Bu Fengxian,Gilles de Rais,45.9
+Lu Bu Fengxian,Diarmuid Ua Duibhne,51.8
+Lu Bu Fengxian,Mordred,53.9
+Lu Bu Fengxian,Siegfried,50.6
+Lu Bu Fengxian,Atalanta,50.4
+Lu Bu Fengxian,Chiron,41.1
+Lu Bu Fengxian,Vlad III,52.3
+Lu Bu Fengxian,Karna,49.9
+Lu Bu Fengxian,Achilles,44.2
+Lu Bu Fengxian,Astolfo,37.3
+Lu Bu Fengxian,Jack the Ripper,42.7
+Lu Bu Fengxian,Semiramis,51.3
+Lu Bu Fengxian,William Shakespeare,45.3
+Lu Bu Fengxian,Avicebron,46.5
+Lu Bu Fengxian,Frankenstein,45.8
+Lu Bu Fengxian,Spartacus,54.1
+Lu Bu Fengxian,Jeanne d'Arc,37.8
+Lu Bu Fengxian,Amakusa Shirou,43.7
+Lu Bu Fengxian,Angra Mainyu,55.8
+Lu Bu Fengxian,Nero Claudius,43.0
+Lu Bu Fengxian,Robin Hood,45.2
+Lu Bu Fengxian,Vlad III (EXTRA),47.9
+Lu Bu Fengxian,Francis Drake,50.9
+Lu Bu Fengxian,Li Shuwen,37.6
+Lu Bu Fengxian,Tamamo no Mae,55.0
+Lu Bu Fengxian,Lu Bu Fengxian,46.7

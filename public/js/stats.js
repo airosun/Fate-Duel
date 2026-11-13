@@ -4,7 +4,7 @@
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const CARDS = [['quick', 'Quick'], ['arts', 'Arts'], ['buster', 'Buster']];
 const pct = (a, b) => (b ? `${Math.round((100 * a) / b)}%` : '—');
-export const total = st => st.dmg.attack + st.dmg.np + st.dmg.extra + st.dmg.curse + (st.dmg.poison ?? 0) + (st.dmg.shock ?? 0);
+export const total = st => st.dmg.attack + st.dmg.np + st.dmg.extra + st.dmg.curse + (st.dmg.poison ?? 0) + (st.dmg.shock ?? 0) + (st.dmg.bleed ?? 0);
 
 // One comparison row: label in the middle, each side's value, and a split bar
 // showing who had more (left = player 1, right = player 2).
@@ -83,6 +83,7 @@ export function statsHtml(match, { masterLabel, art }) {
         ${A.dmg.curse || B.dmg.curse ? dmgRow('From Curse', 'curse', 'Damage over time from Curse') : ''}
         ${A.dmg.poison || B.dmg.poison ? dmgRow('From Poison', 'poison', 'Damage over time from Poison stacks') : ''}
         ${A.dmg.shock || B.dmg.shock ? dmgRow('From Shock', 'shock', 'Damage over time from Shock stacks') : ''}
+        ${A.dmg.bleed || B.dmg.bleed ? dmgRow('From Bleed', 'bleed', 'Damage over time from Bleed stacks') : ''}
         ${row('Biggest single hit', A.biggest.amount, B.biggest.amount, {
           va: A.biggest.amount ? `${A.biggest.amount}<small>${esc(A.biggest.what)}</small>` : '—',
           vb: B.biggest.amount ? `${B.biggest.amount}<small>${esc(B.biggest.what)}</small>` : '—' })}

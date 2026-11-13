@@ -1533,3 +1533,91 @@ test('Buff Removal Resist, next-Buster boost, Damage Cut vs a Dragon, NP target 
   assert.ok(mist > 55 && mist < 105, `mist ${mist}`);
   assert.ok(self > 95 && self < 145, `self ${self}`);
 });
+
+// ---------- Heracles' second revive, and the seven new servants' mechanics ----------
+
+test('Heracles: 12 Labors revives him twice, then he falls', () => {
+  let s = createMatch(dummy('A', { atk: 4000 }), SERVANTS.heracles);
+  for (let k = 1; k <= 2; k++) {
+    s = resolveTurn(s, [atk('buster'), atk('quick')]).state;
+    assert.equal(s.players[1].stats.revives, k);
+    assert.ok(s.players[1].hp > 0);
+  }
+  s = resolveTurn(s, [atk('buster'), atk('quick')]).state;
+  assert.equal(s.over, true);
+  assert.equal(s.result.winner, 0);
+});
+
+test('Pierce Invincible: regular attacks with it, and an NP flagged with it, go through Invincible', () => {
+  const inv = { skills: [{ id: 'inv', name: 'Inv', cost: 1, effects: [{ type: 'invincible' }] }] };
+  let s = fresh({ passive: { effects: [{ type: 'pierceInvincible' }] } }, inv);
+  s = resolveTurn(s, [atk('buster'), skill('inv')]).state;
+  assert.ok(s.players[1].hp < 1000);
+  let t = fresh({}, inv);
+  t = resolveTurn(t, [atk('buster'), skill('inv')]).state;
+  assert.equal(t.players[1].hp, 1000);
+  let n = fresh({ np: { name: 'Pike', card: 'buster', mult: 4, pierceInvincible: true } }, inv);
+  n.players[0].np = 100;
+  n = resolveTurn(n, [np(), skill('inv')]).state;
+  assert.ok(n.players[1].hp < 1000);
+});
+
+test('Bleed ticks at the end of the turn and stacks', () => {
+  const s = fresh({ skills: [{ id: 'cut', name: 'Cut', cost: 1, effects: [{ type: 'bleed', value: 15, turns: 5, target: 'enemy' }, { type: 'bleed', value: 15, turns: 5, target: 'enemy' }] }] });
+  const r = resolveTurn(s, [skill('cut'), skill('shield')]);
+  assert.equal(r.state.players[1].hp, 1000 - 30);
+  assert.ok(r.log.some(l => /Bleed drains B for 30 \(2 stacks\)/.test(l.msg)));
+  assert.equal(r.state.players[0].stats.dmg.bleed, 30);
+});
+
+test("Tamamo: after her NP, skills cost 2 less AP for 2 turns", () => {
+  let s = createMatch(SERVANTS.tamamo, dummy('B'));
+  s.players[0].np = 100;
+  const sk = SERVANTS.tamamo.skills.find(x => x.id === 'mantra_sunlight');
+  s = resolveTurn(s, [np(), atk('quick')]).state;
+  assert.equal(skillCost(sk, s.players[0]), sk.cost - 2);
+  s = resolveTurn(s, [atk('quick'), atk('quick')]).state;
+  assert.equal(skillCost(sk, s.players[0]), sk.cost - 2);
+  s = resolveTurn(s, [atk('quick'), atk('quick')]).state;
+  assert.equal(skillCost(sk, s.players[0]), sk.cost);
+});
+
+test('Robin Hood: Take from the Rich splits the NP gauges ~10% of the time when the enemy has more', () => {
+  let hits = 0;
+  for (let seed = 1; seed <= 1000; seed++) {
+    const s = createMatch(SERVANTS.robin, dummy('B'), { seed });
+    s.players[0].np = 10; s.players[1].np = 70;
+    const r = resolveTurn(s, [skill('sage_of_the_forest'), skill('shield')]).state;   // he goes to 30, B stays 70
+    if (r.players[0].np === r.players[1].np) { hits++; assert.equal(r.players[0].np, 50); }
+  }
+  assert.ok(hits > 60 && hits < 145, `${hits}`);
+});
+
+test('Lu Bu: Restless Soul makes his own offensive buffs fail about half the time', () => {
+  let landed = 0;
+  for (let seed = 1; seed <= 400; seed++) {
+    let s = createMatch(SERVANTS.lubu, dummy('B'), { seed });
+    s.players[0].ap = 12;
+    s = resolveTurn(s, [skill('restless_soul'), skill('shield')]).state;
+    s = resolveTurn(s, [skill('bravery_lubu'), atk('quick')]).state;
+    if (s.players[0].buffs.some(b => b.type === 'atkUp' && b.turns !== null)) landed++;
+    assert.ok(s.players[0].buffs.some(b => b.type === 'debuffResist' && b.turns !== null));   // non-offensive part always lands
+  }
+  assert.ok(landed > 160 && landed < 240, `${landed}`);
+});
+
+test('Nero: Thrice Setting Sun revives at 20% with NP damage up; Li Shuwen NP can instant kill through revives', () => {
+  let s = createMatch(dummy('A', { atk: 3000 }), SERVANTS.nero);
+  s = resolveTurn(s, [atk('buster'), atk('quick')]).state;
+  const n = s.players[1];
+  assert.equal(n.hp, Math.round(n.maxHp * 0.2));
+  assert.ok(n.buffs.some(b => b.type === 'npUp' && b.value === 30));
+  let kills = 0;
+  for (let seed = 1; seed <= 600; seed++) {
+    const t = createMatch(SERVANTS.li_shuwen, SERVANTS.heracles, { seed });
+    t.players[0].np = 100;
+    const r = resolveTurn(t, [np(), atk('quick')]).state;
+    if (r.over && r.result.winner === 0) kills++;
+  }
+  assert.ok(kills > 12 && kills < 55, `${kills}`);
+});

@@ -35,7 +35,7 @@ export function deriveStats(servant, { uniquesOff = false } = {}) {
 // ---------- match stats (shown on the post-battle stats screen) ----------
 export function newStats() {
   return {
-    dmg: { attack: 0, np: 0, extra: 0, curse: 0, poison: 0, shock: 0 }, biggest: { amount: 0, what: '' }, crits: 0,
+    dmg: { attack: 0, np: 0, extra: 0, curse: 0, poison: 0, shock: 0, bleed: 0 }, biggest: { amount: 0, what: '' }, crits: 0,
     attempted: { quick: 0, arts: 0, buster: 0 }, landed: { quick: 0, arts: 0, buster: 0 },
     clash: { won: 0, lost: 0, tied: 0 }, nps: { fired: 0, landed: 0, blocked: 0 },
     negated: 0, healed: 0, skills: 0, seals: 0, revives: 0, maxCombo: 0, combo: 0,
@@ -196,7 +196,10 @@ const hasBuff = (p, type) => p.buffs.some(b => b.type === type);
 
 // Healing skills with costStep cost that much more AP each time they're used (anti-stall).
 export function skillCost(skill, p) {
-  return skill.cost + (skill.costStep ?? 0) * (p?.skillCount?.[skill.id] ?? 0);
+  const base = skill.cost + (skill.costStep ?? 0) * (p?.skillCount?.[skill.id] ?? 0);
+  // Nine-Tail Fox's Blessing: skills cost less for a while after her NP
+  const down = p?.buffs ? p.buffs.filter(b => b.type === 'skillCostDown').reduce((a, b) => a + b.value, 0) : 0;
+  return Math.max(0, base - down);
 }
 
 export function getLegalActions(state, idx) {
@@ -273,12 +276,12 @@ export function sealLine(state, idx) {
 
 // ---------- effects ----------
 
-const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', 'curse', 'debuffResistDown', 'npSeal', 'taunt', 'confusion', 'stun', 'poison', 'nullifyBoosts', 'madness', 'charm', 'shock', 'burn', 'npDown', 'critDown'];
+const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', 'curse', 'debuffResistDown', 'npSeal', 'taunt', 'confusion', 'stun', 'poison', 'nullifyBoosts', 'madness', 'charm', 'shock', 'burn', 'npDown', 'critDown', 'bleed', 'offenseFailChance'];
 
 // Lasting positive effects a servant puts on itself (what Breaker Gorgon can make fail).
 const BUFF_TYPES = new Set(['ignoreDamageCut', 'buffSuccessUp', 'apRecoveryUp', 'atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
   'cardNpGainUp', 'debuffResist', 'guts', 'apRegen', 'busterConvert', 'flatDamage', 'sureHit', 'pierceEvade',
-  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight', 'npOnlyKo', 'debuffOnHit', 'apChance', 'rpsOverride', 'randomWork', 'starCrossed', 'lastStand', 'hpRegen', 'divineIntervention', 'battleChoice', 'buffDurationUp', 'debuffDurationUp', 'npRegen', 'npGainDefUp', 'worldsEvils', 'critUp', 'critDmgUp', 'apGainUp', 'apDelayed', 'removalResist', 'nextCardUp', 'extraSeal']);
+  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight', 'npOnlyKo', 'debuffOnHit', 'apChance', 'rpsOverride', 'randomWork', 'starCrossed', 'lastStand', 'hpRegen', 'divineIntervention', 'battleChoice', 'buffDurationUp', 'debuffDurationUp', 'npRegen', 'npGainDefUp', 'worldsEvils', 'critUp', 'critDmgUp', 'apGainUp', 'apDelayed', 'removalResist', 'nextCardUp', 'extraSeal', 'pierceInvincible', 'skillCostDown', 'npSkillDiscount', 'npEqualizeChance']);
 const hasStatus = (p, status) => p.buffs.some(b => b.status === status);
 // All the World's Evils (Angra Mainyu): every chance-based effect on him lands (not instant kill, Breaker Gorgon,
 // Terror, or effects that stop him acting: Blind, Trap and Terror roll normally)
@@ -421,6 +424,7 @@ const buffName = e => (e.type === 'cardUp' ? `${CARD_NAME[e.card]} up`
 // Rolls for effects that can fail: an effect's own `chance` (e.g. Expert of
 // Many Specializations, 80%) and the enemy's Breaker Gorgon. The user's
 // buffSuccessUp raises the first and lowers the second, point for point.
+const OFFENSIVE = new Set(['atkUp', 'cardUp', 'npUp', 'critUp', 'critDmgUp', 'flatDamage', 'nextHitUp', 'nextCardUp']);
 function screenBuffs(state, user, enemy, effects, say, label = 'Chance buffs') {
   if (!effects?.length) return [];
   const success = sumBuff(user, 'buffSuccessUp');
@@ -432,6 +436,13 @@ function screenBuffs(state, user, enemy, effects, say, label = 'Chance buffs') {
       proc(user, `${label} (${e.label ?? e.type} landed)`, ok);
       if (!ok) say(`${label}: the ${e.label ?? e.type} misses.`, { type: 'buffFail' });
       return ok;
+    }
+    // Restless Soul (demerit): the master's own offensive buffs may fail to land
+    const offFail = sumBuff(user, 'offenseFailChance');
+    if (offFail && OFFENSIVE.has(e.type)) {
+      const ok = roll(state) * 100 >= offFail;
+      proc(user, `${label} (offensive buffs landed while restless)`, ok);
+      if (!ok) { say(`${user.name}'s ${buffName(e)} doesn't take hold (Restless Soul).`, { type: 'buffFail' }); return false; }
     }
     if (e.chance != null) {
       const ok = roll(state) * 100 < Math.min(100, e.chance + success);
@@ -518,8 +529,8 @@ function atkMultiplier(p, card, extraPct = 0) {
 
 const hasAffinity = (p, card) => p.favoredCard === card || hasBuff(p, 'affinityAll');
 
-function defend(defender, raw, { isNp, ignoreDefense, sureHit, ignoreCut = false, card, attacker }) {
-  if (hasBuff(defender, 'invincible')) return { amount: 0, blocked: 'invincible' };
+function defend(defender, raw, { isNp, ignoreDefense, sureHit, ignoreCut = false, pierceInvincible = false, card, attacker }) {
+  if (hasBuff(defender, 'invincible') && !pierceInvincible) return { amount: 0, blocked: 'invincible' };
   if (!isNp && !ignoreDefense && !sureHit && hasBuff(defender, 'evade')) return { amount: 0, blocked: 'evade' };
   const cutSum = defender.buffs.filter(b => b.type === 'damageCut' && (!b.vsStatus || (attacker && hasStatus(attacker, b.vsStatus)))).reduce((a, b) => a + b.value, 0);
   const cut = ignoreDefense || ignoreCut ? 0 : Math.min(T.maxDamageCut, cutSum);
@@ -544,7 +555,8 @@ function attackPacket(att, def, card, { counter, nextHit = 0, vsBonus = 0 }) {
   const sureHit = att.buffs.some(b => b.type === 'sureHit' && (!b.card || b.card === card));
   const pierce = sureHit || att.buffs.some(b => b.type === 'pierceEvade' && (!b.card || b.card === card));
   // ignoreDamageCut (Iskandar): attacks and NPs go straight through damage cut; Evade still works
-  const out = defend(def, raw, { isNp: false, ignoreDefense: false, sureHit: pierce, ignoreCut: hasBuff(att, 'ignoreDamageCut'), card, attacker: att });
+  // pierceInvincible (Voyager of the Storm, Juezhao): regular attacks go through Invincible
+  const out = defend(def, raw, { isNp: false, ignoreDefense: false, sureHit: pierce, ignoreCut: hasBuff(att, 'ignoreDamageCut'), pierceInvincible: hasBuff(att, 'pierceInvincible'), card, attacker: att });
   return { ...out, sureHit, pierce };
 }
 
@@ -572,7 +584,7 @@ function npPacket(att, def, np, { nextHit = 0, vsBonus = 0 } = {}) {
     * (b ? (1 + vsBonus / 100) * (1 + vsStatusPct(att, def) / 100) : 1)
     * Math.max(0.1, 1 + ((b ? sumBuff(att, 'npUp') : 0) - sumBuff(att, 'npDown')) / 100)
     + (b ? sumBuff(att, 'flatDamage') : 0);
-  return defend(def, raw, { isNp: true, ignoreDefense: !!np.ignoreDefense, ignoreCut: !!np.ignoreCut || hasBuff(att, 'ignoreDamageCut'), card: np.card, attacker: att });
+  return defend(def, raw, { isNp: true, ignoreDefense: !!np.ignoreDefense, ignoreCut: !!np.ignoreCut || hasBuff(att, 'ignoreDamageCut'), pierceInvincible: !!np.pierceInvincible, card: np.card, attacker: att });
 }
 
 function gainNp(p, base, { defending = false, card, artsEffect = 0 } = {}) {
@@ -1018,6 +1030,12 @@ function resolveTurnInner(prev, actions, opts) {
   }
   for (const i of npUsers) applyEffects(P[i], P[1 - i], npPre[i], 'np');
   for (const i of npUsers) applyEffects(P[i], P[1 - i], screenBuffs(state, P[i], P[1 - i], nps[i].postEffects, say, nps[i].name), 'np');
+  // Nine-Tail Fox's Blessing: after her NP, her skills cost less for the next turns
+  for (const i of npUsers) for (const b of P[i].buffs.filter(b => b.type === 'npSkillDiscount')) {
+    P[i].buffs = P[i].buffs.filter(x => !(x.type === 'skillCostDown' && x.source === b.source));
+    P[i].buffs.push({ type: 'skillCostDown', value: b.value, turns: (b.markTurns ?? 2) + 1, debuff: false, source: b.source });
+    say(`${b.source}: ${P[i].name}'s skills cost ${b.value} less AP for ${b.markTurns ?? 2} turns.`, { type: 'info', player: i });
+  }
 
   // Curse: damage over time at the end of the turn (before guts, so revives still work)
   for (const p of P) {
@@ -1029,13 +1047,13 @@ function resolveTurnInner(prev, actions, opts) {
     }
     // Stacking damage over time: every instance is its own debuff, so stacks add up.
     // Poison (Semiramis), Shock (Frankenstein) and Burn (self-inflicted by Overload; refreshes, doesn't stack).
-    for (const [type, name] of [['poison', 'Poison'], ['shock', 'Shock'], ['burn', 'Burn']]) {
+    for (const [type, name] of [['poison', 'Poison'], ['shock', 'Shock'], ['burn', 'Burn'], ['bleed', 'Bleed']]) {
       const stacks = p.buffs.filter(b => b.type === type);
       const d = Math.round(stacks.reduce((a, b) => a + b.value, 0));
       if (!d || p.hp <= 0) continue;
       p.hp -= d;
       if (type !== 'burn') dealt(P[1 - P.indexOf(p)], type, d, name);   // Burn is self-inflicted, not the enemy's damage
-      say(`${name} ${type === 'shock' ? 'jolts' : type === 'burn' ? 'scorches' : 'eats at'} ${p.name} for ${d}${stacks.length > 1 ? ` (${stacks.length} stacks)` : ''}.`, { type: 'curse', player: P.indexOf(p), amount: d });
+      say(`${name} ${type === 'shock' ? 'jolts' : type === 'burn' ? 'scorches' : type === 'bleed' ? 'drains' : 'eats at'} ${p.name} for ${d}${stacks.length > 1 ? ` (${stacks.length} stacks)` : ''}.`, { type: 'curse', player: P.indexOf(p), amount: d });
     }
   }
 
@@ -1080,6 +1098,18 @@ function resolveTurnInner(prev, actions, opts) {
   }
 
   // 6. End of turn
+  // Take from the Rich, Give to the Poor: when the enemy has more NP, a chance to split the total evenly
+  for (const p of P) {
+    const eq = sumBuff(p, 'npEqualizeChance'), o = P[1 - P.indexOf(p)];
+    if (!eq || p.hp <= 0 || o.hp <= 0 || o.np <= p.np) continue;
+    const ok = evilsLand(o) || roll(state) * 100 < eq;
+    const src = p.buffs.find(b => b.type === 'npEqualizeChance').source;
+    proc(p, `${src} (NP gauges evened)`, ok);
+    if (!ok) continue;
+    const avg = Math.floor((p.np + o.np) / 2);
+    p.np = avg; o.np = avg;
+    say(`${src}: ${p.name} takes from the rich! Both NP gauges are now ${avg}%.`, { type: 'status', player: P.indexOf(p) });
+  }
   for (const p of P) {
     const regen = sumBuff(p, 'apRegen');
     if (regen) p.ap = Math.min(p.maxAp, p.ap + regen);
