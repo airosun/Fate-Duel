@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { ROSTER } from './src/data/servants.js';
 import { RoomManager, RoomError } from './src/server/rooms.js';
+import { ACTIONS } from './src/server/actions.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -14,8 +15,10 @@ const io = new Server(httpServer);
 const rooms = new RoomManager();
 
 app.use(express.static(path.join(__dirname, 'public')));
-// The browser only needs the shared engine + data, never server code.
-app.use('/src/server', (_req, res) => res.status(404).end());
+// The browser needs the shared engine + data, plus the room manager and its action table
+// (a local Holy Grail War runs them in the page). Nothing else under src/server is served.
+const BROWSER_SERVER_FILES = new Set(['/rooms.js', '/actions.js']);
+app.use('/src/server', (req, res, next) => (BROWSER_SERVER_FILES.has(req.path) ? next() : res.status(404).end()));
 app.use('/src', express.static(path.join(__dirname, 'src')));
 app.get('/health', (_req, res) => res.json({ ok: true, servants: ROSTER.length, rooms: rooms.rooms.size }));
 
@@ -90,24 +93,13 @@ io.on('connection', socket => {
     if (rooms.rooms.has(room.code)) broadcast(room); else sockets.delete(room.code);
   });
 
-  const action = (event, fn) => handle(socket, event, payload => {
-    const { room, id } = current(socket);
-    fn(room, id, payload);
-    broadcast(room);
-  });
-
-  action('room:role', (room, id, { role }) => rooms.setRole(room, id, role));
-  action('room:start', (room, id) => rooms.start(room, id));
-  action('select:focus', (room, id, { servantId }) => rooms.focus(room, id, servantId));
-  action('select:pick', (room, id, { servantId }) => rooms.pick(room, id, servantId));
-  action('battle:draft', (room, id, { action: a }) => rooms.draft(room, id, a));
-  action('battle:lock', (room, id, { action: a }) => rooms.lock(room, id, a));
-  action('battle:unlock', (room, id) => rooms.unlock(room, id));
-  action('battle:foresight', (room, id) => rooms.foresight(room, id));
-  action('battle:continue', (room, id) => rooms.continueTurn(room, id));
-  action('battle:divine', (room, id, { use }) => rooms.divineDecision(room, id, use));
-  action('match:rematch', (room, id, { choice }) => rooms.rematch(room, id, choice));
-  action('match:return', (room, id) => rooms.returnToRoom(room, id));
+  for (const [event, fn] of Object.entries(ACTIONS)) {
+    handle(socket, event, payload => {
+      const { room, id } = current(socket);
+      fn(rooms, room, id, payload);
+      broadcast(room);
+    });
+  }
 
   socket.on('disconnect', () => {
     const { code, memberId } = socket.data;

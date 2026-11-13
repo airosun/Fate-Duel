@@ -649,3 +649,51 @@ h1, h2, h3, h4 { font-family: var(--title); margin: 0; letter-spacing: .04em; }
 /* demerit effects in skill / NP / passive text */
 .demerit, .kit-row span.demerit, small .demerit, #refcard .demerit { color: #ff6b6b; }
 .demerit .term, .kit-row span.demerit span.term { color: inherit; }
+
+/* ---------- Holy Grail War ---------- */
+.war-screen { padding-bottom: 3rem; }
+.war-banner { text-align: center; padding: 1.2rem 1rem .4rem; }
+.war-banner h2 { color: var(--gold2); font-family: var(--title); margin-bottom: .8rem; }
+.war-banner.win .end-art { margin: 0 auto 1rem; }
+.war-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 1.2rem; padding: 1rem 1.5rem; max-width: 1200px; margin: 0 auto; }
+@media (max-width: 860px) { .war-grid { grid-template-columns: 1fr; padding: .8rem; } }
+.war-fights h3, .war-standings h3 { color: var(--gold2); font-family: var(--title); margin-bottom: .6rem; }
+.wf-card { border: 1px solid rgba(216,178,90,.25); border-radius: 8px; padding: .7rem .8rem; margin-bottom: .7rem; background: rgba(0,0,0,.25); }
+.wf-card.mine { border-color: var(--gold); box-shadow: 0 0 12px rgba(216,178,90,.2); }
+.wf-pair { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .5rem; }
+.wf-pair .versus { font-size: .9rem; }
+.wf-foot { display: flex; justify-content: space-between; align-items: center; margin-top: .5rem; gap: .5rem; }
+.wf-status { font-size: .85rem; opacity: .85; }
+.wf-card.done .wf-status { color: var(--gold2); font-weight: 700; opacity: 1; }
+.wm-chip { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+.wm-chip > span { display: flex; flex-direction: column; min-width: 0; }
+.wm-chip b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wm-chip small { font-size: .72rem; opacity: .85; display: flex; gap: .3rem; align-items: center; flex-wrap: wrap; }
+.wm-chip.out { opacity: .45; }
+.wm-art { width: 40px; height: 40px; border-radius: 6px; flex: none; }
+.cpu-tag { font-size: .6rem; padding: 0 .3rem; border: 1px solid rgba(255,255,255,.3); border-radius: 3px; opacity: .7; }
+.ws-row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto; align-items: center; gap: .6rem; padding: .35rem 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+.ws-row.out .bar { opacity: .4; }
+.ws-rec { font-size: .8rem; white-space: nowrap; opacity: .85; }
+.ws-delta { color: #ff6b6b; margin-left: .3rem; }
+.war-draft { max-width: 1000px; margin: 0 auto; padding: 1rem; text-align: center; }
+.draft-classes { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: .7rem; margin: 1rem 0; }
+.draft-class { display: flex; flex-direction: column; align-items: center; gap: .35rem; padding: .7rem .5rem; border-radius: 8px; border: 1px solid rgba(216,178,90,.35); background: rgba(0,0,0,.3); color: var(--text); cursor: pointer; font: inherit; }
+.draft-class:not(:disabled):hover { border-color: var(--gold); box-shadow: 0 0 12px rgba(216,178,90,.35); }
+.draft-class:disabled { cursor: default; }
+.draft-class.taken { opacity: .55; }
+.draft-class b { color: var(--gold2); }
+.dc-arts { display: flex; }
+.dc-art { width: 30px; height: 30px; border-radius: 50%; margin-left: -6px; border: 1px solid rgba(0,0,0,.6); }
+.dc-arts .dc-art:first-child { margin-left: 0; }
+.draft-order { display: flex; flex-wrap: wrap; justify-content: center; gap: .4rem; list-style: none; padding: 0; counter-reset: d; }
+.draft-order li { counter-increment: d; padding: .25rem .6rem; border-radius: 999px; border: 1px solid rgba(255,255,255,.15); font-size: .82rem; }
+.draft-order li::before { content: counter(d) ". "; opacity: .6; }
+.draft-order li.now { border-color: var(--gold); color: var(--gold2); }
+.draft-order li.done { opacity: .6; }
+.war-wait { text-align: center; padding: 1.5rem 1rem .5rem; }
+.war-screen .war-standings { max-width: 1200px; }
+.war-screen > .war-standings { margin: 0 auto; padding: 0 1.5rem; max-width: 700px; }
+.muted.small { font-size: .78rem; margin-top: .5rem; }
+.wm-name { display: flex; align-items: center; gap: .35rem; min-width: 0; }
+.wm-chip .cpu-tag { flex: none; }

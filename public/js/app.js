@@ -12,6 +12,8 @@ import { statsHtml } from './stats.js';
 import { pro } from '/src/engine/pronouns.js';
 import { glossify, plainDesc } from './glossary.js';
 import { nextStrength, START_STRENGTH } from '/src/engine/difficulty.js';
+import { RoomManager } from '/src/server/rooms.js';
+import { ACTIONS } from '/src/server/actions.js';
 
 const app = document.getElementById('app');
 const overlay = document.getElementById('overlay');
@@ -98,7 +100,7 @@ function show(screen) {
 function render() {
   if (!ui.revealing) { overlay.hidden = true; overlay.innerHTML = ''; }
   ({ title: renderTitle, lobby: renderLobby, room: renderRoom, select: renderSelect, spectate: renderSpectateSelect,
-     battle: renderBattle, end: renderEnd })[ui.screen]();
+     battle: renderBattle, end: renderEnd, war: renderWar })[ui.screen]();
   renderNetBanner();
   animateBars();
 }
@@ -150,6 +152,7 @@ function renderTitle() {
       <div class="title-actions">
         <button class="btn gold big" id="online">Online Duel</button>
         <button class="btn ghost big" id="cpu">Play vs CPU</button>
+        <button class="btn ghost big" id="war">Holy Grail War <small>you vs 6 CPUs</small></button>
         <button class="btn ghost big" id="local">Local Duel <small>one screen</small></button>
       </div>
       ${rulesHtml()}
@@ -160,6 +163,7 @@ function renderTitle() {
     show('select');
   };
   app.querySelector('#online').onclick = () => { ui.mode = 'online'; ui.net.error = ''; connect(); show('lobby'); };
+  app.querySelector('#war').onclick = startLocalWar;
   app.querySelector('#cpu').onclick = () => {
     ui.mode = 'cpu';
     ui.picks = [null, null]; ui.selecting = 0; ui.focus = SORTED[0].id; ui.search = ''; ui.classFilter = null;
@@ -197,6 +201,7 @@ const loadSession = () => { try { return JSON.parse(sessionStorage.getItem(SESSI
 const clearSession = () => sessionStorage.removeItem(SESSION_KEY);
 
 function emit(event, payload = {}) {
+  if (ui.net.local) return emitLocal(event, payload);
   return new Promise(resolve => {
     if (!ui.net.socket?.connected) return resolve({ ok: false, error: 'Not connected to the server yet.' });
     ui.net.socket.timeout(8000).emit(event, payload, (err, res) =>
@@ -227,8 +232,13 @@ function onSnapshot(snap) {
   ui.net.snap = snap;
   ui.net.code = snap.code;
   const duel = snap.duel;
+  // In a Holy Grail War you move between battles; joining one already under way shows it from now on
+  const duelKey = duel ? `${duel.fightId ?? 'duel'}:${duel.replay ? 'r' : 'l'}` : null;
+  const switched = duelKey !== ui.net.duelKey;
+  ui.net.duelKey = duelKey;
   if (!duel?.lastTurn) ui.net.revealedTurn = 0;               // new match: nothing revealed yet
-  else if (firstForRoom) ui.net.revealedTurn = duel.lastTurn.turn; // refresh: don't replay old turns
+  else if (firstForRoom || (switched && !duel.replay)) ui.net.revealedTurn = duel.lastTurn.turn; // refresh: don't replay old turns
+  else if (switched) ui.net.revealedTurn = duel.lastTurn.turn - 1; // a replay picks up at the viewer's step
   if (duel?.match) { ui.match = duel.match; ui.locked = duel.locked; }
   // Spectators: once both duelists have continued past the turn being shown, move on automatically
   if (ui.revealing && !isDuelist() && duel?.lastTurn && (duel.continued ?? [0, 0]).every(t => t >= ui.net.revealedTurn)) {
@@ -238,7 +248,18 @@ function onSnapshot(snap) {
   if (ui.revealing) return; // applied when the reveal closes
 
   if (snap.phase === 'lobby') return show('room');
-  if (snap.phase === 'select') {
+  if (snap.phase === 'war') {
+    const w = snap.war, meM = w.masters.find(m => m.id === snap.me?.id);
+    if (!duel) {
+      if (w.stage === 'servants' && meM && !meM.picked) {
+        if (ui.screen !== 'select') { ui.focus = SORTED.find(s => s.class === meM.cls)?.id; ui.search = ''; ui.classFilter = null; }
+        return show('select');
+      }
+      return show('war');
+    }
+  }
+  const phase = snap.phase === 'war' ? duel.phase : snap.phase;
+  if (phase === 'select') {
     if (!isDuelist()) return show('spectate');
     if (ui.screen !== 'select') { ui.focus = duel.picks[snap.seat] ?? SORTED[0].id; ui.bars = {}; }
     show('select');
@@ -247,7 +268,7 @@ function onSnapshot(snap) {
   }
   // battle / over
   // Divine Intervention: the turn is paused while the holder's master decides
-  if (duel.pendingDivine && snap.phase === 'battle') {
+  if (duel.pendingDivine && phase === 'battle') {
     const pd = duel.pendingDivine, holder = duel.seats[pd.player]?.name ?? 'Their master';
     ui.active = -1;
     show('battle');
@@ -268,11 +289,12 @@ function onSnapshot(snap) {
     show('battle');
     return showReveal(duel.lastTurn, duel.match, () => {
       ui.revealing = false;
-      if (isDuelist()) emit('battle:continue');   // lets spectators follow along
+      if (duel.replay) { if (!duel.match.over) emit('war:replay'); else ui.net.revealedTurn = duel.lastTurn.turn; } // replays move one turn per Continue
+      else if (isDuelist()) emit('battle:continue');   // lets spectators follow along
       onSnapshot(ui.net.snap); // re-apply whatever arrived during the reveal
-    }, { autoNote: !isDuelist() });
+    }, { autoNote: !isDuelist() && !duel.replay });
   }
-  if (snap.phase === 'over') return show('end');
+  if (phase === 'over') return show('end');
   if (ui.draftTurn !== duel.match.turn) { ui.draft = { main: null, seal: null }; ui.draftTurn = duel.match.turn; }
   ui.active = isDuelist() && !duel.locked[snap.seat] ? snap.seat : -1;
   show('battle');
@@ -289,8 +311,8 @@ function waitingOverlay(title, text) {
 }
 
 async function leaveRoom() {
-  await emit('room:leave');
-  clearSession();
+  if (ui.net.local) ui.net.local = null;
+  else { await emit('room:leave'); clearSession(); }
   Object.assign(ui.net, { code: null, snap: null, revealedTurn: 0, error: '' });
   ui.mode = 'local';
   ui.match = null;
@@ -312,7 +334,7 @@ function renderLobby() {
       <div class="lobby-cards">
         <section class="lobby-card">
           <h3>Create a room</h3>
-          <p class="muted">Host a room for up to 6 people and share the code.</p>
+          <p class="muted">Host a room for up to 7 people and share the code.</p>
           <button class="btn gold big" id="create">Create Room</button>
         </section>
         <section class="lobby-card">
@@ -413,7 +435,9 @@ function renderRoom() {
           <h2>${next ?? 'Waiting for players…'}</h2>
           <p class="muted">${next ? 'The first two players in the queue duel. Everyone else watches.' : 'At least two people need to be queued up to battle.'}</p>
           ${host
-            ? `<button class="btn gold big" id="start" ${next ? '' : 'disabled'}>Start Duel</button>`
+            ? `<button class="btn gold big" id="start" ${next ? '' : 'disabled'}>Start Duel</button>
+               <button class="btn ghost big" id="startWar" ${ready.length ? '' : 'disabled'}>Start Holy Grail War</button>
+               <p class="muted">Holy Grail War: all ${Math.min(7, ready.length)} queued player${ready.length === 1 ? '' : 's'} become masters${ready.length < 7 ? `, with ${7 - Math.min(7, ready.length)} CPU${7 - ready.length === 1 ? '' : 's'} filling the remaining seats` : ''}.</p>`
             : `<p class="muted">Waiting for the host (${esc(nameOf(snap.hostId))}) to start.</p>`}
           <p class="error" id="startErr"></p>
         </section>
@@ -430,6 +454,187 @@ function renderRoom() {
     const res = await emit('room:start');
     if (!res.ok) app.querySelector('#startErr').textContent = res.error;
   };
+  const startWar = app.querySelector('#startWar');
+  if (startWar) startWar.onclick = async () => {
+    const res = await emit('war:start');
+    if (!res.ok) app.querySelector('#startErr').textContent = res.error;
+  };
+}
+
+// ---------- Holy Grail War ----------
+
+// Local war: the browser runs its own room manager, so a war against six CPUs uses the
+// same rules and screens as an online war.
+function startLocalWar() {
+  const rm = new RoomManager({ cpuStrength: cpuStrength() });
+  const { room, member } = rm.create(savedName() || 'Master');
+  rm.startWar(room, member.id);
+  ui.net.local = { rm, room, id: member.id };
+  Object.assign(ui.net, { code: null, snap: null, revealedTurn: 0, error: '', duelKey: null });
+  onSnapshot(rm.snapshot(room, member.id));
+}
+
+function emitLocal(event, payload) {
+  const L = ui.net.local;
+  if (event === 'room:leave') return Promise.resolve({ ok: true });
+  const fn = ACTIONS[event];
+  if (!fn) return Promise.resolve({ ok: false, error: 'Not available offline.' });
+  try { fn(L.rm, L.room, L.id, payload); }
+  catch (e) { return Promise.resolve({ ok: false, error: e.message }); }
+  setTimeout(() => { if (ui.net.local === L) onSnapshot(L.rm.snapshot(L.room, L.id)); }, 0);
+  return Promise.resolve({ ok: true });
+}
+
+const ordinal = n => `${n}${['th', 'st', 'nd', 'rd'][(n % 100 - 20) % 10] || ['th', 'st', 'nd', 'rd'][n % 100] || 'th'}`;
+
+function warMasterChip(w, id, { showServant = true } = {}) {
+  const m = w.masters.find(x => x.id === id);
+  const sv = showServant && m.servant ? byId(m.servant) : null;
+  const meId = ui.net.snap.me?.id;
+  return `<span class="wm-chip ${m.out ? 'out' : ''}">
+      ${sv ? art(sv, 'wm-art') : ''}
+      <span><span class="wm-name"><b>${esc(m.name)}${m.id === meId ? ' (You)' : ''}</b>${m.cpu ? '<small class="cpu-tag">CPU</small>' : ''}</span>
+      <small>${m.cls ? `<span class="class-badge" data-class="${esc(m.cls)}">${esc(m.cls)}</span>` : ''}${sv ? ` ${esc(sv.name)}` : ''}</small></span>
+    </span>`;
+}
+
+function warStandingsHtml(w) {
+  const order = [...w.masters].sort((a, b) => (a.out - b.out) || (b.hp - a.hp) || ((a.place ?? 99) - (b.place ?? 99)));
+  const lostThisRound = id => w.log.filter(l => l.type === 'loss' && l.id === id).reduce((t, l) => t + l.pen, 0);
+  const showDelta = ['results', 'over'].includes(w.stage);
+  return `
+    <section class="war-standings">
+      <h3>Team HP</h3>
+      ${order.map(m => {
+        const delta = showDelta ? lostThisRound(m.id) : 0;
+        return `<div class="ws-row ${m.out ? 'out' : ''}">
+          ${warMasterChip(w, m.id)}
+          ${bar(`war-${m.id}`, m.hp, `hp ${m.hp <= 30 ? 'low' : ''}`, m.out ? (m.place ? `Out · ${ordinal(m.place)}` : 'Out') : `${m.hp}%`)}
+          <span class="ws-rec" title="Wins · losses · draws">${m.record.w}–${m.record.l}–${m.record.d}${delta ? ` <b class="ws-delta">−${delta}%</b>` : ''}</span>
+        </div>`;
+      }).join('')}
+      <p class="muted small">Losses cost ${w.penalties.map(p => `${p}%`).join(', then ')}. A draw counts as a loss for both.</p>
+    </section>`;
+}
+
+function warFightsHtml(w) {
+  const meId = ui.net.snap.me?.id;
+  const live = ['round', 'final'].includes(w.stage);
+  const outcome = f => f.result === undefined ? '' : f.result === null ? 'Draw: both lose team HP'
+    : f.result === meId ? 'You win' : `${esc(w.masters.find(m => m.id === f.result).name)} wins`;
+  return `
+    <section class="war-fights">
+      <h3>${w.stage === 'final' || w.fights[0]?.final ? 'The final battle' : `Round ${w.round} battles`}</h3>
+      ${w.fights.map(f => {
+        const mine = f.a === meId || f.b === meId;
+        const status = f.result !== undefined ? outcome(f)
+          : f.over ? 'Finished' : f.replay ? 'CPU battle · watch the replay' : `In progress · turn ${f.turn}`;
+        const watch = live && w.canWatch && !mine
+          ? `<button class="btn ${w.chosen === f.id ? 'gold' : 'ghost'} small" data-watch="${f.id}">${w.chosen === f.id ? 'Keep watching' : 'Watch'}</button>`
+          : mine && live && !f.over ? `<button class="btn gold small" data-watch="${f.id}">Your battle</button>` : '';
+        return `<div class="wf-card ${mine ? 'mine' : ''} ${f.result !== undefined ? 'done' : ''}">
+          <div class="wf-pair">${warMasterChip(w, f.a)}<span class="versus">VS</span>${warMasterChip(w, f.b)}</div>
+          <div class="wf-foot"><span class="wf-status">${status}</span>${watch}</div>
+        </div>`;
+      }).join('')}
+      ${live && w.sitter ? `<p class="muted">${esc(w.masters.find(m => m.id === w.sitter).name)}${w.sitter === meId ? ' (you)' : ''} sits this round out and is guaranteed a battle next round.</p>` : ''}
+    </section>`;
+}
+
+function renderWar() {
+  const snap = ui.net.snap, w = snap.war, meId = snap.me?.id;
+  const meM = w.masters.find(m => m.id === meId);
+  const local = !!ui.net.local;
+  const head = w.stage === 'draft' ? 'Class draft' : w.stage === 'servants' ? 'Summoning'
+    : w.stage === 'over' ? 'The Grail is claimed' : w.stage === 'final' || (w.stage === 'results' && w.fights[0]?.final) ? 'The final battle' : `Round ${w.round}`;
+  let body = '';
+  if (w.stage === 'draft') {
+    const myTurn = w.drafter === meId;
+    body = `
+      <section class="war-draft">
+        <p class="tag">${myTurn ? 'Your turn: choose the class you will be the master of.' : `${esc(w.masters.find(m => m.id === w.drafter)?.name)} is choosing a class…`}</p>
+        <div class="draft-classes">
+          ${w.classes.map(c => {
+            const owner = w.masters.find(m => m.cls === c);
+            const servants = SORTED.filter(s => s.class === c);
+            return `<button class="draft-class ${owner ? 'taken' : ''}" data-cls="${esc(c)}" ${myTurn && !owner ? '' : 'disabled'}>
+              <span class="class-badge" data-class="${esc(c)}">${esc(c)}</span>
+              <span class="dc-arts">${servants.slice(0, 4).map(sv => art(sv, 'dc-art')).join('')}</span>
+              <small>${servants.length} servant${servants.length === 1 ? '' : 's'}</small>
+              <b>${owner ? esc(owner.name) + (owner.id === meId ? ' (You)' : '') : myTurn ? 'Claim' : 'Open'}</b>
+            </button>`;
+          }).join('')}
+        </div>
+        <ol class="draft-order">${w.draftOrder.map((id, k) => {
+          const m = w.masters.find(x => x.id === id);
+          return `<li class="${id === w.drafter ? 'now' : m.cls ? 'done' : ''}">${esc(m.name)}${id === meId ? ' (You)' : ''}${m.cls ? ` · ${esc(m.cls)}` : ''}</li>`;
+        }).join('')}</ol>
+      </section>`;
+  } else if (w.stage === 'servants') {
+    body = `
+      <section class="war-wait">
+        <div class="spinner"></div>
+        <p class="tag">${w.masters.filter(m => m.picked).length}/7 masters have summoned. Everyone's servant is revealed when the last one is in.</p>
+        ${meM?.servant ? `<p>Your ${esc(meM.cls)}: <b>${esc(byId(meM.servant).name)}</b></p>` : ''}
+      </section>
+      <section class="war-standings"><h3>Masters</h3>${w.masters.map(m => `<div class="ws-row">${warMasterChip(w, m.id)}<span class="ws-rec">${m.picked ? 'Summoned ✓' : 'Choosing…'}</span></div>`).join('')}</section>`;
+  } else {
+    const ready = w.ready.includes(meId);
+    const waiting = w.masters.filter(m => !m.cpu && !m.out && !w.ready.includes(m.id) && m.connected && m.id !== meId).map(m => m.name);
+    let banner = '';
+    if (w.stage === 'over') {
+      const champ = w.masters.find(m => m.id === w.winner);
+      banner = `<section class="war-banner win">
+        ${champ?.servant ? art(byId(champ.servant), 'end-art winner') : ''}
+        <h2>${champ ? `${esc(champ.name)}${champ.id === meId ? ' (You)' : ''} and ${esc(byId(champ.servant).name)} win the Holy Grail War` : 'No one claims the Grail'}</h2>
+        <div class="title-actions">${local ? '<button class="btn gold big" id="warAgain">New war</button><button class="btn ghost big" id="warTitle">Title</button>'
+          : '<button class="btn gold big" id="warBack">Back to the room</button>'}</div>
+      </section>`;
+    } else if (w.stage === 'results') {
+      const final = w.fights[0]?.final;
+      banner = `<section class="war-banner">
+        <h2>${final ? 'The final ends in a draw. Both masters lose team HP and fight again.' : `Round ${w.round} results`}</h2>
+        ${(meM && !meM.out) || !waiting.length ? `<button class="btn gold big" id="warReady" ${ready ? 'disabled' : ''}>${ready ? 'Ready ✓' : final ? 'To the rematch' : 'Next round'}</button>` : ''}
+        <p class="muted">${waiting.length ? `Waiting for ${waiting.map(esc).join(', ')}…` : ''}</p>
+      </section>`;
+    } else {
+      const myFight = w.fights.find(f => f.a === meId || f.b === meId);
+      const note = !meM ? 'You are watching this war. Pick any battle to spectate.'
+        : meM.out ? 'You are out of the war, but you can watch any battle.'
+        : myFight ? (myFight.over ? 'Your battle is over. Waiting for the other battles to finish…' : 'Your battle is waiting for you.')
+        : w.chosen ? 'You picked your battle to watch this round.' : 'You sit out this round. Choose ONE battle to watch. You are guaranteed a battle next round.';
+      banner = `<section class="war-banner"><p class="tag">${note}</p></section>`;
+    }
+    body = `${banner}<div class="war-grid">${warFightsHtml(w)}${warStandingsHtml(w)}</div>`;
+  }
+  app.innerHTML = `
+    <div class="room-screen war-screen">
+      <header class="screen-head">
+        <button class="btn ghost small" id="leave">${local ? 'Quit war' : 'Leave room'}</button>
+        <h1>Holy Grail War <span>· ${head}</span></h1>
+        ${!local && isHost() && w.stage !== 'over' ? '<button class="btn ghost small" id="endWar">End war</button>' : '<div></div>'}
+      </header>
+      ${body}
+      <p class="error" id="warErr"></p>
+    </div>`;
+  const err = res => { const e = app.querySelector('#warErr'); if (!res.ok && e) e.textContent = res.error; };
+  app.querySelector('#leave').onclick = () => {
+    if (meM && !meM.out && w.stage !== 'over' && !confirm(local ? 'Quit this Holy Grail War?' : 'Leave the Holy Grail War? A CPU takes over your seat.')) return;
+    leaveRoom();
+  };
+  app.querySelectorAll('.draft-class').forEach(b => b.onclick = async () => err(await emit('war:draft', { cls: b.dataset.cls })));
+  app.querySelectorAll('[data-watch]').forEach(b => b.onclick = async () => {
+    const f = w.fights.find(x => x.id === b.dataset.watch);
+    if (f.a === meId || f.b === meId) return err(await emit('war:watch', { fightId: f.id })); // back to your own battle
+    if (meM && !meM.out && !w.chosen && !confirm('You can only watch one battle this round. Watch this one?')) return;
+    err(await emit('war:watch', { fightId: f.id }));
+  });
+  const $ = sel => app.querySelector(sel);
+  if ($('#warReady')) $('#warReady').onclick = async () => err(await emit('war:ready'));
+  if ($('#warBack')) $('#warBack').onclick = async () => err(await emit('war:return'));
+  if ($('#endWar')) $('#endWar').onclick = async () => { if (confirm('End the Holy Grail War for everyone?')) err(await emit('war:return')); };
+  if ($('#warAgain')) $('#warAgain').onclick = startLocalWar;
+  if ($('#warTitle')) $('#warTitle').onclick = leaveRoom;
 }
 
 // ---------- online: spectator servant select ----------
@@ -515,14 +720,19 @@ function applyRosterFilter() {
 }
 
 function renderSelect() {
-  const focus = ROSTER.find(s => s.id === ui.focus) ?? ROSTER[0];
   const snap = ui.net.snap;
-  const title = online() ? `${esc(snap.me.name)} <span>— Summon your Servant</span>`
+  const war = online() && snap.phase === 'war' ? snap.war : null;
+  const myCls = war?.masters.find(m => m.id === snap.me.id)?.cls;
+  const list = war ? SORTED.filter(s => s.class === myCls) : SORTED;
+  const focus = list.find(s => s.id === ui.focus) ?? list[0];
+  const title = war ? `${esc(snap.me.name)} <span>— Summon your ${esc(myCls)}</span>`
+    : online() ? `${esc(snap.me.name)} <span>— Summon your Servant</span>`
     : vsCpu() ? (ui.selecting === 0 ? 'Summon your Servant' : 'Choose the <span>CPU\'s Servant</span>')
     : `Master ${ui.selecting + 1} <span>— Summon your Servant</span>`;
-  const opp = online() ? snap.duel.seats[1 - snap.seat] : null;
-  const oppReady = online() && snap.duel.picked[1 - snap.seat];
-  const status = online()
+  const opp = online() && !war ? snap.duel.seats[1 - snap.seat] : null;
+  const oppReady = online() && !war && snap.duel.picked[1 - snap.seat];
+  const status = war ? `<span class="opp-status">${war.masters.filter(m => m.picked).length}/7 masters summoned · picks stay secret</span>`
+    : online()
     ? `<span class="opp-status ${oppReady ? 'ready' : ''}">${esc(opp.name)}: ${oppReady ? 'ready' : 'choosing…'}</span>`
     : vsCpu() ? `<span class="opp-status" title="Adapts after every match to keep games close">CPU level ${cpuLevel()}/10</span>`
     : '<div></div>';
@@ -537,14 +747,14 @@ function renderSelect() {
         <div class="roster-col">
         <div class="roster-tools">
           <input type="search" id="rosterSearch" placeholder="Search servants…" autocomplete="off" value="${esc(ui.search ?? '')}">
-          <div class="class-filter">
+          <div class="class-filter" ${war ? 'hidden' : ''}>
             <button data-cls="">All</button>
             ${CLASSES.map(c => `<button data-cls="${esc(c)}" class="class-badge" data-class="${esc(c)}">${esc(c)}</button>`).join('')}
           </div>
         </div>
         <div class="roster-empty" hidden>No servants match.</div>
         <div class="roster">
-          ${SORTED.map(s => `
+          ${list.map(s => `
             <button class="roster-card ${s.id === focus.id ? 'focused' : ''}" data-id="${s.id}">
               ${art(s, 'portrait')}
               <div class="roster-name">${esc(s.name)}</div>
@@ -578,8 +788,8 @@ function renderSelect() {
   applyRosterFilter();
   app.querySelectorAll('.roster-card').forEach(b => b.onclick = () => {
     ui.focus = b.dataset.id;
-    const picked = online() && ui.net.snap.duel.picks[ui.net.snap.seat];
-    if (online() && !picked) emit('select:focus', { servantId: ui.focus });
+    const picked = online() && !war && ui.net.snap.duel.picks[ui.net.snap.seat];
+    if (online() && !war && !picked) emit('select:focus', { servantId: ui.focus });
     render();
     if (picked) waitingOverlay('Servant summoned', 'Waiting for your opponent to choose…');
   });
@@ -589,6 +799,11 @@ function renderSelect() {
     show('title');
   };
   app.querySelector('#confirm').onclick = async () => {
+    if (war) {
+      const res = await emit('war:pick', { servantId: focus.id });
+      if (!res.ok) alert(res.error);
+      return;
+    }
     if (online()) {
       const res = await emit('select:pick', { servantId: focus.id });
       if (!res.ok) alert(res.error);
@@ -870,12 +1085,21 @@ function spectatorHtml() {
         <span class="spec-status">${locked ? 'LOCKED IN' : draft ? 'selecting…' : ''}</span>
       </div>`;
   };
+  if (d.replay) return `
+    <section class="controls spectator">
+      <div class="controls-head"><h3>Replay <span>· ${esc(d.seats[0].name)} vs ${esc(d.seats[1].name)}</span></h3><span class="turn-tag">Turn ${d.step} / ${d.steps}</span></div>
+      <p class="muted">Both masters are CPUs, so this battle was fought in full. Step through it turn by turn.</p>
+      <div class="title-actions">
+        <button class="btn gold" id="replayNext">Next turn ▸</button>
+        <button class="btn ghost" id="replayEnd">Skip to result</button>
+      </div>
+    </section>`;
   return `
     <section class="controls spectator">
       <div class="controls-head"><h3>Spectating <span>· live selections</span></h3><span class="turn-tag">Turn ${ui.match.turn}</span></div>
       ${d.foresight ? `<p class="foresight-note">${esc(d.seats[d.foresight.seat].name)} is using ${esc(foresightName(d.foresight.seat))}: they see ${esc(d.seats[1 - d.foresight.seat].name)}'s action before choosing.</p>` : ''}
       <div class="spec-cols">${col(0)}${col(1)}</div>
-      ${rosterHtml({ compact: true })}
+      ${ui.net.snap.war ? '' : rosterHtml({ compact: true })}
     </section>`;
 }
 
@@ -1010,7 +1234,7 @@ function renderBattle() {
   app.innerHTML = `
     ${miniStatusHtml()}
     <div class="battle">
-      ${online() ? `<div class="room-tag">${isDuelist() ? '' : '<span class="spec-badge">Spectating</span>'} Room ${esc(ui.net.code)} <button class="btn ghost small" id="leaveBattle">Leave</button></div>` : ''}
+      ${online() ? `<div class="room-tag">${isDuelist() ? '' : `<span class="spec-badge">${ui.net.snap.duel?.replay ? 'Replay' : 'Spectating'}</span>`} ${ui.net.snap.war ? `Holy Grail War · ${ui.net.snap.war.stage === 'final' ? 'Final' : `Round ${ui.net.snap.war.round}`}` : `Room ${esc(ui.net.code)}`} ${ui.net.snap.war && !isDuelist() ? '<button class="btn ghost small" id="toHub">War overview</button>' : `<button class="btn ghost small" id="leaveBattle">Leave</button>`}</div>` : ''}
       <div class="field">
         ${panelHtml(0)}
         <div class="versus">VS</div>
@@ -1059,8 +1283,15 @@ function bindControls() {
   if (unlock) unlock.onclick = () => emit('battle:unlock');
   const leave = app.querySelector('#leaveBattle');
   if (leave) leave.onclick = () => {
-    if (!isDuelist() || confirm('Leave this duel? It will end and everyone returns to the room.')) leaveRoom();
+    const msg = ui.net.snap?.war ? 'Leave the Holy Grail War? A CPU takes over your seat.' : 'Leave this duel? It will end and everyone returns to the room.';
+    if (!isDuelist() || confirm(msg)) leaveRoom();
   };
+  const toHub = app.querySelector('#toHub');
+  if (toHub) toHub.onclick = () => emit('war:hub');
+  const rNext = app.querySelector('#replayNext');
+  if (rNext) rNext.onclick = () => emit('war:replay');
+  const rEnd = app.querySelector('#replayEnd');
+  if (rEnd) rEnd.onclick = () => emit('war:replay', { toEnd: true });
   bindRoster();
   app.querySelector('#logToggle').onclick = () => { ui.logOpen = !ui.logOpen; setDraft({}); };
 }
@@ -1240,7 +1471,11 @@ function renderEnd() {
   }
 
   let actions;
-  if (online()) {
+  if (online() && ui.net.snap.war) {
+    actions = `
+      <div class="title-actions"><button class="btn gold big" id="toHub">Back to the war</button></div>
+      <p class="muted">${isDuelist() ? 'Team HP is settled once every battle this round is over.' : 'Head back to see how the other battles are going.'}</p>`;
+  } else if (online()) {
     const d = ui.net.snap.duel;
     const voteText = v => v === 'same' ? 'wants a rematch' : v === 'change' ? 'wants new servants' : '';
     const votes = d.seats.map((st, i) => d.rematch[i] ? `${esc(st.name)} ${voteText(d.rematch[i])}.` : '').filter(Boolean).join(' ');
@@ -1295,6 +1530,7 @@ function renderEnd() {
 
   if (online()) {
     const $ = sel => app.querySelector(sel);
+    if ($('#toHub')) $('#toHub').onclick = () => emit('war:hub');
     if ($('#rematch')) $('#rematch').onclick = () => emit('match:rematch', { choice: 'same' });
     if ($('#newpick')) $('#newpick').onclick = () => emit('match:rematch', { choice: 'change' });
     if ($('#toRoom')) $('#toRoom').onclick = () => emit('match:return');

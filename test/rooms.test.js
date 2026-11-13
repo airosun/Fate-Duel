@@ -234,3 +234,134 @@ test('Divine Intervention online: the turn pauses for the holder; the opponent o
   assert.ok(room.duel.lastTurn.log.some(l => l.blocked === 'divine'));
   assert.equal(room.duel.pendingDivine, null);
 });
+
+// ---------- Holy Grail War ----------
+import { chooseAction } from '../src/engine/ai.js';
+import { classServants } from '../src/engine/grailwar.js';
+
+// Drive a war to the end: humans draft/pick the first free option, lock CPU-chosen actions,
+// decline Divine Intervention, watch replays to the end and press ready on results.
+function playWar(rm, room, humans, { onRound } = {}) {
+  let guard = 0;
+  while (room.war && guard++ < 20000) {
+    const st = room.war.state;
+    if (st.stage === 'draft') {
+      const id = st.draftOrder[st.draftTurn];
+      const free = rm.snapshot(room, id).war.classes.find(c => !st.masters.some(m => m.cls === c));
+      rm.warDraft(room, id, free);
+    } else if (st.stage === 'servants') {
+      for (const id of humans) if (!st.masters.find(m => m.id === id).servant) rm.warPick(room, id, classServants(st.masters.find(m => m.id === id).cls)[0].id);
+    } else if (st.stage === 'round' || st.stage === 'final') {
+      onRound?.(st);
+      let acted = false;
+      for (const id of humans) {
+        const snap = rm.snapshot(room, id);
+        const d = snap.duel;
+        if (!d || d.replay || snap.seat == null || d.phase !== 'battle') continue;
+        if (d.pendingDivine?.player === snap.seat) { rm.divineDecision(room, id, false); acted = true; continue; }
+        if (!d.locked[snap.seat] && !d.pendingDivine) { rm.lock(room, id, chooseAction(d.match, snap.seat, { strength: 0.5 })); acted = true; }
+      }
+      if (!acted) assert.fail(`war stalled in ${st.stage} round ${st.round}`);
+    } else if (st.stage === 'results') {
+      for (const id of humans) if (!st.masters.find(m => m.id === id).out) rm.warReady(room, id);
+      if (room.war.state.stage === 'results') rm.warReady(room, room.hostId);
+    } else if (st.stage === 'over') return st;
+  }
+  assert.fail('war did not finish');
+}
+
+test(`rooms hold ${MAX_MEMBERS} people`, () => {
+  assert.equal(MAX_MEMBERS, 7);
+});
+
+test('Holy Grail War online: humans fill seats, CPUs the rest; fights run, sitters watch one, CPU battles replay', () => {
+  const { rm, room, H, B, C } = room3();
+  assert.throws(() => rm.startWar(room, B), /Only the host/);
+  rm.startWar(room, H, { seed: 42 });
+  assert.equal(room.phase, 'war');
+  const st = room.war.state;
+  assert.equal(st.masters.length, 7);
+  assert.equal(st.masters.filter(m => !m.cpu).length, 3);
+  // secret picks: during the servant stage you see only your own
+  let checkedSecret = false, checkedSitter = false, checkedReplay = false;
+  while (st.stage === 'draft') {
+    const id = st.draftOrder[st.draftTurn];
+    rm.warDraft(room, id, st.masters.find(m => m.id === id).cls ?? ['Saber', 'Archer', 'Lancer', 'Rider', 'Caster', 'Assassin', 'Berserker'].find(c => !st.masters.some(m => m.cls === c)));
+  }
+  rm.warPick(room, H, classServants(st.masters.find(m => m.id === H).cls)[0].id);
+  const view = rm.snapshot(room, B).war;
+  assert.equal(view.masters.find(m => m.id === H).servant, null);
+  assert.equal(view.masters.find(m => m.id === H).picked, true);
+  checkedSecret = true;
+  const winner = playWar(rm, room, [H, B, C], {
+    onRound: s => {
+      if (s.stage !== 'round' || !s.sitter || checkedSitter) return;
+      const sitter = s.sitter;
+      const fights = room.war.state.fights;
+      const snap = rm.snapshot(room, sitter);
+      if (s.masters.find(m => m.id === sitter).cpu) return;
+      assert.equal(snap.war.canWatch, true);
+      rm.warSpectate(room, sitter, fights[0].id);
+      assert.throws(() => rm.warSpectate(room, sitter, fights[1].id), /only watch one/);
+      const watching = rm.snapshot(room, sitter).duel;
+      assert.equal(watching.fightId, fights[0].id);
+      if (watching.replay) {
+        assert.equal(watching.step, 0);
+        rm.warReplayNext(room, sitter);
+        assert.equal(rm.snapshot(room, sitter).duel.step, 1);
+        rm.warReplayNext(room, sitter, { toEnd: true });
+        assert.equal(rm.snapshot(room, sitter).duel.phase, 'over');
+        checkedReplay = true;
+      }
+      rm.warHub(room, sitter);
+      assert.throws(() => rm.warSpectate(room, sitter, fights[1].id), /only watch one/);
+      checkedSitter = true;
+    },
+  });
+  assert.ok(checkedSecret && checkedSitter);
+  assert.ok(winner.winner);
+  assert.equal(winner.masters.filter(m => !m.out).length, 1);
+  void checkedReplay;
+  rm.returnToRoom(room, B);
+  assert.equal(room.phase, 'lobby');
+  assert.equal(room.war, null);
+});
+
+test('Holy Grail War: many full wars finish (CPU replays, draws, finals) with one human and with seven', () => {
+  for (let seed = 1; seed <= 6; seed++) {
+    const rm = new RoomManager();
+    const h = rm.create('Solo');
+    const ids = [h.member.id];
+    if (seed % 2 === 0) for (let k = 0; k < 6; k++) ids.push(rm.join(h.room.code, `P${k}`).member.id);
+    rm.startWar(h.room, h.member.id, { seed });
+    const st = playWar(rm, h.room, ids);
+    assert.equal(st.stage, 'over');
+    assert.equal(st.masters.filter(m => m.place === 1).length, 1);
+  }
+});
+
+test('Holy Grail War: leaving mid-war hands the seat to a CPU', () => {
+  const { rm, room, H, B, C } = room3();
+  rm.startWar(room, H, { seed: 7 });
+  const st = room.war.state;
+  // finish draft + picks
+  while (st.stage === 'draft') {
+    const id = st.draftOrder[st.draftTurn];
+    rm.warDraft(room, id, ['Saber', 'Archer', 'Lancer', 'Rider', 'Caster', 'Assassin', 'Berserker'].find(c => !st.masters.some(m => m.cls === c)));
+  }
+  for (const id of [H, B, C]) rm.warPick(room, id, classServants(st.masters.find(m => m.id === id).cls)[0].id);
+  assert.equal(st.stage === 'round' || st.stage === 'final', true);
+  const inFight = [B, C].find(id => st.fights.some(f => f.a === id || f.b === id)) ?? B;
+  rm.leave(room, inFight);
+  assert.equal(st.masters.find(m => m.id === inFight).cpu, true);
+  const f = st.fights.find(x => x.a === inFight || x.b === inFight);
+  if (f) {
+    const d = room.war.duels[f.id];
+    const other = d.seats.find(x => x !== inFight);
+    // either it's now CPU-vs-CPU and finished, or it waits on the remaining human
+    if (st.masters.find(m => m.id === other).cpu) assert.equal(d.phase, 'over');
+    else assert.equal(d.locked[d.seats.indexOf(inFight)] != null, true);
+  }
+  const end = playWar(rm, room, [H, C].filter(id => id !== inFight));
+  assert.equal(end.stage, 'over');
+});
