@@ -8,7 +8,7 @@ import { ROSTER } from '/src/data/servants.js';
 import { TUNING as T, CARDS } from '/src/engine/constants.js';
 import { CARD_LABEL, describeSkill, describeNp, describeEffects, buffChip } from './describe.js';
 import { chooseAction, wantsForesight } from '/src/engine/ai.js';
-import { statsHtml } from './stats.js';
+import { statsHtml, total as dmgTotal } from './stats.js';
 import { pro } from '/src/engine/pronouns.js';
 import { glossify, plainDesc } from './glossary.js';
 import { nextStrength, START_STRENGTH } from '/src/engine/difficulty.js';
@@ -250,6 +250,7 @@ function onSnapshot(snap) {
   if (snap.phase === 'lobby') return show('room');
   if (snap.phase === 'war') {
     const w = snap.war, meM = w.masters.find(m => m.id === snap.me?.id);
+    if (w.stage !== 'over') ui.warStats = null;   // a new war starts on the overview
     if (!duel) {
       if (w.stage === 'servants' && meM && !meM.picked) {
         if (ui.screen !== 'select') { ui.focus = SORTED.find(s => s.class === meM.cls)?.id; ui.search = ''; ui.classFilter = null; }
@@ -541,6 +542,109 @@ function warFightsHtml(w) {
     </section>`;
 }
 
+// ---------- end-of-war stats ----------
+
+// Totals for one master across every battle they fought in the war.
+function warTotals(w, id) {
+  const t = { battles: 0, w: 0, l: 0, d: 0, dealt: 0, taken: 0, turns: 0, crits: 0, landed: 0, tried: 0,
+    npFired: 0, npLanded: 0, clashWon: 0, skills: 0, seals: 0, healed: 0, negated: 0, biggest: { amount: 0, what: '', servant: null } };
+  for (const b of w.battles) {
+    const i = b.seats.indexOf(id);
+    if (i < 0) continue;
+    const st = b.players[i].stats, op = b.players[1 - i].stats;
+    if (!st) continue;
+    t.battles++;
+    if (b.winner === id) t.w++; else if (b.winner == null) t.d++; else t.l++;
+    t.dealt += dmgTotal(st); t.taken += dmgTotal(op); t.turns += b.turns;
+    t.crits += st.crits ?? 0;
+    t.landed += ['quick', 'arts', 'buster'].reduce((a, c) => a + st.landed[c], 0);
+    t.tried += ['quick', 'arts', 'buster'].reduce((a, c) => a + st.attempted[c], 0);
+    t.npFired += st.nps.fired; t.npLanded += st.nps.landed; t.clashWon += st.clash.won;
+    t.skills += st.skills; t.seals += st.seals; t.healed += st.healed; t.negated += st.negated;
+    if (st.biggest.amount > t.biggest.amount) t.biggest = { ...st.biggest, servant: b.servants[i] };
+  }
+  return t;
+}
+
+function warStatsHtml(w) {
+  const W = ui.warStats, meId = ui.net.snap.me?.id;
+  const nameOf = id => { const m = w.masters.find(x => x.id === id); return `${m.name}${id === meId ? ' (You)' : ''}`; };
+  const order = [...w.masters].sort((a, b) => (a.place ?? 99) - (b.place ?? 99));
+  const rows = order.map(m => ({ m, t: warTotals(w, m.id) }));
+  const best = key => Math.max(...rows.map(r => typeof key === 'function' ? key(r.t) : r.t[key]));
+  const cell = (r, key, text) => {
+    const v = typeof key === 'function' ? key(r.t) : r.t[key];
+    return `<td class="${v > 0 && v === best(key) ? 'ws-best' : ''}">${text ?? v}</td>`;
+  };
+  const pctOf = (a, b) => (b ? Math.round((100 * a) / b) : 0);
+  const per = (a, b) => (b ? Math.round(a / b) : 0);
+  const overall = `
+    <section class="st-card ws-overall">
+      <h3>Overall: every battle of the war</h3>
+      <div class="ws-table-wrap"><table class="ws-table">
+        <thead><tr>
+          <th>Place</th><th>Master</th><th title="Battles fought">Bat.</th><th title="Wins · losses · draws">W–L–D</th>
+          <th>Damage dealt</th><th>Damage taken</th><th title="Average damage dealt per battle">Avg / battle</th>
+          <th>Biggest hit</th><th title="Regular attacks that landed, out of those chosen">Hit rate</th><th>Crits</th>
+          <th title="NPs landed / fired">NPs</th><th>Clashes won</th><th>Skills</th><th title="Command Seals used">Seals</th><th>Healed</th><th>Turns</th>
+        </tr></thead>
+        <tbody>${rows.map(r => {
+          const { m, t } = r, sv = m.servant ? byId(m.servant) : null;
+          return `<tr class="${m.id === meId ? 'me' : ''}">
+            <td>${m.place ? ordinal(m.place) : '—'}</td>
+            <td class="ws-who">${sv ? art(sv, 'wm-art') : ''}<span><b>${esc(nameOf(m.id))}</b><small>${esc(m.cls ?? '')}${sv ? ` · ${esc(sv.name)}` : ''}</small></span></td>
+            ${cell(r, 'battles')}
+            <td>${t.w}–${t.l}–${t.d}</td>
+            ${cell(r, 'dealt')}
+            <td>${t.taken}</td>
+            ${cell(r, x => per(x.dealt, x.battles))}
+            ${cell(r, x => x.biggest.amount, t.biggest.amount ? `${t.biggest.amount}<small>${esc(t.biggest.what)}</small>` : '—')}
+            ${cell(r, x => pctOf(x.landed, x.tried), t.tried ? `${pctOf(t.landed, t.tried)}%<small>${t.landed} / ${t.tried}</small>` : '—')}
+            ${cell(r, 'crits')}
+            ${cell(r, 'npLanded', `${t.npLanded}<small>/ ${t.npFired}</small>`)}
+            ${cell(r, 'clashWon')}
+            ${cell(r, 'skills')}
+            ${cell(r, 'seals')}
+            ${cell(r, 'healed')}
+            ${cell(r, 'turns')}
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>
+      <p class="muted small">Gold marks the highest value in each column.</p>
+    </section>`;
+
+  const list = w.battles.map((b, k) => ({ b, k })).filter(({ b }) => !W.who || b.seats.includes(W.who));
+  const label = b => b.final ? 'Final' : `Round ${b.round}`;
+  const games = `
+    <section class="st-card ws-games">
+      <h3>Battle by battle</h3>
+      <div class="ws-filter">
+        <button class="${!W.who ? 'on' : ''}" data-ws-who="">Everyone</button>
+        ${order.map(m => `<button class="${W.who === m.id ? 'on' : ''}" data-ws-who="${esc(m.id)}">${esc(nameOf(m.id))}</button>`).join('')}
+      </div>
+      ${list.map(({ b, k }) => {
+        const side = i => {
+          const sv = byId(b.servants[i]), st = b.players[i].stats;
+          const won = b.winner === b.seats[i];
+          return `<div class="wg-side ${won ? 'won' : b.winner == null ? 'drew' : 'lost'}">
+            ${art(sv, 'wm-art')}
+            <span><b>${esc(nameOf(b.seats[i]))}</b><small>${esc(sv.name)} · ${st ? dmgTotal(st) : 0} dmg</small></span>
+          </div>`;
+        };
+        const result = b.winner == null ? (b.reason === 'double KO' ? 'Double KO · draw' : 'Draw') : `${esc(nameOf(b.winner))} ${b.winner === meId ? 'win' : 'wins'}`;
+        const open = W.open === k;
+        const match = { players: b.players, servants: b.servants.map(byId), history: b.history };
+        return `<div class="wg-card ${open ? 'open' : ''}" data-ws-card="${k}">
+          <div class="wg-top"><span class="wg-round">${label(b)}</span>${side(0)}<span class="versus">VS</span>${side(1)}</div>
+          <div class="wg-foot"><span>${result} · ${b.turns} turn${b.turns === 1 ? '' : 's'}</span>
+            <button class="btn ghost small" data-ws-open="${k}">${open ? 'Hide stats' : 'Battle stats'}</button></div>
+          ${open ? statsHtml(match, { masterLabel: i => nameOf(b.seats[i]), art }) : ''}
+        </div>`;
+      }).join('') || '<p class="muted">No battles.</p>'}
+    </section>`;
+  return `<div class="war-stats">${overall}${games}</div>`;
+}
+
 function renderWar() {
   const snap = ui.net.snap, w = snap.war, meId = snap.me?.id;
   const meM = w.masters.find(m => m.id === meId);
@@ -589,6 +693,7 @@ function renderWar() {
         <h2>${champ ? `${esc(champ.name)}${champ.id === meId ? ' (You)' : ''} and ${esc(byId(champ.servant).name)} win the Holy Grail War` : 'No one claims the Grail'}</h2>
         <div class="title-actions">${local ? '<button class="btn gold big" id="warAgain">New war</button><button class="btn ghost big" id="warTitle">Title</button>'
           : '<button class="btn gold big" id="warBack">Back to the room</button>'}</div>
+        <div class="end-toggles"><button class="btn ghost" id="warStatsToggle">${ui.warStats?.on ? 'Hide war stats' : 'War stats'}</button></div>
       </section>`;
     } else if (w.stage === 'results') {
       const final = w.fights[0]?.final;
@@ -605,7 +710,9 @@ function renderWar() {
         : w.chosen ? 'You picked your battle to watch this round.' : 'You sit out this round. Choose ONE battle to watch. You are guaranteed a battle next round.';
       banner = `<section class="war-banner"><p class="tag">${note}</p></section>`;
     }
-    body = `${banner}<div class="war-grid">${warFightsHtml(w)}${warStandingsHtml(w)}</div>`;
+    body = w.stage === 'over' && ui.warStats?.on && w.battles
+      ? `${banner}${warStatsHtml(w)}`
+      : `${banner}<div class="war-grid">${warFightsHtml(w)}${warStandingsHtml(w)}</div>`;
   }
   app.innerHTML = `
     <div class="room-screen war-screen">
@@ -633,7 +740,19 @@ function renderWar() {
   if ($('#warReady')) $('#warReady').onclick = async () => err(await emit('war:ready'));
   if ($('#warBack')) $('#warBack').onclick = async () => err(await emit('war:return'));
   if ($('#endWar')) $('#endWar').onclick = async () => { if (confirm('End the Holy Grail War for everyone?')) err(await emit('war:return')); };
-  if ($('#warAgain')) $('#warAgain').onclick = startLocalWar;
+  if ($('#warAgain')) $('#warAgain').onclick = () => { ui.warStats = null; startLocalWar(); };
+  if ($('#warStatsToggle')) $('#warStatsToggle').onclick = () => {
+    ui.warStats = { on: !ui.warStats?.on, who: null, open: null };
+    render();
+    if (ui.warStats.on) app.querySelector('.war-stats')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  app.querySelectorAll('[data-ws-who]').forEach(b => b.onclick = () => { ui.warStats.who = b.dataset.wsWho || null; ui.warStats.open = null; render(); app.querySelector('.ws-games')?.scrollIntoView({ block: 'start' }); });
+  app.querySelectorAll('[data-ws-open]').forEach(b => b.onclick = () => {
+    const k = Number(b.dataset.wsOpen);
+    ui.warStats.open = ui.warStats.open === k ? null : k;
+    render();
+    app.querySelector(`[data-ws-card="${k}"]`)?.scrollIntoView({ block: 'start' });
+  });
   if ($('#warTitle')) $('#warTitle').onclick = leaveRoom;
 }
 

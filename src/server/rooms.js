@@ -46,6 +46,18 @@ function cleanAction(a) {
   return { main, seal: a.seal == null ? null : String(a.seal), ...(a.choice != null ? { choice: String(a.choice) } : {}) };
 }
 
+// What the end-of-war stats screen needs from one battle: the stat tallies, max HP and the
+// HP-per-turn trail (not the full match state, which carries every servant's whole kit).
+function battleSummary(st, f, d, winner) {
+  const m = d.match;
+  return {
+    round: st.round, final: !!f.final, fightId: f.id, seats: [...d.seats], winner,
+    servants: m.servants.map(s => s.id), turns: (m.history ?? []).length, reason: m.result?.reason ?? null,
+    players: m.players.map(p => ({ stats: p.stats, maxHp: p.maxHp, hp: Math.max(0, p.hp) })),
+    history: (m.history ?? []).map(h => ({ hp: h.hp })),
+  };
+}
+
 function newDuel(seats, { picks = [null, null], cpu = [false, false], fightId = null } = {}) {
   return {
     seats, fightId, cpu, phase: 'select',
@@ -380,7 +392,7 @@ export class RoomManager {
     const humans = room.queue.map(q => room.members.find(m => m.id === q)).filter(m => m?.connected).slice(0, GW.WAR_SIZE);
     if (!humans.length) throw new RoomError('Need at least 1 player in the queue.');
     const state = GW.createWar(humans.map(m => ({ id: m.id, name: m.name })), { seed: seed ?? Math.floor(this.random() * 2 ** 32) });
-    room.war = { state, duels: {}, views: {}, ready: [], round: 0 };
+    room.war = { state, duels: {}, views: {}, ready: [], round: 0, battles: [] };
     room.phase = 'war';
     this.#warSync(room);
   }
@@ -480,7 +492,9 @@ export class RoomManager {
     for (const f of st.fights) {
       const x = w.duels[f.id];
       const r = x.match.result.winner;
-      GW.recordResult(st, f.id, r === 0 || r === 1 ? x.seats[r] : null);
+      const winner = r === 0 || r === 1 ? x.seats[r] : null;
+      w.battles.push(battleSummary(st, f, x, winner));
+      GW.recordResult(st, f.id, winner);
     }
   }
 
@@ -588,6 +602,8 @@ export class RoomManager {
       // who may pick a battle to watch right now
       canWatch: live && !fighting && (!me || me.out || !v.chosen),
       ready: w.ready,
+      // every battle of the war, for the end-of-war stats (only once there's a winner)
+      battles: st.stage === 'over' ? w.battles : null,
     };
   }
 

@@ -4,7 +4,7 @@
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const CARDS = [['quick', 'Quick'], ['arts', 'Arts'], ['buster', 'Buster']];
 const pct = (a, b) => (b ? `${Math.round((100 * a) / b)}%` : '—');
-const total = st => st.dmg.attack + st.dmg.np + st.dmg.extra + st.dmg.curse + (st.dmg.poison ?? 0) + (st.dmg.shock ?? 0);
+export const total = st => st.dmg.attack + st.dmg.np + st.dmg.extra + st.dmg.curse + (st.dmg.poison ?? 0) + (st.dmg.shock ?? 0);
 
 // One comparison row: label in the middle, each side's value, and a split bar
 // showing who had more (left = player 1, right = player 2).
@@ -98,7 +98,6 @@ export function statsHtml(match, { masterLabel, art }) {
         ${row('Clashes won', A.clash.won, B.clash.won, { hint: 'Your card beat theirs (a counter hit)' })}
         ${row('Clashes lost', A.clash.lost, B.clash.lost, { bar: false, hint: 'Your card was beaten, or an NP overpowered your attack' })}
         ${row('Ties', A.clash.tied, B.clash.tied, { bar: false })}
-        ${row('Critical hits', A.crits ?? 0, B.crits ?? 0, { hint: 'Regular attacks that crit' })}
         ${row('Critical hits', A.crits ?? 0, B.crits ?? 0, { hint: 'Regular attacks that crit' })}
         ${row('Longest hit streak', A.maxCombo, B.maxCombo, { hint: 'Most regular attacks landed in a row' })}
       </section>

@@ -33,7 +33,7 @@ export function deriveStats(servant, { uniquesOff = false } = {}) {
 // ---------- match stats (shown on the post-battle stats screen) ----------
 export function newStats() {
   return {
-    dmg: { attack: 0, np: 0, extra: 0, curse: 0, poison: 0, shock: 0 }, biggest: { amount: 0, what: '' }, crits: 0, crits: 0,
+    dmg: { attack: 0, np: 0, extra: 0, curse: 0, poison: 0, shock: 0 }, biggest: { amount: 0, what: '' }, crits: 0,
     attempted: { quick: 0, arts: 0, buster: 0 }, landed: { quick: 0, arts: 0, buster: 0 },
     clash: { won: 0, lost: 0, tied: 0 }, nps: { fired: 0, landed: 0, blocked: 0 },
     negated: 0, healed: 0, skills: 0, seals: 0, revives: 0, maxCombo: 0, combo: 0,
