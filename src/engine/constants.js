@@ -33,10 +33,10 @@ export const TUNING = {
   npMax: 100,
   npGainOnHit: Number(globalThis.process?.env?.NPH ?? 17),      // defender gains this when hit (attack or NP)
 
-  startAp: 4,
-  defaultMaxAp: 10,
-  apPerAttack: 2,       // any outcome
-  apOnLand: 1,          // bonus if the attack connects
+  startAp: Number(globalThis.process?.env?.START_AP ?? 5),
+  defaultMaxAp: Number(globalThis.process?.env?.MAX_AP ?? 12),
+  apPerAttack: Number(globalThis.process?.env?.AP_ATK ?? 3),       // any outcome
+  apOnLand: Number(globalThis.process?.env?.AP_LAND ?? 1),          // bonus if the attack connects
 
   seals: {
     count: 3,

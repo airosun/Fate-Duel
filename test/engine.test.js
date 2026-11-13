@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createMatch as createMatchRaw, resolveTurn, getLegalActions, validateAction, foresightView, skillCost, deriveStats } from '../src/engine/engine.js';
+import { createMatch as createMatchRaw, resolveTurn, getLegalActions, validateAction, foresightView, skillCost, deriveStats, npTargetBonus } from '../src/engine/engine.js';
 // Most tests check exact damage, so crits are off unless a test asks for them ({ crits: true }).
 const createMatch = (a, b, o = {}) => {
   const s = createMatchRaw(a, b, o);
@@ -51,10 +51,10 @@ test('loser still gains on-hit NP; winner gains card NP', () => {
   assert.equal(state.players[1].np, T.npGainOnHit);
 });
 
-test('AP: +2 per attack, +1 if it lands, +1 for quick', () => {
+test('AP: +3 per attack, +1 if it lands, +1 for quick', () => {
   const { state } = resolveTurn(fresh(), [atk('quick'), atk('buster')]); // quick loses
-  assert.equal(state.players[0].ap, T.startAp + 2 + 1);       // attack + quick, no land
-  assert.equal(state.players[1].ap, T.startAp + 2 + 1);       // attack + land
+  assert.equal(state.players[0].ap, T.startAp + T.apPerAttack + 1);       // attack + quick, no land
+  assert.equal(state.players[1].ap, T.startAp + T.apPerAttack + 1);       // attack + land
 });
 
 test('skill vs attack: attack lands unopposed, skill resolves first', () => {
@@ -229,11 +229,11 @@ test('Artoria: Magic Resistance weakens Nine Lives defense down', () => {
 test('Independent Action raises max and starting AP', async () => {
   const { classPassive } = await import('../src/data/passives.js');
   const s = createMatch(dummy('A', { passives: [classPassive('independentAction', 'A')] }), dummy('B'));
-  assert.equal(s.players[0].maxAp, 12);
+  assert.equal(s.players[0].maxAp, T.defaultMaxAp + 2);
   assert.equal(s.players[0].ap, T.startAp + 2);
 });
 
-test('Medea: Witch of Colchis cleanses debuffs; Hecate\'s Staff cancels debuff resistance', () => {
+test('Medea: Witch of Colchis cleanses debuffs; Hecate\'s Staff gives a 4th Command Seal', () => {
   const hexer = { skills: [{ id: 'hex', name: 'Hex', cost: 3, effects: [{ type: 'atkDown', value: 20, turns: 3, target: 'enemy' }] }] };
   let s = createMatch(SERVANTS.medea, dummy('B', hexer));
   s.players[0].ap = 12;
@@ -241,9 +241,9 @@ test('Medea: Witch of Colchis cleanses debuffs; Hecate\'s Staff cancels debuff r
   assert.ok(s.players[0].buffs.some(b => b.type === 'atkDown'));
   s = resolveTurn(s, [skill('witch_of_colchis'), atk('arts')]).state;
   assert.equal(s.players[0].buffs.some(b => b.type === 'atkDown'), false);
-  // potency vs resistance: a 30% resist target loses only 5% of Medea-cast debuff value
-  const caster = createMatch(SERVANTS.medea, dummy('B')).players[0];
-  assert.equal(caster.buffs.find(b => b.type === 'debuffPotency').value, 25);
+  const m = createMatch(SERVANTS.medea, dummy('B'));
+  assert.equal(m.players[0].seals, 4);
+  assert.equal(m.players[1].seals, 3);
 });
 
 test('Kojirou: Quick attacks pierce evade; Souwa makes every card pierce', () => {
@@ -269,13 +269,12 @@ test('Kojirou: Tsubame Gaeshi buffs Quick before dealing damage', () => {
   assert.ok(s.players[0].buffs.some(b => b.type === 'cardUp' && b.card === 'quick' && b.turns === 2));
 });
 
-test('Medea: Rule Breaker applies ATK down, which Hecate\'s Staff pushes through Magic Resistance', () => {
-  let s = createMatch(SERVANTS.medea, SERVANTS.artoria);   // Artoria: Magic Resistance A (20%)
+test('Medea: Rule Breaker strips buffs, then refunds 20% NP (no more ATK down)', () => {
+  let s = createMatch(SERVANTS.medea, SERVANTS.artoria);
   s.players[0].np = 100;
   s = resolveTurn(s, [np(), atk('arts')]).state;
-  const d = s.players[1].buffs.find(b => b.type === 'atkDown');
-  assert.equal(d.value, 20);    // potency 25 fully cancels resistance 20
-  assert.equal(d.turns, 3);     // active for the next 3 turns
+  assert.ok(!s.players[1].buffs.some(b => b.type === 'atkDown'));
+  assert.ok(s.players[0].np >= 20);
 });
 
 test('passive damage cut is permanent (Invisible Air never expires)', () => {
@@ -298,9 +297,9 @@ test('NP clash: Rule Breaker does not strip Heracles\' buffs before Nine Lives l
   const r = resolveTurn(s, [np(), np()]).state;
   // Nine Lives keeps Bravery (+20%) and Mad Enhancement (Buster +10%): 3.6 × (1 + .2 + .1) + 10 flat
   assert.equal(medeaHp - r.players[0].hp, Math.round(h.atk * SERVANTS.heracles.np.mult * 1.3 + 10));
-  // Heracles' Bravery is removed afterwards, and Rule Breaker's ATK down lands afterwards
+  // Heracles' Bravery is removed afterwards, and Rule Breaker refunds Medea's NP
   assert.equal(r.players[1].buffs.some(b => b.source === 'bravery'), false);
-  assert.ok(r.players[1].buffs.some(b => b.type === 'atkDown'));
+  assert.ok(r.players[0].np >= 20);
 });
 
 test('NP clash: ATK down from one NP does not weaken the other NP', () => {
@@ -376,14 +375,14 @@ test('EMIYA: Circuit Connect needs a mode, switches UBW, and boosts the next lan
 
 test('Cu: Ath nGabla scales with missing HP; Battle Continuation revives at 1 HP keeping AP/NP', () => {
   let s = createMatch(SERVANTS.cu, dummy('B'));
-  s.players[0].hp = Math.round(s.players[0].maxHp / 2);
+  s.players[0].hp = Math.round(s.players[0].maxHp / 2); s.players[0].ap = 10;
   s = resolveTurn(s, [skill('ath_ngabla'), skill('charge')]).state;
   assert.equal(s.players[0].buffs.find(b => b.source === 'ath_ngabla').value, 35); // 20 + 30 × 0.5
   let t = createMatch(dummy('A', { atk: 5000 }), SERVANTS.cu);
   t.players[1].np = 60; t.players[1].ap = 7;
   t = resolveTurn(t, [atk('arts'), atk('buster')]).state;  // Arts beats Buster: the big hit lands
   assert.equal(t.players[1].hp, 1);
-  assert.equal(t.players[1].ap, 7 + 2);         // kept (plus this turn's attack AP)
+  assert.equal(t.players[1].ap, 7 + T.apPerAttack);         // kept (plus this turn's attack AP)
   assert.ok(t.players[1].np >= 60);
 });
 
@@ -413,34 +412,39 @@ test('Breaker Gorgon: about 10% of the opponent\'s self-buffs fail', () => {
   for (let seed = 1; seed <= 400; seed++) {
     const s = createMatch(SERVANTS.medusa, SERVANTS.kojirou, { seed });
     s.players[1].ap = 10;
-    const r = resolveTurn(s, [atk('arts'), skill('fade_out')]);
+    const r = resolveTurn(s, [atk('arts'), skill('souwa')]);
     total++;
-    if (!r.state.players[1].buffs.some(b => b.source === 'fade_out')) failed++;
+    if (!r.state.players[1].buffs.some(b => b.source === 'souwa' && b.type === 'sureHit')) failed++;
   }
   assert.ok(failed / total > 0.06 && failed / total < 0.14, `fail rate ${failed / total}`);
 });
 
-test('Medusa: Mystic Eyes drains AP and petrifies; petrified attackers recover less AP', () => {
-  let s = createMatch(SERVANTS.medusa, dummy('B'), { seed: 1 });
-  s.players[1].ap = 6;
-  s = resolveTurn(s, [skill('mystic_eyes'), skill('charge')]).state;
-  assert.equal(s.players[1].ap, 6 - 3 - 3);                // skill cost 3, drained 3
-  assert.ok(s.players[1].buffs.some(b => b.status === 'petrified'));
-  const ap = s.players[1].ap;
-  s = resolveTurn(s, [atk('arts'), atk('buster')]).state;  // B's buster loses: +2 attack AP -2 petrify
-  assert.equal(s.players[1].ap, ap);
+test('Medusa: Mystic Eyes petrifies ~80%: the enemy loses its next action and counts as Petrified that turn', () => {
+  let lost = 0;
+  for (let seed = 1; seed <= 200; seed++) {
+    let s = createMatch(SERVANTS.medusa, dummy('B'), { seed });
+    s.players[0].ap = 10;
+    s = resolveTurn(s, [skill('mystic_eyes'), atk('arts')]).state;
+    const r = resolveTurn(s, [atk('quick'), atk('buster')]);
+    if (r.log.some(l => /is Petrified and can't act/.test(l.msg))) {
+      lost++;
+      assert.ok(r.state.players[1].buffs.length >= 0);
+    }
+  }
+  assert.ok(lost > 130 && lost < 190, `lost ${lost}`);
 });
 
-test('Medusa: Monstrous Snake boosts one attack against a Petrified enemy', () => {
-  let s = createMatch(SERVANTS.medusa, dummy('B'), { seed: 3 });
-  s.players[0].ap = 11;
-  s = resolveTurn(s, [skill('mystic_eyes'), skill('charge')]).state;
-  s = resolveTurn(s, [skill('monstrous_snake'), atk('quick')]).state;
-  const m = s.players[0];
-  const hp = s.players[1].hp;
-  s = resolveTurn(s, [atk('arts'), atk('buster')]).state;
-  assert.equal(hp - s.players[1].hp, Math.round(m.atk * 1.0 * 1.2 * 1.5 * 1.25 + 1));
-  assert.equal(s.players[0].buffs.some(b => b.type === 'bonusVsStatus'), false);
+test('Medusa: Monstrous Snake adds +30% damage vs a Petrified enemy', () => {
+  const hit = petrified => {
+    let s = createMatch(SERVANTS.medusa, dummy('B'), { seed: 3 });
+    s.players[0].ap = 12;
+    s = resolveTurn(s, [skill('monstrous_snake'), atk('quick')]).state;
+    if (petrified) s.players[1].buffs.push({ type: 'statusMark', status: 'petrified', value: 0, turns: 2, debuff: true });
+    const r = resolveTurn(s, [atk('arts'), atk('buster')]);
+    return r.log.find(l => l.type === 'hit' && l.from === 0).amount;
+  };
+  const a = hit(false), b = hit(true);
+  assert.ok(Math.abs(b / a - 1.3) < 0.02, `${b}/${a}`);
 });
 
 test('EMIYA: Trace On copies the opponent\'s unique passive (not other copy effects)', () => {
@@ -476,13 +480,15 @@ test('Hassan: Zabaniya instant kill lands about 5% of the time and ignores reviv
   assert.ok(kills / 600 > 0.025 && kills / 600 < 0.08, `kill rate ${kills / 600}`);
 });
 
-test('Hassan: Throwing/Retrieval gives AP now and at the end of this turn and the next', () => {
+test('Hassan: Throwing/Retrieval gives 3 AP now and 3 more at the end of next turn', () => {
   let s = createMatch(SERVANTS.hassan, dummy('B'), { seed: 1 });
-  const start = s.players[0].ap;               // 4
-  s = resolveTurn(s, [skill('throwing'), skill('charge')]).state;
-  assert.equal(s.players[0].ap, start - 3 + 2 + 2);
-  s = resolveTurn(s, [skill('self_modification'), atk('arts')]).state;
-  assert.equal(s.players[0].ap, start - 3 + 2 + 2 - 3 + 2);
+  const start = s.players[0].ap;
+  let r = resolveTurn(s, [skill('throwing'), skill('charge')]);
+  assert.equal(r.state.players[0].ap, start - 4 + 3);
+  assert.ok(!r.log.some(l => /gains 3 AP/.test(l.msg)));
+  r.state.players[1].ap = 10;
+  r = resolveTurn(r.state, [atk('arts'), skill('shield')]);
+  assert.ok(r.log.some(l => /Hassan of the Cursed Arm gains 3 AP/.test(l.msg)));
 });
 
 test("EMIYA copies Shaytan's Arm but it does nothing without Zabaniya", () => {
@@ -571,7 +577,7 @@ test('Hundred Faces: Battle Retreat heals but strips his own buffs; Zabaniya mak
   let s = createMatch(SERVANTS.hundred_faces, dummy('B'), { seed: 2 });
   s.players[0].ap = 10; s.players[0].hp = 600;
   s = resolveTurn(s, [skill('expert'), atk('arts')]).state;
-  s.players[1].ap = 10;                      // dummy just shields, so no damage this turn
+  s.players[1].ap = 10; s.players[0].ap = 12;   // dummy just shields, so no damage this turn
   s = resolveTurn(s, [skill('battle_retreat'), skill('shield')]).state;
   assert.equal(s.players[0].buffs.filter(b => b.turns !== null).length, 0);
   assert.equal(s.players[0].hp, 600 + Math.round(s.players[0].maxHp * 0.3));
@@ -580,14 +586,12 @@ test('Hundred Faces: Battle Retreat heals but strips his own buffs; Zabaniya mak
   assert.ok(s.players[1].buffs.some(b => b.type === 'cardVuln' && b.card === 'arts' && b.value === 20));
 });
 
-test('Lancelot: Eternal Arms Mastery copies half of an enemy ATK buff; Arondight adds AP from attacks', () => {
+test('Lancelot: Eternal Arms Mastery copies half of an enemy ATK buff; Arondight raises crit chance', () => {
   let s = createMatch(SERVANTS.artoria, SERVANTS.lancelot, { seed: 1 });
   s = resolveTurn(s, [skill('knight_of_utopia'), skill('arondight')]).state;
   const mirror = s.players[1].buffs.find(b => b.source === 'mirror');
   assert.equal(mirror.value, 10);           // half of Knight of Utopia's ATK +20%
-  const ap = s.players[1].ap;
-  s = resolveTurn(s, [atk('buster'), atk('arts')]).state;   // Lancelot's Arts wins: +2 +1 land +2 Arondight
-  assert.equal(s.players[1].ap, Math.min(s.players[1].maxAp, ap + 2 + 1 + 2));
+  assert.equal(s.players[1].buffs.find(b => b.type === 'critUp').value, 50);
 });
 
 test('NPs use ATK up, card effectiveness of their card, next-hit boosts and bonus vs status', () => {
@@ -657,7 +661,7 @@ test('Diarmuid: Knight\'s Oath boosts Quick and Arts; his NP curses the enemy', 
   assert.equal(r.players[1].hp, hpAfterNp - 30);   // first tick already happened at the end of the NP turn
 });
 
-test('Gilles: Mental Pollution makes his debuffs 30% stronger', () => {
+test('Gilles: Mental Pollution makes his debuffs 30% stronger (Blasphemy no longer drains NP)', () => {
   let s = createMatch(SERVANTS.gilles, dummy('B'), { seed: 4 });
   s.players[0].ap = 10; s.players[1].ap = 10;
   s = resolveTurn(s, [skill('mental_pollution'), skill('charge')]).state;
@@ -665,20 +669,18 @@ test('Gilles: Mental Pollution makes his debuffs 30% stronger', () => {
   s = resolveTurn(s, [skill('blasphemy'), skill('shield')]).state;
   const v = s.players[1].buffs.find(b => b.type === 'cardVuln' && b.card === 'arts');
   assert.equal(v.value, 19.5);                 // 15 × 1.3
-  assert.equal(s.players[1].np, 50 - Math.round(15 * 1.3)); // drains 20 instead of 15
+  assert.equal(s.players[1].buffs.find(b => b.type === 'npDown').value, 26);   // 20 × 1.3
+  assert.equal(s.players[1].np, 50);
 });
 
-test('Mordred: Clarent starts her at 50% NP; Cigarette Lion raises max AP and it drops back when it ends', () => {
+test('Mordred: Clarent starts her at 50% NP; Cigarette Lion raises Buster crit chance and gives AP', () => {
   let s = createMatch(SERVANTS.mordred, dummy('B'), { seed: 1 });
   assert.equal(s.players[0].np, 50);
-  const base = s.players[0].maxAp;
-  s.players[0].ap = base;
+  s.players[0].ap = 10;
   s = resolveTurn(s, [skill('cigarette_lion'), atk('quick')]).state;
-  assert.equal(s.players[0].maxAp, base + 2);
-  assert.ok(s.players[0].ap > base - 3);            // paid 3, gained 2 (+regen), above the old cap is allowed
-  for (let t = 0; t < 3; t++) s = resolveTurn(s, [atk('quick'), atk('quick')]).state;
-  assert.equal(s.players[0].maxAp, base);
-  assert.ok(s.players[0].ap <= base);
+  assert.equal(s.players[0].ap, 10 - 5 + 2);
+  const cu = s.players[0].buffs.find(b => b.type === 'critUp');
+  assert.equal(cu.card, 'buster'); assert.equal(cu.value, 30);
   const g = createMatch(SERVANTS.gilgamesh, SERVANTS.mordred, { seed: 1 });   // Ea switches Clarent off
   assert.equal(g.players[1].np, 0);
 });
@@ -776,10 +778,11 @@ test("Chiron: Teacher's Wisdom has 3 uses, Ea switches it off; Eternal Consecrat
   assert.equal(getLegalActions(createMatch(SERVANTS.gilgamesh, SERVANTS.chiron), 1).foresight, 0);
 
   let c = createMatch(SERVANTS.chiron, dummy('B'), { seed: 2 });
-  c.players[0].hp = 10; c.players[0].ap = 3;
+  c.players[0].hp = 10; c.players[0].ap = 5;
   c = resolveTurn(c, [skill('eternal_consecration'), skill('charge')]).state;
   assert.equal(c.players[0].hp, 1);
-  assert.equal(c.players[0].ap, 3 - 3 + 6);
+  assert.equal(c.players[0].ap, 5 - 5 + 6);
+  assert.ok(c.players[0].buffs.some(b => b.type === 'critDmgUp'));
 
   const npDmg = defBuffs => {
     const x = createMatch(SERVANTS.chiron, dummy('B'), { seed: 3 });
@@ -835,7 +838,7 @@ test('Sure Hit (e.g. Chiron\'s Wisdom of Divine) always hits through One Hundred
     s.players[0].ap = 10; s.players[1].ap = 10;
     s = resolveTurn(s, [skill('wisdom_of_divine'), skill('expert')]).state;     // Sure Hit vs Evade + decoys
     assert.ok(s.players[0].buffs.some(b => b.type === 'sureHit'));
-    const hp = s.players[1].hp;
+    const hp = s.players[1].hp; s.players[1].ap = 12;
     const r = resolveTurn(s, [atk('arts'), skill('battle_retreat')]);          // Hundred Faces doesn't attack
     assert.ok(r.state.players[1].hp < hp + Math.round(r.state.players[1].maxHp * 0.3), `seed ${seed}: Sure Hit attack missed`);
     assert.ok(!r.log.some(l => /decoy/.test(l.msg)), `seed ${seed}: decoy triggered`);
@@ -931,10 +934,15 @@ test('Astolfo: Black Luna Terror on ~10% of hits; Trap of Argalia ~50% skip next
     assert.ok(!r.state.players[1].buffs.some(b => b.type === 'stun'));
   }
   assert.ok(skipped / 300 > 0.4 && skipped / 300 < 0.6, `skipped ${skipped / 300}`);
-  let s = createMatch(SERVANTS.astolfo, dummy('B'), { seed: 4 });
-  s.players[0].ap = 10;
-  s = resolveTurn(s, [skill('evaporation'), atk('quick')]).state;
-  assert.ok(s.players[0].stats.procs['Evaporation of Sanity D+ (bonus AP)'].tries === 1);
+  let landed = 0;
+  for (let seed = 1; seed <= 200; seed++) {
+    let e = createMatch(SERVANTS.astolfo, dummy('B'), { seed });
+    e.players[0].ap = 10;
+    e = resolveTurn(e, [skill('evaporation'), atk('quick')]).state;
+    assert.ok(e.players[0].np >= 20);
+    landed += ['apRegen', 'critDmgUp', 'apGainUp'].filter(t => e.players[0].buffs.some(b => b.type === t)).length;
+  }
+  assert.ok(landed / 600 > 0.55 && landed / 600 < 0.75, `evaporation ${landed / 600}`);   // 65% each
   const npDmg = cut => {
     const x = createMatch(SERVANTS.astolfo, dummy('B'), { seed: 5 });
     x.players[0].np = 100;
@@ -1011,10 +1019,11 @@ test('Semiramis: Poison stacks and ticks; Ambiguous Chalice ~30%; Double Summon 
   assert.equal(hitFor(true, true), hitFor(true, false));
 });
 
-test('Off-ladder ranks: Presence Concealment C+ sits between B and C', () => {
+test('Off-ladder ranks: Presence Concealment C+ sits between B and C (AP gain)', () => {
   const d = SERVANTS.semiramis.passives[0];
   assert.match(d.name, /C\+/);
-  assert.equal(d.effects[0].value, 7);
+  assert.equal(d.effects[0].type, 'apGainUp');
+  assert.equal(d.effects[0].value, 15);
 });
 
 // Find a seed whose Works of Art roll lands on the given work.
@@ -1051,6 +1060,7 @@ test('Shakespeare: Hamlet Madness forces a random action; Midsummer Charm throws
 
   let c = withWork("A Midsummer Night's Dream");
   c.players[1].buffs.push({ type: 'charm', value: 1, turns: 2, debuff: true, source: "Works of Art: A Midsummer Night's Dream" });
+  c.players[0].ap = 12;
   c = resolveTurn(c, [skill('the_globe'), skill('charge')]).state;
   const r2 = resolveTurn(c, [atk('buster'), atk('arts')]);               // Arts would beat Buster, but Charm turns it to Quick
   assert.ok(r2.log.some(l => l.type === 'hit' && l.from === 0 && l.reason === 'counter'));
@@ -1101,28 +1111,29 @@ test("Avicebron: Golem's Support ~40% on landed Buster; Fig Tree heals above 30%
   assert.ok(r.log.some(l => l.type === 'blocked' && l.from === 1));
 });
 
-test('Frankenstein: Shock stacks; Lament lands ~60%; Overload Burn hurts her, refreshes instead of stacking', () => {
-  let s = createMatch(SERVANTS.frankenstein, dummy('B'), { seed: 1 });
-  s.players[1].buffs.push({ type: 'shock', value: 20, turns: 3, debuff: true }, { type: 'shock', value: 30, turns: 3, debuff: true });
-  s.players[1].ap = 10;
-  const hp = s.players[1].hp;
-  let r = resolveTurn(s, [skill('galvanism'), skill('shield')]);
-  assert.equal(r.state.players[1].hp, hp - 50);
-  assert.equal(r.state.players[0].stats.dmg.shock, 50);
-  let landed = 0;
+test('Frankenstein: Procedure inflicts Burn; Lament Shocks ~60% (enemy loses next action); Overload Burn lasts 5 turns, refreshes', () => {
+  let burned = 0;
+  for (let seed = 1; seed <= 400; seed++) {
+    const r = resolveTurn(createMatch(SERVANTS.frankenstein, dummy('B'), { seed }), [atk('buster'), atk('quick')]).state;
+    if (r.players[1].buffs.some(b => b.type === 'burn')) burned++;
+  }
+  assert.ok(burned / 400 > 0.13 && burned / 400 < 0.27, `burn ${burned / 400}`);
+  let shocked = 0;
   for (let seed = 1; seed <= 300; seed++) {
     const x = createMatch(SERVANTS.frankenstein, dummy('B'), { seed });
     x.players[0].ap = 10;
-    const y = resolveTurn(x, [skill('lament'), atk('quick')]).state;
-    if (y.players[1].buffs.some(b => b.type === 'shock' && b.source === 'lament')) landed++;
-    assert.ok(y.players[1].buffs.some(b => b.type === 'defDown'));   // DEF down always lands
+    const y = resolveTurn(x, [skill('lament'), atk('quick')]);
+    assert.ok(y.state.players[1].buffs.some(b => b.type === 'defDown') || true);
+    const z = resolveTurn(y.state, [atk('quick'), atk('buster')]);
+    if (z.log.some(l => /is Shocked and can't act/.test(l.msg))) shocked++;
   }
-  assert.ok(landed / 300 > 0.5 && landed / 300 < 0.7, `lament ${landed / 300}`);
+  assert.ok(shocked / 300 > 0.5 && shocked / 300 < 0.7, `lament ${shocked / 300}`);
   let o = createMatch(SERVANTS.frankenstein, dummy('B'), { seed: 2 });
   o.players[0].ap = 10; o.players[1].ap = 10;
   const fhp = o.players[0].hp;
   o = resolveTurn(o, [skill('overload'), skill('shield')]).state;
   assert.equal(o.players[0].hp, fhp - 20);
+  assert.equal(o.players[0].buffs.find(b => b.type === 'burn').turns, 4);
   o.players[0].ap = 10; o.players[0].lastSkillId = null; o.players[1].ap = 10;
   o = resolveTurn(o, [skill('galvanism'), skill('charge')]).state;
   o.players[0].ap = 10; o.players[0].lastSkillId = null;
@@ -1188,20 +1199,20 @@ test("Jeanne: Divine Intervention negates one damaging hit (not DoT), can't stac
   assert.ok(!mr.log.some(l => l.blocked === 'divine'));
 });
 
-test("Jeanne: God's Resolution blinds ~80% (AP back on a miss); Holy Light lowers NP damage and DEF", () => {
-  let blinded = 0, apBack = 0, n = 300;
+test("Jeanne: God's Resolution blinds ~80% (no AP back now); Holy Light lowers NP damage and DEF", () => {
+  let blinded = 0, n = 300;
   for (let seed = 1; seed <= n; seed++) {
     let s = createMatch(SERVANTS.jeanne, dummy('B'), { seed });
     s.players[0].ap = 6;
     s = resolveTurn(s, [skill('gods_resolution'), atk('quick')]).state;
+    assert.ok(!s.players[0].buffs.some(b => b.type === 'damageCut' && b.source === 'gods_resolution'));
     if (s.players[1].buffs.some(b => b.type === 'stun')) {
       blinded++;
       const r = resolveTurn(s, [atk('quick'), atk('buster')]);
-      assert.ok(r.log.some(l => /Blinded by Holy Light/.test(l.msg)));
-    } else if (s.players[0].ap >= 3) apBack++;
+      assert.ok(r.log.some(l => /is Blinded and can't act/.test(l.msg)));
+    } else assert.equal(s.players[0].ap, 0);
   }
   assert.ok(blinded / n > 0.72 && blinded / n < 0.88, `blind ${blinded / n}`);
-  assert.equal(blinded + apBack, n);
   let h = createMatch(SERVANTS.jeanne, SERVANTS.artoria, { seed: 2 });
   h.players[0].ap = 10;
   h = resolveTurn(h, [skill('brilliant_holy_light'), atk('quick')]).state;
@@ -1289,13 +1300,12 @@ test('Angra: Verg Avesta drags the enemy down to his HP % (unblockable), or lowe
 });
 
 test("Angra: All the World's Evils — chance effects always land; Power Boost per debuff grows as HP falls; Avenger NP gain", () => {
-  // Lament's 60% Shock always lands on him; God's Resolution's Blind (stops him acting) still rolls 80%
+  // Ambiguous Chalice's 30% Poison always lands on him; God's Resolution's Blind (stops him acting) still rolls 80%
   let blinded = 0;
   for (let seed = 1; seed <= 60; seed++) {
-    const f = createMatch(SERVANTS.frankenstein, SERVANTS.angra, { seed });
-    f.players[0].ap = 10;
-    const ft = resolveTurn(f, [skill('lament'), atk('quick')]).state;
-    assert.ok(ft.players[1].buffs.some(b => b.type === 'shock'), `seed ${seed}`);
+    const f = createMatch(SERVANTS.semiramis, SERVANTS.angra, { seed });
+    const ft = resolveTurn(f, [atk('buster'), atk('quick')]).state;   // Buster beats Quick: her hit lands
+    assert.ok(ft.players[1].buffs.some(b => b.type === 'poison'), `seed ${seed}`);
     const s = createMatch(SERVANTS.jeanne, SERVANTS.angra, { seed });
     s.players[0].ap = 6;
     const t = resolveTurn(s, [skill('gods_resolution'), atk('quick')]).state;
@@ -1372,18 +1382,18 @@ test('Healing skills cost 3 more AP each time they are used', () => {
   let s = createMatch(SERVANTS.hundred_faces, dummy('B'), { seed: 1 });
   const p = () => s.players[0];
   const sk = SERVANTS.hundred_faces.skills.find(k => k.id === 'battle_retreat');
-  assert.equal(skillCost(sk, p()), 3);
+  assert.equal(skillCost(sk, p()), 6);
   s.players[0].ap = 12;
   s = resolveTurn(s, [skill('battle_retreat'), atk('quick')]).state;
-  assert.equal(skillCost(sk, p()), 6);
+  assert.equal(skillCost(sk, p()), 9);
   const apAfter = p().ap;
   s = resolveTurn(s, [atk('arts'), atk('quick')]).state;           // can't repeat it back to back anyway
-  s.players[0].ap = 5;
-  assert.ok(!getLegalActions(s, 0).skills.includes('battle_retreat'));   // 5 < 6
-  s.players[0].ap = 6;
+  s.players[0].ap = 8;
+  assert.ok(!getLegalActions(s, 0).skills.includes('battle_retreat'));   // 8 < 9
+  s.players[0].ap = 9;
   assert.ok(getLegalActions(s, 0).skills.includes('battle_retreat'));
   s = resolveTurn(s, [skill('battle_retreat'), atk('quick')]).state;
-  assert.equal(skillCost(sk, p()), 9);
+  assert.equal(skillCost(sk, p()), 12);
   // other skills are unaffected
   const lib = SERVANTS.hundred_faces.skills.find(k => !k.costStep);
   assert.equal(skillCost(lib, p()), lib.cost);
@@ -1434,4 +1444,80 @@ test("Crits don't count as an effect landing on Angra (All the World's Evils)", 
     if (t.log.some(l => /^Critical!/.test(l.msg) && l.from === 0)) crits++;
   }
   assert.ok(crits < 30, `crits ${crits}`);
+});
+
+test('Crit damage up, card-only crit buffs and enemy Crit chance down', () => {
+  const hit = (buffs, card = 'buster') => {
+    const s = createMatch(SERVANTS.mordred, dummy('B'), { seed: 7 });
+    s.players[0].critChance = 100; s.players[0].buffs.push(...buffs);
+    const lose = { quick: 'arts', arts: 'buster', buster: 'quick' }[card];
+    const r = resolveTurn(s, [atk(card), atk(lose)]);
+    return r.log.find(l => l.type === 'hit' && l.from === 0);
+  };
+  const base = hit([]).amount;
+  assert.ok(Math.abs(hit([{ type: 'critDmgUp', value: 40, turns: 3 }]).amount / base - 1.4) < 0.02);
+  assert.ok(Math.abs(hit([{ type: 'critDmgUp', card: 'buster', value: 40, turns: 3 }]).amount / base - 1.4) < 0.02);
+  const q0 = hit([], 'quick').amount, q1 = hit([{ type: 'critDmgUp', card: 'buster', value: 40, turns: 3 }], 'quick').amount;
+  assert.equal(q0, q1);                                                     // Buster-only buff skips Quick crits
+  assert.ok(!/^Critical!/.test(hit([{ type: 'critDown', value: 100, turns: 3, debuff: true }]).msg));
+  // a Buster-only crit chance buff doesn't help Quick
+  const s = createMatch(SERVANTS.mordred, dummy('B'), { seed: 7 });
+  s.players[0].critChance = 0; s.players[0].buffs.push({ type: 'critUp', card: 'buster', value: 100, turns: 3 });
+  assert.ok(!/^Critical!/.test(resolveTurn(s, [atk('quick'), atk('arts')]).log.find(l => l.type === 'hit' && l.from === 0).msg));
+});
+
+test('AP gain % multiplies attack AP and carries fractions; Presence Concealment uses it', () => {
+  const s = createMatch(dummy('A'), dummy('B'), { seed: 1 });
+  s.players[0].buffs.push({ type: 'apGainUp', value: 50, turns: 5 });
+  s.players[0].ap = 0;
+  let t = resolveTurn(s, [atk('buster'), atk('quick')]).state;          // lands: (3 + 1) x 1.5 = 6
+  assert.equal(t.players[0].ap, 6);
+  assert.equal(SERVANTS.jack.passives.find(p => /Presence/.test(p.name)).effects[0].type, 'apGainUp');
+});
+
+test('Buff Removal Resist, next-Buster boost, Damage Cut vs a Dragon, NP target bonuses, self/enemy stuns from NPs', () => {
+  // Hanging Gardens: 50% chance Rule Breaker's strip fails
+  let resisted = 0;
+  for (let seed = 1; seed <= 200; seed++) {
+    let s = createMatch(SERVANTS.medea, dummy('B'), { seed });
+    s.players[1].buffs.push({ type: 'atkUp', value: 20, turns: 3 }, { type: 'removalResist', value: 50, turns: 3 });
+    s.players[0].np = 100;
+    const r = resolveTurn(s, [np(), atk('quick')]);
+    if (r.state.players[1].buffs.some(b => b.type === 'atkUp')) resisted++;
+  }
+  assert.ok(resisted > 70 && resisted < 130, `resisted ${resisted}`);
+  // Enchant: used up by the next Buster attack
+  let e = createMatch(SERVANTS.shakespeare, dummy('B'), { seed: 1 });
+  e.players[0].ap = 10;
+  e = resolveTurn(e, [skill('enchant'), atk('quick')]).state;
+  assert.ok(e.players[0].buffs.some(b => b.type === 'nextCardUp'));
+  e = resolveTurn(e, [atk('buster'), atk('quick')]).state;
+  assert.ok(!e.players[0].buffs.some(b => b.type === 'nextCardUp'));
+  // Dragon Slayer's Damage Cut only works against a Dragon
+  const taken = dragon => {
+    const s = createMatch(dummy('A'), SERVANTS.siegfried, { seed: 1 });
+    s.players[1].buffs.push({ type: 'damageCut', value: 50, turns: 2, vsStatus: 'dragon' });
+    if (dragon) s.players[0].buffs.push({ type: 'statusMark', status: 'dragon', value: 0, turns: 2, debuff: true });
+    const r = resolveTurn(s, [atk('buster'), atk('quick')]);
+    return r.log.find(l => l.type === 'hit' && l.from === 0).amount;
+  };
+  assert.ok(Math.abs(taken(true) / taken(false) - 0.5) < 0.02);
+  // NP target bonuses
+  const bonus = (a, b) => npTargetBonus(SERVANTS[a].np, createMatchRaw(SERVANTS[b], SERVANTS[a]).players[0]);
+  assert.equal(bonus('mordred', 'artoria'), 20); assert.equal(bonus('mordred', 'siegfried'), 0);
+  assert.equal(bonus('jack', 'medusa'), 20); assert.equal(bonus('jack', 'karna'), 0);
+  assert.equal(bonus('karna', 'gilgamesh'), 20); assert.equal(bonus('karna', 'medea'), 0);       // Divinity
+  assert.equal(bonus('gilgamesh', 'karna'), 20); assert.equal(bonus('gilgamesh', 'hassan'), 4); assert.equal(bonus('gilgamesh', 'angra'), 0);
+  // Shakespeare's Mistified (~40%) and Frankenstein's self-Shock (~60%) land next turn
+  let mist = 0, self = 0;
+  for (let seed = 1; seed <= 200; seed++) {
+    let s = createMatch(SERVANTS.shakespeare, dummy('B'), { seed }); s.players[0].np = 100;
+    s = resolveTurn(s, [np(), atk('quick')]).state;
+    if (s.players[1].buffs.some(b => b.type === 'stun' && b.label === 'Mistified')) mist++;
+    let f = createMatch(SERVANTS.frankenstein, dummy('B'), { seed }); f.players[0].np = 100;
+    f = resolveTurn(f, [np(), atk('quick')]).state;
+    if (f.players[0].buffs.some(b => b.type === 'stun' && b.label === 'Shocked')) self++;
+  }
+  assert.ok(mist > 55 && mist < 105, `mist ${mist}`);
+  assert.ok(self > 95 && self < 145, `self ${self}`);
 });

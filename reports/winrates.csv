@@ -1,32 +1,32 @@
 servant,class,score_vs_field_pct,overall_win_pct,nps_per_match,hp,atk
-Artoria Pendragon,Saber,50.8,48.4,1.94,1285,123
-Heracles,Berserker,49.9,47.4,1.40,923,122
-Medea,Caster,49.3,47.2,2.51,1246,118
-Sasaki Kojirou,Assassin,50.8,47.9,1.72,1201,115
-EMIYA,Archer,50.0,47.7,1.63,1201,121
-Cú Chulainn,Lancer,50.2,48.1,1.90,1027,117
-Medusa,Rider,50.2,47.4,1.48,1215,117
-Hassan of the Cursed Arm,Assassin,49.7,47.0,1.74,1211,116
-Gilgamesh,Archer,57.1,54.6,1.63,1285,124
-Iskandar,Rider,51.2,48.6,1.49,1240,123
-Hassan of the Hundred Faces,Assassin,50.8,48.7,2.09,1261,116
-Lancelot,Berserker,49.8,47.0,1.63,1268,122
-Gilles de Rais,Caster,49.9,47.3,1.87,1223,116
-Diarmuid Ua Duibhne,Lancer,50.2,47.5,1.95,1249,117
-Mordred,Saber,49.9,47.4,2.13,1281,123
-Siegfried,Saber,50.3,47.9,1.77,1311,119
-Atalanta,Archer,50.9,48.5,1.50,1253,120
-Chiron,Archer,51.1,48.6,1.59,1218,120
-Vlad III,Lancer,49.8,47.5,1.92,961,123
-Karna,Lancer,50.2,47.6,1.69,1261,123
-Achilles,Rider,50.8,46.5,1.26,897,123
-Astolfo,Rider,50.0,47.7,1.23,1200,120
-Jack the Ripper,Assassin,49.9,47.8,2.14,1281,123
-Semiramis,Assassin,50.5,47.8,1.72,1255,123
-William Shakespeare,Caster,50.1,47.6,2.56,1219,115
-Avicebron,Caster,49.2,46.8,2.25,1306,116
-Frankenstein,Berserker,50.4,47.3,1.62,1271,121
-Spartacus,Berserker,49.5,49.4,2.50,1050,113
-Jeanne d'Arc,Ruler,49.8,47.8,2.09,949,121
-Amakusa Shirou,Ruler,50.9,48.6,1.70,1238,122
-Angra Mainyu,Avenger,36.9,36.4,1.12,1205,200
+Artoria Pendragon,Saber,50.4,48.2,1.83,1169,123
+Heracles,Berserker,50.4,48.0,1.44,947,122
+Medea,Caster,50.3,48.1,2.58,1269,118
+Sasaki Kojirou,Assassin,50.2,47.6,1.74,1223,115
+EMIYA,Archer,50.6,48.6,1.47,1261,121
+Cú Chulainn,Lancer,50.3,48.3,1.92,1024,117
+Medusa,Rider,49.7,46.9,1.47,1169,117
+Hassan of the Cursed Arm,Assassin,49.6,47.3,1.77,1320,116
+Gilgamesh,Archer,55.9,53.2,1.43,1269,124
+Iskandar,Rider,50.1,47.6,1.45,1233,123
+Hassan of the Hundred Faces,Assassin,49.6,47.7,2.07,1259,116
+Lancelot,Berserker,49.9,47.6,1.61,1342,122
+Gilles de Rais,Caster,50.5,47.9,1.77,1143,116
+Diarmuid Ua Duibhne,Lancer,50.2,47.8,1.88,1266,117
+Mordred,Saber,50.2,47.8,2.06,1257,123
+Siegfried,Saber,50.7,48.3,1.83,1335,119
+Atalanta,Archer,50.3,48.0,1.49,1238,120
+Chiron,Archer,50.2,47.9,1.64,1228,120
+Vlad III,Lancer,50.1,47.9,1.93,965,123
+Karna,Lancer,49.9,47.2,1.53,1251,123
+Achilles,Rider,50.1,45.8,1.25,890,123
+Astolfo,Rider,50.3,48.0,1.15,1211,120
+Jack the Ripper,Assassin,50.3,48.2,2.00,1249,123
+Semiramis,Assassin,50.3,47.7,1.69,1274,123
+William Shakespeare,Caster,50.3,47.9,2.42,1097,115
+Avicebron,Caster,50.8,48.6,2.16,1333,116
+Frankenstein,Berserker,50.1,47.8,1.90,1463,121
+Spartacus,Berserker,50.7,50.6,2.45,995,113
+Jeanne d'Arc,Ruler,50.3,48.5,2.16,1059,121
+Amakusa Shirou,Ruler,50.3,47.9,1.67,1212,122
+Angra Mainyu,Avenger,37.2,36.8,1.05,1158,200

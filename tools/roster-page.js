@@ -17,7 +17,7 @@ const npGain = (v, ref) => (v ? Math.sqrt(v / ref) : 1).toFixed(2);
 
 function maxAp(s) {
   const bonus = (s.passives ?? []).flatMap(p => p.effects).filter(e => e.type === 'maxApUp').reduce((a, e) => a + e.value, 0);
-  return (s.maxAp ?? T.defaultMaxAp) + bonus;
+  return T.defaultMaxAp + (s.maxApBonus ?? 0) + bonus;
 }
 const favoredAll = s => (s.passives ?? []).some(p => p.effects.some(e => e.type === 'affinityAll'));
 

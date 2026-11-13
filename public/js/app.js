@@ -475,7 +475,7 @@ function kitHtml(s) {
       <div class="kit-stats">
         <div><label>HP</label><b>${hp}</b></div>
         <div><label>ATK</label><b>${atk}</b></div>
-        <div><label>Max AP</label><b>${s.maxAp ?? T.defaultMaxAp}</b></div>
+        <div><label>Max AP</label><b>${T.defaultMaxAp + (s.maxApBonus ?? 0) + passives.flatMap(p => p.effects).filter(e => e.type === 'maxApUp').reduce((a, e) => a + e.value, 0)}</b></div>
         <div><label><span class="term" tabindex="0" data-tip-title="Critical" data-tip="${CRIT_TIP}">Crit</span></label><b>${crit}%</b></div>
         <div><label>Favored</label>${favoredAll(s) ? '<b class="card-chip all">All</b>' : `<b class="card-chip ${s.favoredCard}">${CARD_LABEL[s.favoredCard] ?? '—'}</b>`}</div>
       </div>

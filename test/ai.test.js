@@ -21,6 +21,7 @@ test('CPU always picks a legal action, for every servant pairing, through full m
 
 test('CPU reads a predictable opponent', () => {
   let s = createMatch(SERVANTS.artoria, SERVANTS.emiya);
+  s.players[1].ap = 0;   // card read only: no skills affordable
   const mine = ['quick', 'arts', 'buster'];
   for (let k = 0; k < 6; k++) s.history.push({ turn: k + 1, actions: [{ main: { type: 'attack', card: 'buster' } }, { main: { type: 'attack', card: mine[k % 3] } }], log: [] });
   const pred = predictOpponent(s, 0);

@@ -61,9 +61,12 @@ function createPlayer(servant, { blockUniques = false } = {}) {
   const p = {
     servantId: servant.id,
     name: servant.name,
+    pronouns: servant.pronouns,
+    rarity: servant.rarity,
+    divinity: (servant.passives ?? []).some(pa => /^Divinity\b/.test(pa.name)),
     hp, maxHp: hp, atk,
     ap: T.startAp,
-    maxAp: servant.maxAp ?? T.defaultMaxAp,
+    maxAp: T.defaultMaxAp + (servant.maxApBonus ?? 0),
     critChance: deriveStats(servant).crit,
     np: 0,
     npGainAtk: servant.npGain ?? (servant.fgoNpAtk ? Math.sqrt(servant.fgoNpAtk / T.refFgoNpAtk) : 1),
@@ -119,6 +122,7 @@ export function createMatch(servantA, servantB, { seed } = {}) {
   const players = [createPlayer(servantA, { blockUniques: block[0] }), createPlayer(servantB, { blockUniques: block[1] })];
   if (!block[0]) applyCopiedUniques(players[0], servantA, servantB);
   if (!block[1]) applyCopiedUniques(players[1], servantB, servantA);
+  for (const p of players) p.seals += sumBuff(p, 'extraSeal');   // Hecate's Staff: a 4th Command Seal
   const state = {
     turn: 1,
     over: false,
@@ -180,6 +184,10 @@ export function npOf(servant, player) {
   return { ...np, ...mode, name: np.name, modeName: mode.label };
 }
 
+// Buffs that may name a card: count those for this card plus those with no card (crit buffs).
+const sumCardOrAll = (p, type, card) => p.buffs.filter(b => b.type === type && (!b.card || b.card === card)).reduce((s, b) => s + b.value, 0);
+// Per-turn context for effect code that needs the match RNG or the log (Buff Removal Resist).
+let CTX = null;
 const sumBuff = (p, type, card) =>
   p.buffs.filter(b => b.type === type && (card === undefined || b.card === card))
     .reduce((s, b) => s + b.value, 0);
@@ -236,12 +244,12 @@ export function validateAction(state, idx, action) {
 
 // ---------- effects ----------
 
-const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', 'curse', 'debuffResistDown', 'npSeal', 'taunt', 'confusion', 'stun', 'poison', 'nullifyBoosts', 'madness', 'charm', 'shock', 'burn', 'npDown'];
+const DEBUFFS = ['atkDown', 'defDown', 'apRecoveryDown', 'cardVuln', 'terror', 'curse', 'debuffResistDown', 'npSeal', 'taunt', 'confusion', 'stun', 'poison', 'nullifyBoosts', 'madness', 'charm', 'shock', 'burn', 'npDown', 'critDown'];
 
 // Lasting positive effects a servant puts on itself (what Breaker Gorgon can make fail).
 const BUFF_TYPES = new Set(['ignoreDamageCut', 'buffSuccessUp', 'apRecoveryUp', 'atkUp', 'cardUp', 'npUp', 'damageCut', 'evade', 'invincible', 'npGainUp',
   'cardNpGainUp', 'debuffResist', 'guts', 'apRegen', 'busterConvert', 'flatDamage', 'sureHit', 'pierceEvade',
-  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight', 'npOnlyKo', 'debuffOnHit', 'apChance', 'rpsOverride', 'randomWork', 'starCrossed', 'lastStand', 'hpRegen', 'divineIntervention', 'battleChoice', 'buffDurationUp', 'debuffDurationUp', 'npRegen', 'npGainDefUp', 'worldsEvils', 'critUp']);
+  'nextHitUp', 'bonusVsStatus', 'debuffPotency', 'debuffUp', 'extraHitChance', 'maxApUp', 'dmgVsStatus', 'statusOnHit', 'doubleShot', 'foresight', 'npOnlyKo', 'debuffOnHit', 'apChance', 'rpsOverride', 'randomWork', 'starCrossed', 'lastStand', 'hpRegen', 'divineIntervention', 'battleChoice', 'buffDurationUp', 'debuffDurationUp', 'npRegen', 'npGainDefUp', 'worldsEvils', 'critUp', 'critDmgUp', 'apGainUp', 'apDelayed', 'removalResist', 'nextCardUp', 'extraSeal']);
 const hasStatus = (p, status) => p.buffs.some(b => b.status === status);
 // All the World's Evils (Angra Mainyu): every chance-based effect on him lands (not instant kill, Breaker Gorgon,
 // Terror, or effects that stop him acting: Blind, Trap and Terror roll normally)
@@ -307,6 +315,7 @@ function applyEffectRaw(target, e, source, user) {
       target.hp = Math.max(1, target.hp - Math.round(target.maxHp * e.value / 100));
       return;
     case 'removeDefBuffs': // strips temporary Evade, Invincible and damage cut (Antares Snipe)
+      if (resistsRemoval(target)) return;
       target.buffs = target.buffs.filter(b => b.turns === null || !['evade', 'invincible', 'damageCut'].includes(b.type));
       return;
     case 'setNpMode':
@@ -316,6 +325,7 @@ function applyEffectRaw(target, e, source, user) {
       target.buffs = target.buffs.filter(b => !b.debuff);
       return;
     case 'removeBuffs': // strips temporary, non-debuff buffs (passives stay)
+      if (target !== user && resistsRemoval(target)) return;
       target.buffs = target.buffs.filter(b => b.turns === null || b.debuff);
       return;
     default: { // duration buff/debuff: atkUp, cardUp, npUp, damageCut, evade, invincible,
@@ -359,6 +369,8 @@ function applyEffectRaw(target, e, source, user) {
         deceive: e.deceive,
         amount: e.amount,
         scale: e.scale,
+        label: e.label,
+        vsStatus: e.vsStatus,
         debuff: DEBUFFS.includes(e.type),
         source,
       });
@@ -385,7 +397,13 @@ function screenBuffs(state, user, enemy, effects, say, label = 'Chance buffs') {
   const success = sumBuff(user, 'buffSuccessUp');
   const fail = Math.max(0, sumBuff(enemy, 'buffFailChance') - success);
   return effects.filter(e => {
-    if (e.target === 'enemy') return true;
+    if (e.target === 'enemy') {
+      if (e.chance == null) return true;
+      const ok = (!['stun', 'terror'].includes(e.type) && evilsLand(enemy)) || roll(state) * 100 < e.chance;
+      proc(user, `${label} (${e.label ?? e.type} landed)`, ok);
+      if (!ok) say(`${label}: the ${e.label ?? e.type} misses.`, { type: 'buffFail' });
+      return ok;
+    }
     if (e.chance != null) {
       const ok = roll(state) * 100 < Math.min(100, e.chance + success);
       proc(user, `${label} (buffs landed)`, ok);
@@ -404,9 +422,15 @@ function screenBuffs(state, user, enemy, effects, say, label = 'Chance buffs') {
 }
 
 // AP from attacking, reduced by AP-recovery debuffs (Petrify, Bellerophon).
-function gainAttackAp(p, amount) {
-  const cut = Math.round(sumBuff(p, 'apRecoveryDown')) - Math.round(sumBuff(p, 'apRecoveryUp'));
-  p.ap = Math.min(p.maxAp, p.ap + Math.max(0, amount - cut));
+// AP from attacking. apRecoveryUp/Down add or take flat AP; apGainUp (Presence Concealment, skills)
+// multiplies it, with the fraction carried over to the next gain so small % still add up.
+function gainAttackAp(p, amount, { flat = true } = {}) {
+  const cut = flat ? Math.round(sumBuff(p, 'apRecoveryDown')) - Math.round(sumBuff(p, 'apRecoveryUp')) : 0;
+  const base = Math.max(0, amount - cut);
+  const total = base * (1 + sumBuff(p, 'apGainUp') / 100) + (p.apFrac ?? 0);
+  const whole = Math.floor(total + 1e-9);
+  p.apFrac = total - whole;
+  p.ap = Math.min(p.maxAp, p.ap + whole);
 }
 
 function conditionMet(user, e) {
@@ -416,6 +440,15 @@ function conditionMet(user, e) {
   if (e.condition === 'hpBelow') return (100 * user.hp) / user.maxHp < e.threshold;
   if (e.condition === 'hpAtLeast') return (100 * user.hp) / user.maxHp >= e.threshold;
   throw new Error(`Unknown condition: ${e.condition}`);
+}
+
+// Buff Removal Resist (Hanging Gardens): a chance that an enemy's buff removal fails outright
+function resistsRemoval(target) {
+  const r = sumBuff(target, 'removalResist');
+  if (!r || !CTX) return false;
+  const ok = roll(CTX.state) * 100 < r;
+  if (ok) CTX.say(`${target.name} resists the buff removal!`, { type: 'info' });
+  return ok;
 }
 
 function applyEffects(user, enemy, effects, source) {
@@ -439,7 +472,9 @@ function applyEffects(user, enemy, effects, source) {
 // Connect's next-hit bonus). Damage % stacks across buffs. Side effects don't:
 // Arts gets a flat +artsEffectNpGain% NP gain on its hits and Quick gets
 // +quickEffectAp AP when used, once, no matter how many buffs are active.
-const effectiveness = (p, card) => (card ? sumBuff(p, 'cardUp', card) : 0);
+const effectiveness = (p, card) => (card ? sumBuff(p, 'cardUp', card) + sumBuff(p, 'nextCardUp', card) : 0);
+// Enchant: the next attack or NP of that card uses the boost up
+const consumeNextCard = (p, card) => { p.buffs = p.buffs.filter(b => !(b.type === 'nextCardUp' && b.card === card)); };
 
 // Double Summon (Semiramis): a servant under nullifyBoosts deals base damage. Its ATK up, card
 // effectiveness, NP damage up, flat damage, next-hit and vs-status boosts are all ignored
@@ -454,10 +489,11 @@ function atkMultiplier(p, card, extraPct = 0) {
 
 const hasAffinity = (p, card) => p.favoredCard === card || hasBuff(p, 'affinityAll');
 
-function defend(defender, raw, { isNp, ignoreDefense, sureHit, ignoreCut = false, card }) {
+function defend(defender, raw, { isNp, ignoreDefense, sureHit, ignoreCut = false, card, attacker }) {
   if (hasBuff(defender, 'invincible')) return { amount: 0, blocked: 'invincible' };
   if (!isNp && !ignoreDefense && !sureHit && hasBuff(defender, 'evade')) return { amount: 0, blocked: 'evade' };
-  const cut = ignoreDefense || ignoreCut ? 0 : Math.min(T.maxDamageCut, sumBuff(defender, 'damageCut'));
+  const cutSum = defender.buffs.filter(b => b.type === 'damageCut' && (!b.vsStatus || (attacker && hasStatus(attacker, b.vsStatus)))).reduce((a, b) => a + b.value, 0);
+  const cut = ignoreDefense || ignoreCut ? 0 : Math.min(T.maxDamageCut, cutSum);
   // cardVuln: takes more damage from one card type (attacks and NPs of that card)
   const vuln = 1 + (sumBuff(defender, 'defDown') + (card ? sumBuff(defender, 'cardVuln', card) : 0)) / 100;
   return { amount: Math.round(raw * vuln * (1 - cut / 100)), blocked: null };
@@ -480,22 +516,35 @@ function attackPacket(att, def, card, { counter, empowered, nextHit = 0, vsBonus
   const sureHit = att.buffs.some(b => b.type === 'sureHit' && (!b.card || b.card === card));
   const pierce = sureHit || att.buffs.some(b => b.type === 'pierceEvade' && (!b.card || b.card === card));
   // ignoreDamageCut (Iskandar): attacks and NPs go straight through damage cut; Evade still works
-  const out = defend(def, raw, { isNp: false, ignoreDefense: false, sureHit: pierce, ignoreCut: hasBuff(att, 'ignoreDamageCut'), card });
+  const out = defend(def, raw, { isNp: false, ignoreDefense: false, sureHit: pierce, ignoreCut: hasBuff(att, 'ignoreDamageCut'), card, attacker: att });
   return { ...out, sureHit, pierce };
 }
 
 // NPs use the same ATK modifiers as regular attacks: atkUp/atkDown, card effectiveness
 // (cardUp for the NP's card, incl. class passives), next-hit boosts, bonus vs status and flat damage.
+// Extra NP damage against some targets: { pronouns }, { divinity: true }, { id }, or a rarity table.
+export function npTargetBonus(np, def) {
+  let pct = 0;
+  for (const v of np.bonusVs ?? []) {
+    if (v.pronouns && def.pronouns === v.pronouns) pct += v.value;
+    if (v.divinity && def.divinity) pct += v.value;
+    if (v.id && def.servantId === v.id) pct += v.value;
+  }
+  if (np.rarityBonus) pct += np.rarityBonus[def.rarity] ?? 0;
+  return pct;
+}
+
 function npPacket(att, def, np, { empowered = false, nextHit = 0, vsBonus = 0 } = {}) {
   let mult = np.mult * (empowered ? 1 + T.seals.empowerBonus : 1);
   if (np.missingHpBonus) mult *= 1 + np.missingHpBonus * (1 - def.hp / def.maxHp);
   if (np.vsStatus && hasStatus(def, np.vsStatus.status)) mult *= 1 + np.vsStatus.value / 100; // Balmung vs Dragon
+  mult *= 1 + npTargetBonus(np, def) / 100;
   const b = boosted(att);
   const raw = att.atk * mult * atkMultiplier(att, np.card, nextHit)
     * (b ? (1 + vsBonus / 100) * (1 + vsStatusPct(att, def) / 100) : 1)
     * Math.max(0.1, 1 + ((b ? sumBuff(att, 'npUp') : 0) - sumBuff(att, 'npDown')) / 100)
     + (b ? sumBuff(att, 'flatDamage') : 0);
-  return defend(def, raw, { isNp: true, ignoreDefense: !!np.ignoreDefense, ignoreCut: !!np.ignoreCut || hasBuff(att, 'ignoreDamageCut'), card: np.card });
+  return defend(def, raw, { isNp: true, ignoreDefense: !!np.ignoreDefense, ignoreCut: !!np.ignoreCut || hasBuff(att, 'ignoreDamageCut'), card: np.card, attacker: att });
 }
 
 function gainNp(p, base, { defending = false, card, artsEffect = 0 } = {}) {
@@ -532,6 +581,7 @@ function resolveTurnInner(prev, actions, opts) {
   const S = state.servants;
   const log = [];
   const say = (msg, data = {}) => log.push({ msg, ...data });
+  CTX = { state, say };
   const mains = actions.map(a => a.main);
   const diSeen = [0, 0];
   // Divine Intervention: returns true if this damage instance is negated
@@ -585,7 +635,9 @@ function resolveTurnInner(prev, actions, opts) {
     proc(P[1 - i], `${sourceLabel(S[1 - i], stun.source)} (turns skipped)`, down);
     if (down) {
       mains[i] = { type: 'stunned' };
-      say(String(stun.source).startsWith('gods_resolution') ? `${P[i].name} is Blinded by Holy Light and can't act!` : `${P[i].name} is tripped up and loses this turn!`, { type: 'blocked', player: i, blocked: 'stun' });
+      if (stun.status) P[i].buffs.push({ type: 'statusMark', status: stun.status, value: 0, turns: 1, debuff: true, source: stun.source });
+      const lbl = stun.label ?? (String(stun.source).startsWith('gods_resolution') ? 'Blinded' : null);
+      say(lbl ? `${P[i].name} is ${lbl} and can't act!` : `${P[i].name} is tripped up and loses this turn!`, { type: 'blocked', player: i, blocked: 'stun' });
     } else say(`${P[i].name} ${verb(S[i], 'keeps', 'keep')} ${pro(S[i]).their} footing.`, { type: 'info', player: i });
   }
 
@@ -665,7 +717,7 @@ function resolveTurnInner(prev, actions, opts) {
       const ok = (!['stun', 'terror'].includes(e.type) && evilsLand(P[1 - i])) || roll(state) * 100 < e.chance;
       proc(P[i], `${skill.name} (${e.type[0].toUpperCase() + e.type.slice(1)} landed)`, ok);
       if (!ok) {
-        say(`${skill.name}: the ${e.type === 'stun' ? 'Holy Light' : e.type} misses.`, { type: 'buffFail', player: i });
+        say(`${skill.name}: the ${e.label ?? (e.type === 'stun' ? 'Holy Light' : e.type)} misses.`, { type: 'buffFail', player: i });
         if (e.onMiss) applyEffects(P[i], P[1 - i], e.onMiss, skill.id);   // God's Resolution: AP back on a miss
       }
       return ok;
@@ -709,6 +761,7 @@ function resolveTurnInner(prev, actions, opts) {
       // a buff-stripping pre-effect (Twin Arm, Rule Breaker) removed Divine Intervention before the hit
       divineStripped: !def.buffs.some(b => b.type === 'divineIntervention'),
       ...npPacket(att, def, nps[i], { empowered: P[i].empower, nextHit, vsBonus }) };
+    consumeNextCard(att, nps[i].card);
     // Verg Avesta: equalize HP percentages (worked out from HP before this turn's damage). If he's lower,
     // the enemy drops to his % and nothing can block it; if he's higher, he drops to theirs.
     if (nps[i].equalize) {
@@ -807,6 +860,7 @@ function resolveTurnInner(prev, actions, opts) {
     const vs = P[i].buffs.find(b => b.type === 'bonusVsStatus' && hasStatus(P[j], b.status));
     packets.push({ from: i, to: j, kind: 'attack', card, hitAs, reason, nextHit, vsBonus: vs ? vs.value : 0,
       ...attackPacket(P[i], P[j], hitAs, { counter, empowered, nextHit, vsBonus: vs ? vs.value : 0 }) });
+    consumeNextCard(P[i], hitAs);
   }
 
   // 5. Apply all damage simultaneously
@@ -854,10 +908,11 @@ function resolveTurnInner(prev, actions, opts) {
     // Critical hit: regular attacks only (never NPs or follow-ups). Rolled once the attack connects.
     // Base chance from star absorption, plus any Critical Chance buffs (capped at 100%).
     if (pk.kind === 'attack' && !pk.secondArrow && pk.amount > 0) {
-      const chance = Math.min(100, (att.critChance ?? 0) + (boosted(att) ? sumBuff(att, 'critUp') : 0));
+      const chance = Math.min(100, (att.critChance ?? 0) + (boosted(att) ? sumCardOrAll(att, 'critUp', pk.hitAs) : 0) - sumBuff(att, 'critDown'));
       if (chance > 0 && roll(state) * 100 < chance) {
         pk.crit = pk.hitAs;
-        pk.amount = Math.round(pk.amount * T.crit.mult[pk.hitAs]);
+        const dmgUp = boosted(att) ? sumCardOrAll(att, 'critDmgUp', pk.hitAs) : 0;
+        pk.amount = Math.round(pk.amount * T.crit.mult[pk.hitAs] * (1 + dmgUp / 100));
         att.stats.crits = (att.stats.crits ?? 0) + 1;
       }
     }
@@ -911,7 +966,7 @@ function resolveTurnInner(prev, actions, opts) {
         say(`${att.name}'s NP was drained this turn: the hit charges no NP.`, { type: 'info', player: pk.from });
       }
       const nextHitAp = pk.nextHit && pk.card === 'quick' ? 1 : 0;
-      att.ap = Math.min(att.maxAp, att.ap + T.apOnLand + nextHitAp + (pk.crit === 'quick' ? T.crit.quickAp : 0));
+      gainAttackAp(att, T.apOnLand + nextHitAp + (pk.crit === 'quick' ? T.crit.quickAp : 0), { flat: false });
       if (pk.crit === 'arts' && !drainedNp[pk.from]) gainNp(att, T.crit.artsNp, { card: 'arts' });
     }
     if (pk.nextHit) att.buffs = att.buffs.filter(b => b.type !== 'nextHitUp'); // consumed on a landed attack or NP
@@ -1017,6 +1072,11 @@ function resolveTurnInner(prev, actions, opts) {
   for (const p of P) {
     const regen = sumBuff(p, 'apRegen');
     if (regen) p.ap = Math.min(p.maxAp, p.ap + regen);
+    // Throwing/Retrieval: AP that arrives at the end of a later turn (fires on the buff's last turn)
+    for (const b of p.buffs.filter(b => b.type === 'apDelayed' && b.turns === 1)) {
+      p.ap = Math.min(p.maxAp, p.ap + b.value);
+      say(`${p.name} gains ${b.value} AP.`, { type: 'info', player: P.indexOf(p) });
+    }
     // Grail of Fiery Heavens: a little NP at the end of each turn
     const nr = sumBuff(p, 'npRegen');
     if (nr && p.hp > 0) p.np = Math.min(T.npMax, p.np + Math.round(nr));

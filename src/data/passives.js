@@ -19,8 +19,8 @@ const TABLES = {
     make: v => [{ type: 'cardUp', card: 'arts', value: v }], desc: v => `Arts +${v}%` },
   madness:          { name: 'Mad Enhancement', values: [15, 13, 12, 11, 10, 8, 6, 4, 3],
     make: v => [{ type: 'cardUp', card: 'buster', value: v }], desc: v => `Buster +${v}%` },
-  presenceConcealment: { name: 'Presence Concealment', values: [12, 11, 10, 9, 8, 6, 4, 2, 1],
-    make: v => [{ type: 'npGainUp', value: v }], desc: v => `NP gain +${v}%` },
+  presenceConcealment: { name: 'Presence Concealment', values: [24, 22, 20, 18, 16, 14, 12, 8, 4],
+    make: v => [{ type: 'apGainUp', value: v }], desc: v => `AP gain +${v}%` },
   // flat damage added to every hit (attacks and NPs), at game scale (~120 ATK)
   divinity:         { name: 'Divinity', values: [12, 11, 10, 9, 8, 6, 4, 2, 1],
     make: v => [{ type: 'flatDamage', value: v }], desc: v => `+${v} damage on every hit` },

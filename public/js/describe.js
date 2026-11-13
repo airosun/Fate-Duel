@@ -95,7 +95,14 @@ function describeEffectCore(e) {
     case 'cardVuln': return `${who}takes +${v}% ${c} damage${turnsText(e)}`;
     case 'mirrorAtkUp': return `Copies ${v}% of enemy ATK buffs`;
     case 'apRecoveryUp': return `+${v} AP from attacks${turnsText(e)}`;
-    case 'critUp': return `Critical chance +${v}% on regular attacks.`;
+    case 'critUp': return `Crit chance +${v}%${b.card ? ` on ${b.card[0].toUpperCase() + b.card.slice(1)} attacks` : ' on regular attacks'}.`;
+    case 'critDmgUp': return `Crit damage +${v}%${b.card ? ` on ${b.card[0].toUpperCase() + b.card.slice(1)} crits` : ''}: crits hit that much harder.`;
+    case 'critDown': return `Crit chance −${v}%: regular attacks crit less often.`;
+    case 'apGainUp': return `AP gain +${v}%: more AP from each attack (fractions carry over).`;
+    case 'apDelayed': return `Gains ${v} AP at the end of the turn this runs out.`;
+    case 'removalResist': return `Buff Removal Resist ${v}%: a ${v}% chance an enemy's buff removal fails.`;
+    case 'nextCardUp': return `${b.card ? b.card[0].toUpperCase() + b.card.slice(1) : 'Card'} +${v}% on the next ${b.card ?? ''} attack or NP, then it's used up.`;
+    case 'extraSeal': return `An extra Command Seal at the start of the battle.`;
     case 'npGainDefUp': return `Gains ${v}% more NP when hit.`;
     case 'worldsEvils': {
       const hpPct = owner?.hp != null ? owner.hp / owner.maxHp : 1;
@@ -143,7 +150,7 @@ const BUFF_LABEL = {
   nextHitUp: 'Next Hit↑', affinityAll: 'All Cards Favored', apRecoveryDown: 'AP Recovery↓',
   bonusVsStatus: 'vs Petrified↑', buffFailChance: 'Breaker Gorgon', copyEnemyUnique: 'Trace On',
   instantKillChance: 'Instant Kill', neutralizeEnemyUnique: 'Ea', ignoreDamageCut: 'Pierce DEF', terror: 'Terror', curse: 'Curse', divineIntervention: 'Divine Intervention', npDown: 'NP Dmg↓', buffDurationUp: 'Buffs +1T', debuffDurationUp: 'Debuffs +1T', npRegen: 'NP Regen', shock: 'Shock', burn: 'Burn', lastStand: 'Unyielding Will', lastStandActive: 'Blaze of Glory', hpRegen: 'HP Regen', madness: 'Madness', charm: 'Charm', starCrossed: 'Star-Crossed', rpsOverride: 'Misty Night', poison: 'Poison', nullifyBoosts: 'No Boosts', npOnlyKo: 'Kosmos', taunt: 'Taunted', confusion: 'Confusion', stun: 'Trap', debuffOnHit: 'Black Luna', apChance: 'AP Chance', npSeal: 'NP Seal', debuffResistDown: 'Debuff Res↓', doubleShot: 'Golden Apple', foresight: 'Foresight', maxApUp: 'Max AP↑', statusOnHit: "Fafnir's Blood", dmgVsStatus: 'vs Dragon↑', extraHitChance: 'Sea Demons', missChance: 'Decoys', buffSuccessUp: 'Buff Success↑', cardVuln: '↓ Resist',
-  mirrorAtkUp: 'Arms Mastery', apRecoveryUp: 'AP Recovery↑', npGainDefUp: 'NP Gain (hit)↑', critUp: 'Crit Chance↑', worldsEvils: 'Power Boost',
+  mirrorAtkUp: 'Arms Mastery', apRecoveryUp: 'AP Recovery↑', npGainDefUp: 'NP Gain (hit)↑', critUp: 'Crit Chance↑', worldsEvils: 'Power Boost', critDmgUp: 'Crit Dmg↑', critDown: 'Crit Chance↓', apGainUp: 'AP Gain↑', apDelayed: 'AP Later', removalResist: 'Removal Resist', nextCardUp: 'Next Buster↑', extraSeal: 'Extra Seal',
 };
 
 // Plain-language explanation of what a buff, debuff or passive does.
@@ -202,7 +209,8 @@ export function explainBuff(b, owner) {
     case 'npOnlyKo': return `Only a Noble Phantasm can down ${P.them}: anything else leaves ${P.them} at 1 HP. A landed Sure Hit attack strikes the heel and removes this.`;
     case 'taunt': return `Taunted: ${P.they} can only attack (no skills, no Noble Phantasm).`;
     case 'confusion': return `Confused: ${v}% chance a skill fizzles (AP is still spent). Ends once it triggers.`;
-    case 'stun': return String(b.source).startsWith('gods_resolution') ? `Blinded by Holy Light: ${v >= 100 ? 'loses' : `${v}% chance to lose`} the whole next action (Magic Resistance can shrink the chance).` : `Trapped: ${v}% chance to lose the whole next action. Rolled once, when that turn resolves.`;
+    case 'stun': if (b.label) return `${b.label}: ${v >= 100 ? 'loses' : `${v}% chance to lose`} the whole next action.`;
+      return String(b.source).startsWith('gods_resolution') ? `Blinded by Holy Light: ${v >= 100 ? 'loses' : `${v}% chance to lose`} the whole next action (Magic Resistance can shrink the chance).` : `Trapped: ${v}% chance to lose the whole next action. Rolled once, when that turn resolves.`;
     case 'debuffOnHit': return `A landed regular attack has a ${v}% chance to inflict ${b.inflict?.type === 'terror' ? `Terror (${b.inflict.value}%)` : b.inflict?.type === 'poison' ? `Poison (${b.inflict.value} damage per turn, stacking)` : cap(b.inflict?.type)} on the enemy.`;
     case 'apChance': return `At the end of each turn, a ${v}% chance to gain ${b.amount ?? 2} AP.`;
     case 'npSeal': return `NP Seal: if ${P.they} ${P.plural ? 'use' : 'uses'} ${P.their} Noble Phantasm this turn, it fizzles and the gauge drops ${v}%.`;
@@ -213,7 +221,8 @@ export function explainBuff(b, owner) {
     case 'charm': return `Charmed: next turn, if both servants attack, ${P.their} card becomes the one that loses to the charmer's.`;
     case 'starCrossed': return `Romeo and Juliet: when either servant falls, a ${v}% chance the other falls too and the battle ends in a draw.`;
     case 'maxApUp': return `Max AP +${v}. AP above the normal maximum is lost when this ends.`;
-    case 'statusMark': return b.status === 'dragon' ? 'Dragon: no effect on its own, but Siegfried\'s Dragon Slayer and Balmung deal extra damage to it.' : `Marked: ${b.status}.`;
+    case 'statusMark': if (b.status === 'petrified') return 'Petrified: turned to stone this turn.';
+      return b.status === 'dragon' ? 'Dragon: no effect on its own, but Siegfried\'s Dragon Slayer and Balmung deal extra damage to it.' : `Marked: ${b.status}.`;
     case 'statusOnHit': return `A landed regular attack has a ${v}% chance to mark the enemy as ${b.status[0].toUpperCase() + b.status.slice(1)} for the next turn.`;
     case 'dmgVsStatus': return `Attacks and Noble Phantasms deal ${v}% more damage to a ${b.status[0].toUpperCase() + b.status.slice(1)} enemy.`;
     case 'terror': return `Terrified: ${v}% chance to not follow through on a regular attack. Ends once it triggers.`;
@@ -249,6 +258,8 @@ export function buffChip(b, owner) {
   if (b.type === 'extraHitChance') label = b.source === "Golem's Support" ? 'Golem' : 'Sea Demons';  // value is appended below
   if (b.type === 'foresight') label = `Foresight ×${b.charges ?? 0}`;
   if (b.type === 'stun' && String(b.source).startsWith('gods_resolution')) label = 'Blinded';
+  if (b.type === 'stun' && b.label) label = b.label;
+  if (b.type === 'statusMark' && b.status === 'petrified') label = 'Petrified';
   if (b.type === 'doubleShot') label = '2nd Arrow';
   if (b.type === 'statusMark') label = b.status[0].toUpperCase() + b.status.slice(1);
   if (b.type === 'curse') label = 'Curse';
