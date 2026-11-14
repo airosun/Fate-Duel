@@ -56,13 +56,13 @@ export const SERVANTS = {
   heracles: {
     id: 'heracles', name: 'Heracles', class: 'Berserker', pronouns: 'he/him', rarity: 4, starAbsorb: 10,
     fgoHp: 10327, fgoAtk: 10655, fgoNpAtk: 1.07, fgoNpDef: 5,
-    hpMult: 0.69,
+    hpMult: 0.575,
     favoredCard: 'buster', maxApBonus: -2,
     passives: [
       classPassive('madness', 'B'),
       classPassive('divinity', 'A'),
-      unique('12 Labors', "Guts twice: revives at 25% HP each time, [[but his NP gauge and AP reset to 0]]",
-        [{ type: 'guts', value: 25, charges: 2, resetNp: true, resetAp: true }]),
+      unique('12 Labors', "Guts twice: revives at 25% HP each time, keeping his NP gauge and AP",
+        [{ type: 'guts', value: 25, charges: 2 }]),
     ],
     skills: [
       { id: 'bravery', name: 'Bravery A+', cost: 5,

@@ -221,7 +221,7 @@ test('Heracles: 12 Labors revives at 25%; Indomitable is stronger after revive',
   const h = s.players[1];
   assert.equal(h.revived, true);
   assert.equal(h.hp, Math.round(h.maxHp * 0.25));
-  assert.equal(h.np, 0); assert.equal(h.ap, 0);
+  assert.ok(h.np > 0); assert.ok(h.ap > 0);   // gauges kept through the revive
   h.ap = 8;
   s = resolveTurn(s, [skill('shield'), skill('indomitable')]).state;
   assert.equal(s.players[1].buffs.filter(b => b.type === 'cardUp' && b.card === 'buster' && b.turns !== null).length, 2);
@@ -1546,6 +1546,15 @@ test('Heracles: 12 Labors revives him twice, then he falls', () => {
   s = resolveTurn(s, [atk('buster'), atk('quick')]).state;
   assert.equal(s.over, true);
   assert.equal(s.result.winner, 0);
+});
+
+test('Heracles keeps his NP gauge and AP through a revive', () => {
+  let s = createMatch(dummy('A', { atk: 4000 }), SERVANTS.heracles);
+  s.players[1].np = 60; s.players[1].ap = 7;
+  s = resolveTurn(s, [atk('buster'), atk('quick')]).state;
+  assert.equal(s.players[1].stats.revives, 1);
+  assert.ok(s.players[1].np >= 60, `np ${s.players[1].np}`);
+  assert.ok(s.players[1].ap >= 7, `ap ${s.players[1].ap}`);
 });
 
 test('Pierce Invincible: regular attacks with it, and an NP flagged with it, go through Invincible', () => {
